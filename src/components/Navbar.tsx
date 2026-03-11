@@ -25,8 +25,13 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 w-full bg-white shadow-md z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+<<<<<<< HEAD
         
         {/* LOGO */}
+=======
+
+        {/* 1. LOGO */}
+>>>>>>> NamThinh
         <Link href="/" className="text-2xl font-bold text-gray-800 flex-shrink-0">
           SHOE<span className="text-blue-600">STORE</span>
         </Link>
