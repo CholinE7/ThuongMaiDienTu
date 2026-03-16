@@ -5,4 +5,5 @@ export interface Product {
   image: string;
   category: string;
   description: string;
+  colors?: string[]; // THÊM DÒNG NÀY ĐỂ LƯU MÃ MÀU (Hex code)
 }
