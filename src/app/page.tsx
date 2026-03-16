@@ -114,31 +114,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Section: Banner Khuyến mãi nhỏ (Promo Banner) */}
-      <section className="container mx-auto px-4 mb-20">
-        <div className="bg-gray-900 rounded-3xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between p-8 md:p-16 text-center md:text-left">
-          <div className="z-10 max-w-xl">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-              Đăng ký thành viên <br/> <span className="text-blue-400">Giảm ngay 15%</span>
-            </h2>
-            <p className="text-gray-400 mb-8 text-lg">
-              Nhận thông báo về các đợt giảm giá sớm nhất và ưu đãi độc quyền dành riêng cho thành viên VIP.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <input 
-                type="email" 
-                placeholder="Nhập email của bạn" 
-                className="px-6 py-4 rounded-full bg-white/10 text-white placeholder-gray-400 border border-white/20 focus:outline-none focus:border-blue-500 w-full sm:w-auto"
-              />
-              <button className="bg-blue-600 text-white px-8 py-4 rounded-full font-bold hover:bg-blue-700 transition">
-                Đăng ký ngay
-              </button>
-            </div>
-          </div>
-          {/* Họa tiết trang trí nền */}
-          <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-l from-blue-900/20 to-transparent pointer-events-none"></div>
-        </div>
-      </section>
+     
      
 
       {/* --- FOOTER --- */}
