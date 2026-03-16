@@ -15,6 +15,22 @@ import {
   Loader2 
 } from 'lucide-react';
 
+// Bảng mã màu Hex code để hiển thị màu sắc chuẩn xác
+const COLOR_HEX_MAP: Record<string, string> = {
+  "Đen": "#171717",
+  "Trắng": "#FFFFFF",
+  "Đỏ": "#991B1B",    // Đỏ mận/Đỏ đô sang trọng
+  "Nâu": "#78350F",    // Nâu da bò
+  "Be": "#D4B996",     // Đã chỉnh lại màu Be (Nude/Beige) đậm và thực tế hơn, không bị chìm vào nền
+  "Xám": "#6B7280",
+  "Kem": "#FEFCE8"
+};
+
+// Hàm kiểm tra màu sáng/tối để đổi màu chữ tự động cho dễ đọc
+const isLightColor = (colorName: string) => {
+  return ["Trắng", "Be", "Kem"].includes(colorName);
+};
+
 // Giả lập một "Database" chứa thông tin các sản phẩm
 const MOCK_DATABASE: Record<string, any> = {
   "1": {
@@ -22,8 +38,9 @@ const MOCK_DATABASE: Record<string, any> = {
     name: "Nike Air Max 270 Red Edition",
     price: 3500000,
     category: "Giày Nam",
-    description: "Phiên bản màu đỏ nổi bật với công nghệ đế đệm khí Air Max cực êm ái. Phù hợp cho hoạt động thể thao và dạo phố.",
+    description: "Phiên bản nổi bật với công nghệ đế đệm khí Air Max cực êm ái. Phù hợp cho hoạt động thể thao và dạo phố.",
     sizes: [39, 40, 41, 42, 43],
+    colors: ["Đen", "Trắng", "Đỏ", "Nâu", "Be"],
     images: [
       "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop",
@@ -34,14 +51,14 @@ const MOCK_DATABASE: Record<string, any> = {
     name: "Adidas Ultraboost 22 Core Black",
     price: 4200000,
     category: "Giày Chạy Bộ",
-    description: "Đôi giày chạy bộ huyền thoại với công nghệ đệm Boost hoàn trả năng lượng vô tận. Thiết kế đen tuyền mạnh mẽ.",
+    description: "Đôi giày chạy bộ huyền thoại với công nghệ đệm Boost hoàn trả năng lượng vô tận. Thiết kế thể thao mạnh mẽ.",
     sizes: [40, 41, 42],
+    colors: ["Đen", "Trắng", "Đỏ", "Nâu", "Be"],
     images: [
       "https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?q=80&w=1200&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?q=80&w=1200&auto=format&fit=crop",
     ]
   },
-  // Sản phẩm mặc định nếu ID không nằm trong 1 và 2
   "default": {
     id: "G270",
     name: "Giày Cao Gót G270 - Sandal Gót Trụ",
@@ -49,6 +66,7 @@ const MOCK_DATABASE: Record<string, any> = {
     category: "Giày Nữ",
     description: "Thiết kế thanh lịch, dễ phối đồ. Phù hợp cho cả môi trường công sở lẫn những buổi tiệc nhẹ nhàng. Chất liệu da PU cao cấp, đế êm ái chống trượt.",
     sizes: [35, 36, 37, 38, 39],
+    colors: ["Đen", "Trắng", "Đỏ", "Nâu", "Be"],
     images: [
       "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=1200&auto=format&fit=crop", 
       "https://images.unsplash.com/photo-1562183241-b937e95585b6?q=80&w=1200&auto=format&fit=crop", 
@@ -64,13 +82,14 @@ export default function ProductDetailPage() {
   // const params = useParams();
   // const productId = params?.id as string;
   
-  // Dòng này chỉ dùng để hiển thị mô phỏng trong môi trường Xem trước hiện tại:git 
+  // Dòng này chỉ dùng để hiển thị mô phỏng trong môi trường Xem trước hiện tại:
   const productId = "1"; 
 
   // --- STATE ---
   const [product, setProduct] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState<string | null>('description');
 
   // --- MÔ PHỎNG GỌI API LẤY DỮ LIỆU ---
@@ -80,7 +99,6 @@ export default function ProductDetailPage() {
     setIsLoading(true);
     
     setTimeout(() => {
-      // Tìm sản phẩm trong DB giả lập dựa vào ID
       const foundProduct = MOCK_DATABASE[productId] || {
         ...MOCK_DATABASE["default"],
         id: productId,
@@ -88,6 +106,12 @@ export default function ProductDetailPage() {
       };
       
       setProduct(foundProduct);
+      
+      // Mặc định chọn màu đầu tiên
+      if (foundProduct.colors?.length > 0) {
+        setSelectedColor(foundProduct.colors[0]);
+      }
+      
       setIsLoading(false);
     }, 500);
   }, [productId]);
@@ -114,18 +138,15 @@ export default function ProductDetailPage() {
       <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 z-50">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
           
-          {/* Bên trái: Nút Back (cho mobile) & Logo SHOESTORE */}
           <div className="flex items-center gap-2 sm:gap-4">
             <a href="/" className="p-2 hover:bg-gray-50 rounded-full transition-colors md:hidden">
               <ChevronLeft size={20} className="text-gray-900" />
             </a>
-            {/* Logo: Chữ thẳng, đậm vừa phải (semibold) */}
             <a href="/" className="text-2xl font-semibold text-gray-900 tracking-tight uppercase">
               SHOE<span className="text-blue-600">STORE</span>
             </a>
           </div>
           
-          {/* Ở giữa: Thanh tìm kiếm */}
           <div className="hidden md:flex flex-1 max-w-md mx-8">
             <div className="relative w-full">
               <input 
@@ -137,7 +158,6 @@ export default function ProductDetailPage() {
             </div>
           </div>
           
-          {/* Bên phải: Nút Liên hệ & Giỏ hàng */}
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium text-gray-900 uppercase tracking-widest hidden sm:block">Liên hệ</span>
             <a href="/cart" className="relative p-2 hover:bg-gray-50 rounded-full transition-colors group">
@@ -169,7 +189,6 @@ export default function ProductDetailPage() {
         <div className="lg:col-span-5 px-6 lg:px-0 py-10 lg:py-16 relative">
           <div className="sticky top-24 max-w-md">
             
-            {/* Danh mục & Nút yêu thích */}
             <div className="flex justify-between items-start mb-4">
               <span className="text-xs text-gray-500 font-medium tracking-widest uppercase">{product.category}</span>
               <button className="text-gray-400 hover:text-red-500 transition-colors">
@@ -177,18 +196,16 @@ export default function ProductDetailPage() {
               </button>
             </div>
             
-            {/* Tên sản phẩm - Font chữ mảnh hơn */}
             <h1 className="text-2xl font-medium text-gray-900 leading-tight tracking-wide mb-4 uppercase">
               {product.name}
             </h1>
 
-            {/* Giá tiền - Font chữ mảnh hơn */}
             <div className="text-xl font-medium text-gray-900 mb-10">
               {formatPrice(product.price)}
             </div>
 
-            {/* Chọn kích thước (Size) */}
-            <div className="mb-10">
+            {/* CHỌN KÍCH THƯỚC */}
+            <div className="mb-8">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-xs font-medium text-gray-900 uppercase tracking-widest">Kích thước</span>
                 <button className="text-xs text-gray-500 underline hover:text-gray-900 transition-colors font-medium">Bảng kích cỡ</button>
@@ -209,20 +226,58 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Nút Call to Action */}
-            <button className="w-full bg-black text-white py-4 rounded-full font-medium text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors mb-10 active:scale-95">
+            {/* CHỌN MÀU SẮC */}
+            <div className="mb-10">
+              <span className="text-xs font-medium text-gray-900 uppercase tracking-widest block mb-4">Màu sắc</span>
+              <div className="flex flex-wrap gap-3">
+                {product.colors?.map((color: string) => {
+                  const isSelected = selectedColor === color;
+                  const hexValue = COLOR_HEX_MAP[color] || "#000000";
+                  
+                  // Tính toán màu nền và màu chữ dựa trên trạng thái
+                  const bgColor = isSelected ? hexValue : "#ffffff";
+                  const textColor = isSelected 
+                    ? (isLightColor(color) ? "#111827" : "#ffffff") // Nền sáng chữ đen, nền tối chữ trắng
+                    : "#111827"; // Mặc định chữ đen
+
+                  return (
+                    <button
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      className={`flex items-center gap-2.5 px-5 py-2.5 text-xs font-medium transition-all border uppercase tracking-widest
+                        ${isSelected 
+                          ? 'border-transparent shadow-md ring-1 ring-offset-2 ring-gray-200' 
+                          : 'border-gray-200 hover:border-gray-900'}`}
+                      style={{ 
+                        backgroundColor: bgColor,
+                        color: textColor
+                      }}
+                    >
+                      {/* Chấm màu nhỏ (chỉ hiện khi chưa được chọn để nút nhìn thanh thoát) */}
+                      {!isSelected && (
+                        <span 
+                          className="w-3 h-3 rounded-full border border-gray-300"
+                          style={{ backgroundColor: hexValue }}
+                        />
+                      )}
+                      {color}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button className="w-full bg-black text-white py-4 rounded-full font-medium text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors mb-10 active:scale-95 shadow-lg shadow-gray-200">
               Thêm vào giỏ hàng
             </button>
 
-            {/* Mô tả ngắn */}
             <p className="text-sm text-gray-600 leading-relaxed mb-8">
               {product.description}
             </p>
 
-            {/* ================= CÁC THẺ ACCORDION ================= */}
+            {/* CÁC THẺ ACCORDION */}
             <div className="border-t border-gray-200">
               
-              {/* Thẻ 1: Chi tiết sản phẩm */}
               <div className="border-b border-gray-200">
                 <button 
                   onClick={() => toggleSection('details')}
@@ -235,6 +290,7 @@ export default function ProductDetailPage() {
                   <div className="pb-5 text-sm text-gray-600 leading-relaxed animate-in fade-in slide-in-from-top-2">
                     <ul className="list-disc pl-5 space-y-2">
                       <li>Mã sản phẩm: {product.id}</li>
+                      <li>Màu sắc đã chọn: {selectedColor}</li>
                       <li>Chất liệu: Da PU và Vải cao cấp.</li>
                       <li>Đế ngoài bằng cao su đúc nguyên khối chống trượt.</li>
                       <li>Thiết kế tại studio của SHOESTORE.</li>
@@ -243,7 +299,6 @@ export default function ProductDetailPage() {
                 )}
               </div>
 
-              {/* Thẻ 2: Dịch vụ tại cửa hàng */}
               <div className="border-b border-gray-200">
                 <button 
                   onClick={() => toggleSection('store')}
@@ -259,7 +314,6 @@ export default function ProductDetailPage() {
                 )}
               </div>
 
-              {/* Thẻ 3: Chính sách giao hàng */}
               <div className="border-b border-gray-200">
                 <button 
                   onClick={() => toggleSection('shipping')}
