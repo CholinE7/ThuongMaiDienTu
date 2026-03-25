@@ -2,19 +2,23 @@ package com.tmdtud.cuahang.api.auth.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Entity
-public class Users {
+@NoArgsConstructor
+@AllArgsConstructor
+public class Users{
     @Id
-    private int id;
+    private String id;
     private String username;
     private String password;
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 

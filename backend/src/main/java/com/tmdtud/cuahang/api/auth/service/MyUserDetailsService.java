@@ -24,7 +24,9 @@ public class MyUserDetailsService implements UserDetailsService {
             System.out.println("User Not Found");
             throw new UsernameNotFoundException("user not found");
         }
-        
+         System.out.println("Tìm thấy user: " + user.getUsername());
+         System.out.println("Password trong DB: " + user.getPassword());
+
         return new UserPrincipal(user);
     }
 }
