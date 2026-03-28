@@ -1,9 +1,5 @@
 package com.tmdtud.cuahang.api.customer.request;
 
-
-
-import java.sql.Date;
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;

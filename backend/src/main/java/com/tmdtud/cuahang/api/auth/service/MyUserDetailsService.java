@@ -6,27 +6,36 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.tmdtud.cuahang.api.auth.model.UserPrincipal;
-import com.tmdtud.cuahang.api.auth.model.Users;
-import com.tmdtud.cuahang.api.auth.repository.UserRepo;
+import com.tmdtud.cuahang.api.auth.model.CustomerDetails;
+import com.tmdtud.cuahang.api.auth.model.EmployerDetails;
+import com.tmdtud.cuahang.api.customer.model.Customers;
+import com.tmdtud.cuahang.api.customer.repository.CustomerRepository;
+import com.tmdtud.cuahang.api.employer.model.Employers;
+import com.tmdtud.cuahang.api.employer.repository.EmployerRepository;
 
 @Service
 public class MyUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private UserRepo userRepo;
+    private CustomerRepository customerRepo;
 
+    @Autowired
+    private EmployerRepository employerRepo;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Users user = userRepo.findByUsername(username);
-        if (user == null) {
-            System.out.println("User Not Found");
-            throw new UsernameNotFoundException("user not found");
-        }
-         System.out.println("Tìm thấy user: " + user.getUsername());
-         System.out.println("Password trong DB: " + user.getPassword());
 
-        return new UserPrincipal(user);
+        Customers customer = customerRepo.findByUsername(username);
+        if(customer != null){
+            return new CustomerDetails(customer);
+        }
+
+        Employers employer = employerRepo.findByUsername(username);
+        if(employer != null){
+            System.out.println(employer);
+            return new EmployerDetails(employer);
+        }
+
+        throw new UsernameNotFoundException("Not found username in db" + username);
     }
 }

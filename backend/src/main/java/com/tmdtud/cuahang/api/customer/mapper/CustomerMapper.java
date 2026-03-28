@@ -1,20 +1,14 @@
 package com.tmdtud.cuahang.api.customer.mapper;
 
-import org.springframework.stereotype.Component;
+
+
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
 
 import com.tmdtud.cuahang.api.customer.dto.CustomerDTO;
-import com.tmdtud.cuahang.api.customer.model.Customer;
+import com.tmdtud.cuahang.api.customer.model.Customers;
 
-@Component
-public class CustomerMapper {
-    public CustomerDTO toDTO(Customer user) {
-        return new CustomerDTO(
-            user.getId(),
-            user.getFullName(),
-            user.getEmail(),
-            user.getPhone(),
-            user.getDateOfBirth(),
-            user.getCreatedAt()
-        );
-    }
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+public interface CustomerMapper {
+    CustomerDTO toDTO(Customers customer);
 }
