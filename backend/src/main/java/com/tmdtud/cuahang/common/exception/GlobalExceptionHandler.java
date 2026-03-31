@@ -40,4 +40,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest()
                 .body(ApiResponse.error(400, message));
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Object>> handleAllExceptions(Exception ex){
+        return ResponseEntity.badRequest().body(ApiResponse.error(400, ex.getMessage()));
+    }
 }

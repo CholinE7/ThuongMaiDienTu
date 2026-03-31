@@ -3,12 +3,20 @@ package com.tmdtud.cuahang.api.brand;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tmdtud.cuahang.api.brand.dto.BrandDTO;
+import com.tmdtud.cuahang.api.brand.request.BrandStoreRequest;
+import com.tmdtud.cuahang.api.brand.request.BrandUpdateRequest;
 import com.tmdtud.cuahang.api.brand.service.BrandService;
 import com.tmdtud.cuahang.common.response.ApiResponse;
 import com.tmdtud.cuahang.common.response.PageResponse;
@@ -36,4 +44,23 @@ public class BrandController {
         return ApiResponse.success(brandService.getAll(pageable));
     }
 
+    @DeleteMapping("/{id}")
+    public ApiResponse<Boolean> delete(@PathVariable Long id){
+        return ApiResponse.success(brandService.delete(id));
+    }
+
+    @PostMapping()
+    public ApiResponse<BrandDTO> add(@Validated @RequestBody BrandStoreRequest request){
+        return ApiResponse.success(brandService.add(request));
+    }
+
+    @GetMapping("/{id}")
+    public ApiResponse<BrandDTO> getById(@PathVariable Long id){
+        return ApiResponse.success(brandService.getById(id));
+    }
+
+    @PutMapping()
+    public ApiResponse<BrandDTO> update(@Validated @RequestBody BrandUpdateRequest request){
+        return ApiResponse.success(brandService.update(request));
+    } 
 }

@@ -5,10 +5,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.tmdtud.cuahang.api.brand.repository.BrandRepo;
 import com.tmdtud.cuahang.api.category.dto.CategoryDTO;
 import com.tmdtud.cuahang.api.category.mapper.CategoryMapper;
 import com.tmdtud.cuahang.api.category.model.Categories;
 import com.tmdtud.cuahang.api.category.repository.CategoryRepo;
+import com.tmdtud.cuahang.api.category.request.CategoryStoreRequest;
+import com.tmdtud.cuahang.api.category.request.CategoryUpdateRequest;
 import com.tmdtud.cuahang.common.response.PageResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -20,17 +23,20 @@ public class CategoryService implements CategoryServiceI {
 
     private final CategoryRepo categoryRepo;
     private final CategoryMapper categoryMapper;
+    private final BrandRepo brandRepo;
 
     @Override
-    public CategoryDTO add(Categories categories) {
-        // TODO Auto-generated method stub
-        return null;
+    public CategoryDTO add(CategoryStoreRequest request) {
+        Categories categories = Categories.builder()
+                                    .name(request.getName()).build();
+        return categoryMapper.toDTO(categoryRepo.save(categories));
     }
 
     @Override
-    public void delete(Long id) {
-        // TODO Auto-generated method stub
-        
+    public Boolean delete(Long id) {
+        brandRepo.setDefaultCategory(id);
+        categoryRepo.deleteById(id);
+        return true;
     }
 
     @Override
@@ -41,14 +47,15 @@ public class CategoryService implements CategoryServiceI {
 
     @Override
     public CategoryDTO getById(Long id) {
-        // TODO Auto-generated method stub
-        return null;
+        return categoryMapper.toDTO(categoryRepo.findById(id).orElse(null));
     }
 
     @Override
-    public void update(Long id) {
-        // TODO Auto-generated method stub
-        
+    public CategoryDTO update(CategoryUpdateRequest request) {
+        Categories categories = categoryRepo.findById(request.getId()).orElse(null);
+
+        categories.setName(request.getName());
+        return categoryMapper.toDTO(categories);
     }
     
 }

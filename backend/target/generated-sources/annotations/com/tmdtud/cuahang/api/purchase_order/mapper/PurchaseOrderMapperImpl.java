@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-03-31T16:32:05+0700",
+    date = "2026-04-01T00:11:06+0700",
     comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.45.0.v20260224-0835, environment: Java 21.0.10 (Eclipse Adoptium)"
 )
 @Component
@@ -38,12 +38,12 @@ public class PurchaseOrderMapperImpl implements PurchaseOrderMapper {
 
         PurchaseOrderDTO purchaseOrderDTO = new PurchaseOrderDTO();
 
+        purchaseOrderDTO.setId( purchaseOrder.getId() );
         purchaseOrderDTO.setCreated_at( xmlGregorianCalendarToString( dateToXmlGregorianCalendar( purchaseOrder.getCreated_at() ), null ) );
+        purchaseOrderDTO.setTotalPrice( purchaseOrder.getTotalPrice() );
         purchaseOrderDTO.setCustomer( purchaseOrder.getCustomer() );
         purchaseOrderDTO.setEmployer( purchaseOrder.getEmployer() );
-        purchaseOrderDTO.setId( purchaseOrder.getId() );
         purchaseOrderDTO.setMethod( purchaseOrder.getMethod() );
-        purchaseOrderDTO.setTotalPrice( purchaseOrder.getTotalPrice() );
 
         return purchaseOrderDTO;
     }

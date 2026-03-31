@@ -67,7 +67,7 @@ public class ProductService implements ProductServiceI {
     }
 
     @Override
-    public ProductDTO update(@Validated ProductUpdateRequest request) {
+    public ProductDTO update(ProductUpdateRequest request) {
         Brands brand = brandRepo.findById(request.getBrand_id()).orElse(null);
         Categories category = categoryRepo.findById(request.getCategory_id()).orElse(null);
 

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tmdtud.cuahang.api.product.dto.ProductDTO;
 import com.tmdtud.cuahang.api.product.request.ProductDeleteRequest;
 import com.tmdtud.cuahang.api.product.request.ProductStoreRequest;
+import com.tmdtud.cuahang.api.product.request.ProductUpdateRequest;
 import com.tmdtud.cuahang.api.product.service.ProductService;
 import com.tmdtud.cuahang.common.construct.BaseController;
 import com.tmdtud.cuahang.common.response.ApiResponse;
@@ -59,5 +61,10 @@ public class ProductController extends BaseController {
     @GetMapping("/{id}")
     public ApiResponse<ProductDTO> getById(@PathVariable Long id){
         return ApiResponse.success(productSer.getById(id));
+    }
+
+    @PutMapping()
+    public ApiResponse<ProductDTO> update(@Validated @RequestBody ProductUpdateRequest request){
+        return ApiResponse.success(productSer.update(request));
     }
 }
