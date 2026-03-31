@@ -1,19 +1,18 @@
 package com.tmdtud.cuahang.api.employer.dto;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
+import com.tmdtud.cuahang.common.dto.UserDTO;
+
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class EmployerDTO {
-    private UUID id;
-    private String fullName;
-    private String email;
-    private String phone;
-    private String dateOfBirth;
-    private String createdAt;
+public class EmployerDTO extends UserDTO{
+    @NotNull(message = "salary not null")
+    @DecimalMin(value = "0.0", inclusive = false, message = "salary must be greater than 0")
     private BigDecimal salary;
 }

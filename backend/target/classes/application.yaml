@@ -1,8 +1,8 @@
 spring:
   application:
-    name: giay
+    name: giayHieu
   datasource:
-    url: jdbc:mysql://localhost:3308/giay?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3308/giayHieu?useSSL=false&serverTimezone=UTC
     username: root
     password: ""
     driver-class-name: com.mysql.cj.jdbc.Driver  # ← Thêm dòng này

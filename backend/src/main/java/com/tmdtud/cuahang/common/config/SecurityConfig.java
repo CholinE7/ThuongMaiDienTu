@@ -31,10 +31,10 @@ public class SecurityConfig {
                 authorizeHttpRequests(request -> request
                     .requestMatchers("login", "register/customers").permitAll()
 
-                    .requestMatchers("/api/customers/**", "/api/customers", 
-                                    "/api/employers/**", "/api/employers").hasRole("EMPLOYER")
+                    // .requestMatchers("/api/customers/**", "/api/customers", 
+                    //                 "/api/employers/**", "/api/employers").hasRole("EMPLOYER")
 
-                    .anyRequest().authenticated())
+                    .anyRequest().permitAll())
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

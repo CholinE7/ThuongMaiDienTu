@@ -7,8 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.tmdtud.cuahang.common.response.ApiResponse;
 
@@ -27,5 +29,15 @@ public class GlobalExceptionHandler {
             return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.errorMessageList(400, "Miss data", errors));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<String>> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex) {
+
+        String message = "Parameter '" + ex.getName() + "' must be a number";
+
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.error(400, message));
     }
 }
