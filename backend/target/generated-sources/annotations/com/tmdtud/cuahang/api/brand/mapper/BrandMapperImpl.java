@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-03-31T16:32:05+0700",
-    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.45.0.v20260224-0835, environment: Java 21.0.10 (Eclipse Adoptium)"
+    date = "2026-03-31T18:06:17+0700",
+    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.18 (Microsoft)"
 )
 @Component
 public class BrandMapperImpl implements BrandMapper {
@@ -21,9 +21,9 @@ public class BrandMapperImpl implements BrandMapper {
 
         BrandDTO brandDTO = new BrandDTO();
 
-        brandDTO.setCategory( brand.getCategory() );
         brandDTO.setId( brand.getId() );
         brandDTO.setName( brand.getName() );
+        brandDTO.setCategory( brand.getCategory() );
 
         return brandDTO;
     }

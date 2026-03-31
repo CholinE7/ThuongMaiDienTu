@@ -1,5 +1,6 @@
 package com.tmdtud.cuahang.api.purchase_orders_detail.service;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class PurchaseOrderDetailService implements PurchaseOrderDetailServiceI {
 
     private final PurchaseOrderDetailRepository PurchaseOrderDetail;
+    @Qualifier("purchaseOrderDetailMapper")
     private final PurchaseOrderDetailMapper PurchaseOrderDetailMapper;
 
     @Override

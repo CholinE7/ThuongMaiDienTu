@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-03-31T16:32:05+0700",
-    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.45.0.v20260224-0835, environment: Java 21.0.10 (Eclipse Adoptium)"
+    date = "2026-03-31T18:06:17+0700",
+    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.18 (Microsoft)"
 )
 @Component
 public class PurchaseOrderDetailMapperImpl implements PurchaseOrderDetailMapper {
@@ -21,8 +21,8 @@ public class PurchaseOrderDetailMapperImpl implements PurchaseOrderDetailMapper 
 
         PurchaseOrderDetailDTO purchaseOrderDetailDTO = new PurchaseOrderDetailDTO();
 
-        purchaseOrderDetailDTO.setCost( purchaseOrder.getCost() );
         purchaseOrderDetailDTO.setQuantity( purchaseOrder.getQuantity() );
+        purchaseOrderDetailDTO.setCost( purchaseOrder.getCost() );
         purchaseOrderDetailDTO.setTotal( purchaseOrder.getTotal() );
 
         return purchaseOrderDetailDTO;

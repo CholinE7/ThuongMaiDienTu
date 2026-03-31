@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-03-31T16:32:05+0700",
-    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.45.0.v20260224-0835, environment: Java 21.0.10 (Eclipse Adoptium)"
+    date = "2026-03-31T18:06:17+0700",
+    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.18 (Microsoft)"
 )
 @Component
 public class EmployerMapperImpl implements EmployerMapper {
@@ -26,12 +26,12 @@ public class EmployerMapperImpl implements EmployerMapper {
 
         EmployerDTO employerDTO = new EmployerDTO( salary );
 
-        employerDTO.setDateOfBirth( employer.getDateOfBirth() );
-        employerDTO.setEmail( employer.getEmail() );
-        employerDTO.setFullName( employer.getFullName() );
         employerDTO.setId( employer.getId() );
-        employerDTO.setPhone( employer.getPhone() );
         employerDTO.setUsername( employer.getUsername() );
+        employerDTO.setFullName( employer.getFullName() );
+        employerDTO.setEmail( employer.getEmail() );
+        employerDTO.setPhone( employer.getPhone() );
+        employerDTO.setDateOfBirth( employer.getDateOfBirth() );
 
         return employerDTO;
     }

@@ -4,6 +4,7 @@ package com.tmdtud.cuahang.api.purchase_order.model;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
+import com.tmdtud.cuahang.api.purchase_order.OrderStatus;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.tmdtud.cuahang.api.customer.model.Customers;
@@ -46,6 +47,9 @@ public class PurchaseOrders{
 
     @Column
     private BigDecimal totalPrice;
+
+    @Column
+    private OrderStatus status;
 
     @ManyToOne
     @JoinColumn(name = "customer_id", nullable = false, foreignKey = @ForeignKey(name = "fk_PurchaseOrders_Customers"))

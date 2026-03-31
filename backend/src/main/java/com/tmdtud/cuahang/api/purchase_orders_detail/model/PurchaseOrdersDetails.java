@@ -42,7 +42,7 @@ public class PurchaseOrdersDetails{
     @ManyToOne
     @MapsId("purchase_order_id")
     @JoinColumn(name = "purchase_order_id")
-    private PurchaseOrders puchase_order;
+    private PurchaseOrders purchase;
 
     @ManyToOne
     @MapsId("product_id")

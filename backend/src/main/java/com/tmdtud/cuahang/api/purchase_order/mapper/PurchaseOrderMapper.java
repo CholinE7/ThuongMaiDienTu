@@ -10,4 +10,6 @@ import com.tmdtud.cuahang.api.purchase_order.model.PurchaseOrders;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface PurchaseOrderMapper {
     PurchaseOrderDTO toDTO(PurchaseOrders purchaseOrder);
+
+
 }
