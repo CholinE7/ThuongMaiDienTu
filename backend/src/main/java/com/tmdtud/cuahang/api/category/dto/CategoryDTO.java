@@ -1,5 +1,7 @@
 package com.tmdtud.cuahang.api.category.dto;
 
+import java.sql.Timestamp;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -10,11 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CategoryDTO {
-    @NotNull(message = "id not null")
     private Long id;
-
-    @NotBlank(message = "name not empty")
-    @NotNull(message = "name not null")
     private String name;
-
+    private Timestamp created_at;
 }

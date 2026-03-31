@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import com.tmdtud.cuahang.api.customer.model.Customers;
 import com.tmdtud.cuahang.api.employer.model.Employers;
+import com.tmdtud.cuahang.api.supplier.model.Suppliers;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -58,4 +59,8 @@ public class PurchaseOrders{
     @ManyToOne
     @JoinColumn(name = "employer_id", nullable = false, foreignKey = @ForeignKey(name = "fk_PurchaseOrders_Employers"))
     private Employers employer;
+
+    @ManyToOne
+    @JoinColumn(name = "supplier_id", nullable = false, foreignKey = @ForeignKey(name = "fk_PurchaseOrders_Suppliers"))
+    private Suppliers suppliers;
 }
