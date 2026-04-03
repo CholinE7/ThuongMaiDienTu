@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import com.tmdtud.cuahang.api.customer.model.Customers;
 import com.tmdtud.cuahang.api.employer.model.Employers;
@@ -42,15 +43,15 @@ public class PurchaseOrders{
     private String method;
 
     @CreationTimestamp
-    @Column
+    @Column(updatable = false)
     private Timestamp created_at;
+
+    @UpdateTimestamp
+    @Column
+    private Timestamp updated_at;
 
     @Column
     private BigDecimal totalPrice;
-
-    @ManyToOne
-    @JoinColumn(name = "customer_id", nullable = false, foreignKey = @ForeignKey(name = "fk_PurchaseOrders_Customers"))
-    private Customers customer;
 
     @ManyToOne
     @JoinColumn(name = "employer_id", nullable = false, foreignKey = @ForeignKey(name = "fk_PurchaseOrders_Employers"))

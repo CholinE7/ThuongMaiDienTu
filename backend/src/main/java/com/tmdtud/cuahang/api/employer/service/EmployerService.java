@@ -38,15 +38,14 @@ public class EmployerService implements EmployerServiceI {
     }
 
     @Override
-    public void delete(int id) {
+    public void delete(Long id) {
         // TODO Auto-generated method stub
         
     }
 
     @Override
-    public EmployerDTO getById(int id) {
-        // TODO Auto-generated method stub
-        return null;
+    public Employers getById(Long id) {
+        return employer.findById(id).orElse(null);
     }
 
     @Override

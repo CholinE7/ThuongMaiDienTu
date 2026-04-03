@@ -3,6 +3,7 @@ package com.tmdtud.cuahang.api.brand.request;
 import java.math.BigDecimal;
 
 import org.aspectj.weaver.ast.Not;
+import org.springframework.validation.annotation.Validated;
 
 import com.tmdtud.cuahang.api.brand.model.Brands;
 import com.tmdtud.cuahang.api.category.model.Categories;

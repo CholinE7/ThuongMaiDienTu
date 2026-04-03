@@ -10,13 +10,15 @@ import com.tmdtud.cuahang.api.brand.request.BrandUpdateRequest;
 import com.tmdtud.cuahang.common.response.PageResponse;
 
 public interface BrandServiceI {
-    public PageResponse<BrandDTO> getAll(Pageable pageable);
+    public PageResponse<Brands> getAll(Pageable pageable);
 
-    public BrandDTO getById(Long id);
+    public Brands getById(Long id);
 
     public boolean delete(Long id);
 
-    public BrandDTO update(BrandUpdateRequest request);
+    public Brands update(BrandUpdateRequest request);
 
-    public BrandDTO add(BrandStoreRequest request);
+    public Brands add(BrandStoreRequest request);
+
+    public int setDefaultCategory(Long categoryId);
 }

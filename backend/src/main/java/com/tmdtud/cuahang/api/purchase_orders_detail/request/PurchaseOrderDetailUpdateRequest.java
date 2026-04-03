@@ -1,24 +1,37 @@
 package com.tmdtud.cuahang.api.purchase_orders_detail.request;
 
+import java.math.BigDecimal;
+
+import org.springframework.validation.annotation.Validated;
+
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class PurchaseOrderDetailUpdateRequest {
-    @NotEmpty(message = "Tên không được để trống")
-    private String fullName;
+    @NotNull(message = "id product not null")
+    private Long product_id;
 
-    @NotEmpty(message = "Email không được để trống")
-    @Email(message = "Email không hợp lệ")
-    private String email;
+    @NotNull(message = "id purchase_order not null")
+    private Long purchase_order_id;
 
-    @NotEmpty(message = "Số điện thoại không được để trống")
-    private String phone;
+    @NotNull(message = "quantity not null")
+    private int quantity;
 
-    @NotNull(message = "Ngày sinh không được để trống")
-    private String dateOfBirth;
+    @NotNull(message = "cost not null")
+    @DecimalMin(value = "0.0", inclusive = false, message = "cost more than 0")
+    private BigDecimal cost;
+
+    @NotNull(message = "cost not null")
+    @DecimalMin(value = "0.0", inclusive = false, message = "total more than 0")
+    private BigDecimal total;
 }

@@ -4,9 +4,15 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PageResponse<T> {
     List<T> content;
     int num;

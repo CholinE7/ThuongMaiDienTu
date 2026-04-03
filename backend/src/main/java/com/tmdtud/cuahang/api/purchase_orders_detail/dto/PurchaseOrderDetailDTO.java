@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import com.tmdtud.cuahang.api.customer.model.Customers;
 import com.tmdtud.cuahang.api.employer.model.Employers;
+import com.tmdtud.cuahang.api.product.model.Products;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -18,20 +19,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PurchaseOrderDetailDTO{
-    @NotNull(message = "id product not null")
-    private Long product_id;
+    private Products product;
 
-    @NotNull(message = "id purchase_order not null")
-    private Long purchase_order_id;
+    private Long purchaseOrderId;
 
-    @NotNull(message = "quantity not null")
     private int quantity;
 
-    @NotNull(message = "cost not null")
-    @DecimalMin(value = "0.0", inclusive = false, message = "cost more than 0")
     private BigDecimal cost;
 
-    @NotNull(message = "cost not null")
-    @DecimalMin(value = "0.0", inclusive = false, message = "total more than 0")
     private BigDecimal total;
 }

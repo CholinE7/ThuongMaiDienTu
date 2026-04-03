@@ -13,6 +13,8 @@ import com.tmdtud.cuahang.api.brand.request.BrandStoreRequest;
 import com.tmdtud.cuahang.api.brand.request.BrandUpdateRequest;
 import com.tmdtud.cuahang.api.category.model.Categories;
 import com.tmdtud.cuahang.api.category.repository.CategoryRepo;
+import com.tmdtud.cuahang.api.category.service.CategoryService;
+import com.tmdtud.cuahang.api.product.service.ProductService;
 import com.tmdtud.cuahang.common.response.PageResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -22,43 +24,50 @@ import lombok.RequiredArgsConstructor;
 public class BrandService implements BrandServiceI {
 
     private final BrandRepo brandRepo;
-    private final CategoryRepo categoryRepo;
-    private final BrandMapper brandMapper;
+
+    private final CategoryService categoryService;
+    private final ProductService productService;
 
     @Override
-    public BrandDTO add(BrandStoreRequest request) {
-        Categories category = categoryRepo.findById(request.getCategory_id()).orElse(null);
+    public Brands add(BrandStoreRequest request) {
+        Categories category = categoryService.getById(request.getCategory_id());
         Brands brand = Brands.builder()
                         .category(category)
                         .name(request.getName()).build();
-        return brandMapper.toDTO(brandRepo.save(brand));
+        return brandRepo.save(brand);
     }
 
     @Override
     public boolean delete(Long id) {
+        productService.setDefaultBrand(id);
         brandRepo.deleteById(id);
         return true;
     }
 
     @Override
-    public PageResponse<BrandDTO> getAll(Pageable pageable) {
+    public PageResponse<Brands> getAll(Pageable pageable) {
         Page<Brands> brands = brandRepo.findAll(pageable);
-        return new PageResponse<BrandDTO>(brands.map(brand -> brandMapper.toDTO(brand)));
+        return new PageResponse<Brands>(brands.map(brand -> brand));
     }
 
     @Override
-    public BrandDTO getById(Long id) {
-        return brandMapper.toDTO(brandRepo.findById(id).orElse(null));
+    public Brands getById(Long id) {
+        return brandRepo.findById(id).orElse(null);
     }
 
     @Override
-    public BrandDTO update(BrandUpdateRequest request) {
-        Categories category = categoryRepo.findById(request.getCategory_id()).orElse(null);
+    public Brands update(BrandUpdateRequest request) {
+        Categories category = categoryService.getById(request.getCategory_id());
         Brands brand = brandRepo.findById(request.getId()).orElse(null);
 
         brand.setCategory(category);
         brand.setName(request.getName());
-        return brandMapper.toDTO(brandRepo.save(brand));
+        return brandRepo.save(brand);
+    }
+
+    @Override
+    public int setDefaultCategory(Long categoryId){
+        return brandRepo.setDefaultCategory(categoryId);
     }
 
 }

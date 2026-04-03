@@ -1,5 +1,8 @@
 package com.tmdtud.cuahang.api.brand;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -15,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tmdtud.cuahang.api.brand.dto.BrandDTO;
+import com.tmdtud.cuahang.api.brand.mapper.BrandMapper;
+import com.tmdtud.cuahang.api.brand.model.Brands;
 import com.tmdtud.cuahang.api.brand.request.BrandStoreRequest;
 import com.tmdtud.cuahang.api.brand.request.BrandUpdateRequest;
 import com.tmdtud.cuahang.api.brand.service.BrandService;
@@ -26,8 +31,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("api/brands")
 @RestController
+@Validated
 public class BrandController {
     private final BrandService brandService;
+    private final BrandMapper brandMapper;
 
     @GetMapping
     public ApiResponse<PageResponse<BrandDTO>> getAll(
@@ -40,8 +47,18 @@ public class BrandController {
                 : Sort.by(sortBy).descending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-
-        return ApiResponse.success(brandService.getAll(pageable));
+        PageResponse<Brands> pageResponse = brandService.getAll(pageable);
+        List<BrandDTO> brands = pageResponse.getContent()
+                    .stream()
+                    .map(item -> brandMapper.toDTO(item))
+                    .collect(Collectors.toList());
+        PageResponse<BrandDTO> pageResponse2 = PageResponse.<BrandDTO>builder()
+                                                .content(brands)
+                                                .num(pageResponse.getNum())
+                                                .size(pageResponse.getSize())
+                                                .total(pageResponse.getTotal()).build();
+                    
+        return ApiResponse.success(pageResponse2);
     }
 
     @DeleteMapping("/{id}")
@@ -51,16 +68,16 @@ public class BrandController {
 
     @PostMapping()
     public ApiResponse<BrandDTO> add(@Validated @RequestBody BrandStoreRequest request){
-        return ApiResponse.success(brandService.add(request));
+        return ApiResponse.success(brandMapper.toDTO(brandService.add(request)));
     }
 
     @GetMapping("/{id}")
     public ApiResponse<BrandDTO> getById(@PathVariable Long id){
-        return ApiResponse.success(brandService.getById(id));
+        return ApiResponse.success(brandMapper.toDTO(brandService.getById(id)));
     }
 
     @PutMapping()
     public ApiResponse<BrandDTO> update(@Validated @RequestBody BrandUpdateRequest request){
-        return ApiResponse.success(brandService.update(request));
+        return ApiResponse.success(brandMapper.toDTO(brandService.update(request)));
     } 
 }

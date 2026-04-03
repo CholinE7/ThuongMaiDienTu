@@ -3,13 +3,17 @@ package com.tmdtud.cuahang.api.purchase_order.service;
 import org.springframework.data.domain.Pageable;
 
 import com.tmdtud.cuahang.api.purchase_order.dto.PurchaseOrderDTO;
+import com.tmdtud.cuahang.api.purchase_order.model.PurchaseOrders;
+import com.tmdtud.cuahang.api.purchase_order.request.PurchaseOrderStoreRequest;
+import com.tmdtud.cuahang.api.purchase_order.request.PurchaseOrderUpdateRequest;
 import com.tmdtud.cuahang.common.response.PageResponse;
 
 
 public interface PurchaseOrderServiceI {
-    public PageResponse<PurchaseOrderDTO> getAll(Pageable pageable);
-    public PurchaseOrderDTO getById(Long id);
-    public void delete(Long id);
-    public void add(PurchaseOrderDTO supplier);
-    public void update(PurchaseOrderDTO supplier);
+    public PageResponse<PurchaseOrders> getAll(Pageable pageable);
+    public PurchaseOrders getById(Long id);
+    public Boolean delete(Long id);
+    public PurchaseOrders add(PurchaseOrderStoreRequest request);
+    public PurchaseOrders update(PurchaseOrderUpdateRequest supplier);
+    
 }

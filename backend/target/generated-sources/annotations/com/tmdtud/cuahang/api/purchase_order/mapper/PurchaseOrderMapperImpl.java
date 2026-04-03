@@ -2,33 +2,18 @@ package com.tmdtud.cuahang.api.purchase_order.mapper;
 
 import com.tmdtud.cuahang.api.purchase_order.dto.PurchaseOrderDTO;
 import com.tmdtud.cuahang.api.purchase_order.model.PurchaseOrders;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.processing.Generated;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-04-01T00:11:06+0700",
+    date = "2026-04-02T10:49:29+0700",
     comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.45.0.v20260224-0835, environment: Java 21.0.10 (Eclipse Adoptium)"
 )
 @Component
 public class PurchaseOrderMapperImpl implements PurchaseOrderMapper {
-
-    private final DatatypeFactory datatypeFactory;
-
-    public PurchaseOrderMapperImpl() {
-        try {
-            datatypeFactory = DatatypeFactory.newInstance();
-        }
-        catch ( DatatypeConfigurationException ex ) {
-            throw new RuntimeException( ex );
-        }
-    }
 
     @Override
     public PurchaseOrderDTO toDTO(PurchaseOrders purchaseOrder) {
@@ -39,37 +24,44 @@ public class PurchaseOrderMapperImpl implements PurchaseOrderMapper {
         PurchaseOrderDTO purchaseOrderDTO = new PurchaseOrderDTO();
 
         purchaseOrderDTO.setId( purchaseOrder.getId() );
-        purchaseOrderDTO.setCreated_at( xmlGregorianCalendarToString( dateToXmlGregorianCalendar( purchaseOrder.getCreated_at() ), null ) );
+        purchaseOrderDTO.setCreated_at( purchaseOrder.getCreated_at() );
+        purchaseOrderDTO.setUpdated_at( purchaseOrder.getUpdated_at() );
         purchaseOrderDTO.setTotalPrice( purchaseOrder.getTotalPrice() );
-        purchaseOrderDTO.setCustomer( purchaseOrder.getCustomer() );
         purchaseOrderDTO.setEmployer( purchaseOrder.getEmployer() );
         purchaseOrderDTO.setMethod( purchaseOrder.getMethod() );
 
         return purchaseOrderDTO;
     }
 
-    private String xmlGregorianCalendarToString( XMLGregorianCalendar xcal, String dateFormat ) {
-        if ( xcal == null ) {
+    @Override
+    public List<PurchaseOrderDTO> toDTOList(List<PurchaseOrders> purchaseOrders) {
+        if ( purchaseOrders == null ) {
             return null;
         }
 
-        if (dateFormat == null ) {
-            return xcal.toString();
+        List<PurchaseOrderDTO> list = new ArrayList<PurchaseOrderDTO>( purchaseOrders.size() );
+        for ( PurchaseOrders purchaseOrders1 : purchaseOrders ) {
+            list.add( toDTO( purchaseOrders1 ) );
         }
-        else {
-            Date d = xcal.toGregorianCalendar().getTime();
-            SimpleDateFormat sdf = new SimpleDateFormat( dateFormat );
-            return sdf.format( d );
-        }
+
+        return list;
     }
 
-    private XMLGregorianCalendar dateToXmlGregorianCalendar( Date date ) {
-        if ( date == null ) {
+    @Override
+    public PurchaseOrders toEntity(PurchaseOrderDTO purchaseOrder) {
+        if ( purchaseOrder == null ) {
             return null;
         }
 
-        GregorianCalendar c = new GregorianCalendar();
-        c.setTime( date );
-        return datatypeFactory.newXMLGregorianCalendar( c );
+        PurchaseOrders.PurchaseOrdersBuilder purchaseOrders = PurchaseOrders.builder();
+
+        purchaseOrders.id( purchaseOrder.getId() );
+        purchaseOrders.method( purchaseOrder.getMethod() );
+        purchaseOrders.created_at( purchaseOrder.getCreated_at() );
+        purchaseOrders.updated_at( purchaseOrder.getUpdated_at() );
+        purchaseOrders.totalPrice( purchaseOrder.getTotalPrice() );
+        purchaseOrders.employer( purchaseOrder.getEmployer() );
+
+        return purchaseOrders.build();
     }
 }

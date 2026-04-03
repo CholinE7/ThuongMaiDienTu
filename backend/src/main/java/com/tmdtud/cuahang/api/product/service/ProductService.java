@@ -7,8 +7,10 @@ import org.springframework.validation.annotation.Validated;
 
 import com.tmdtud.cuahang.api.brand.model.Brands;
 import com.tmdtud.cuahang.api.brand.repository.BrandRepo;
+import com.tmdtud.cuahang.api.brand.service.BrandService;
 import com.tmdtud.cuahang.api.category.model.Categories;
 import com.tmdtud.cuahang.api.category.repository.CategoryRepo;
+import com.tmdtud.cuahang.api.category.service.CategoryService;
 import com.tmdtud.cuahang.api.product.dto.ProductDTO;
 import com.tmdtud.cuahang.api.product.mapper.ProductMapper;
 import com.tmdtud.cuahang.api.product.model.Products;
@@ -26,21 +28,21 @@ import lombok.RequiredArgsConstructor;
 public class ProductService implements ProductServiceI {
 
     private final ProductRepository productRepo;
-    private final BrandRepo brandRepo;
-    private final CategoryRepo categoryRepo;
-    private final ProductMapper productMapper;
+
+    private final BrandService brandService;
+    private final CategoryService categoryService;
 
     @Override
-    public PageResponse<ProductDTO> getAll(Pageable pageable) {
+    public PageResponse<Products> getAll(Pageable pageable) {
         Page<Products> products = productRepo.findAll(pageable);
-        return new PageResponse<ProductDTO>(products.map(product -> productMapper.toDTO(product)));
+        return new PageResponse<Products>(products);
     }
 
     @Override
-    public ProductDTO add(ProductStoreRequest request) {
-        Brands brand = brandRepo.findById(request.getBrand_id()).orElse(null);
+    public Products add(ProductStoreRequest request) {
+        Brands brand = brandService.getById(request.getBrand_id());
         System.out.println(brand.getName());
-        Categories category = categoryRepo.findById(request.getCategory_id()).orElse(null);
+        Categories category = categoryService.getById(request.getCategory_id());
         System.out.println(category.getName());
 
         Products product = Products.builder()
@@ -51,25 +53,26 @@ public class ProductService implements ProductServiceI {
                 .brand(brand)
                 .category(category).build();
 
-        return productMapper.toDTO(productRepo.save(product));
+        return productRepo.save(product);
     }
 
     @Override
     public boolean delete(Long id) {
-        productRepo.deleteById(id);
+        Products products = getById(id);
+
         return true;
     }
 
     @Override
-    public ProductDTO getById(Long id) {
+    public Products getById(Long id) {
         Products product = productRepo.findById(id).orElse(null);
-        return productMapper.toDTO(product);
+        return (product);
     }
 
     @Override
-    public ProductDTO update(ProductUpdateRequest request) {
-        Brands brand = brandRepo.findById(request.getBrand_id()).orElse(null);
-        Categories category = categoryRepo.findById(request.getCategory_id()).orElse(null);
+    public Products update(ProductUpdateRequest request) {
+        Brands brand = brandService.getById(request.getBrand_id());
+        Categories category = categoryService.getById(request.getCategory_id());
 
         Products product = Products.builder()
                 .name(request.getName())
@@ -79,7 +82,17 @@ public class ProductService implements ProductServiceI {
                 .brand(brand)
                 .id(request.getId())
                 .category(category).build();
-        return productMapper.toDTO(productRepo.save(product));
+        return productRepo.save(product);
+    }
+
+    @Override
+    public int setCategoryAndBrandDefaultByCategory(Long catogryId) {
+        return productRepo.setDefaultCategoryAndBrandByCategory(catogryId);
+    }
+
+    @Override
+    public int setDefaultBrand(Long brandId){
+        return productRepo.setDefaultBrand(brandId);
     }
 
 }

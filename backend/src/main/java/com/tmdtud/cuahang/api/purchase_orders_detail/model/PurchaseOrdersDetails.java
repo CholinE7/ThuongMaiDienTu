@@ -41,12 +41,12 @@ public class PurchaseOrdersDetails{
 
     @ManyToOne
     @MapsId("purchase_order_id")
-    @JoinColumn(name = "purchase_order_id")
-    private PurchaseOrders puchase_order;
+    @JoinColumn(name = "purchase_order_id", updatable = false)
+    private PurchaseOrders purchaseOrder;
 
     @ManyToOne
     @MapsId("product_id")
-    @JoinColumn(name = "product_id")
+    @JoinColumn(name = "product_id", updatable = false)
     private Products product;
 
     @Column(nullable = false)
@@ -57,4 +57,12 @@ public class PurchaseOrdersDetails{
 
     @Column(nullable = false)
     private BigDecimal total;
+
+    @Column(name = "created_at")
+    @CreationTimestamp
+    private Timestamp createdAt;
+
+    @Column(name = "updated_at")
+    @CreationTimestamp
+    private Timestamp updatedAt;
 }

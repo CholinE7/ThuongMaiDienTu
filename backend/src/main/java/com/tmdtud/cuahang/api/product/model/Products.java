@@ -43,9 +43,13 @@ public class Products{
     @Column
     private String description;
 
+    @Column 
+    private int deleted;
+
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false, foreignKey = @ForeignKey(name = "fk_products_categories"))
     private Categories category;
+
 
     @ManyToOne
     @JoinColumn(name = "brand_id", nullable = false, foreignKey = @ForeignKey(name = "fk_products_brands"))

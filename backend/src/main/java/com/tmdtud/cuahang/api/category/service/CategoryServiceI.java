@@ -9,9 +9,9 @@ import com.tmdtud.cuahang.api.category.request.CategoryUpdateRequest;
 import com.tmdtud.cuahang.common.response.PageResponse;
 
 public interface CategoryServiceI {
-    public PageResponse<CategoryDTO> getAll(Pageable pageable);
-    public CategoryDTO getById(Long id);
+    public PageResponse<Categories> getAll(Pageable pageable);
+    public Categories getById(Long id);
     public Boolean delete(Long id);
-    public CategoryDTO update(CategoryUpdateRequest request);
-    public CategoryDTO add(CategoryStoreRequest request);
+    public Categories update(CategoryUpdateRequest request);
+    public Categories add(CategoryStoreRequest request);
 }

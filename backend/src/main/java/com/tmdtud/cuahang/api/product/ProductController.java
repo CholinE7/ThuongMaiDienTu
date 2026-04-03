@@ -1,5 +1,8 @@
 package com.tmdtud.cuahang.api.product;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -16,7 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tmdtud.cuahang.api.product.dto.ProductDTO;
-import com.tmdtud.cuahang.api.product.request.ProductDeleteRequest;
+import com.tmdtud.cuahang.api.product.mapper.ProductMapper;
+import com.tmdtud.cuahang.api.product.model.Products;
 import com.tmdtud.cuahang.api.product.request.ProductStoreRequest;
 import com.tmdtud.cuahang.api.product.request.ProductUpdateRequest;
 import com.tmdtud.cuahang.api.product.service.ProductService;
@@ -33,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductController extends BaseController {
 
     private final ProductService productSer;
+    private final ProductMapper productMapper;
 
     @GetMapping
     public ApiResponse<PageResponse<ProductDTO>> getAll(
@@ -44,27 +49,38 @@ public class ProductController extends BaseController {
                 : Sort.by(sortBy).descending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
+        
+        PageResponse<Products> pageResponse = productSer.getAll(pageable);
+        List<ProductDTO> productDTOs = pageResponse.getContent()
+                                        .stream()
+                                        .map(item -> productMapper.toDTO(item))
+                                        .collect(Collectors.toList());
+        PageResponse<ProductDTO> pageResponse2 = PageResponse.<ProductDTO>builder()
+                                                    .content(productDTOs)
+                                                    .num(pageResponse.getNum())
+                                                    .size(pageResponse.getSize())
+                                                    .total(pageResponse.getTotal()).build();
 
-        return ApiResponse.success(productSer.getAll(pageable));
+        return ApiResponse.success(pageResponse2);
     }
 
     @PostMapping()
     public ApiResponse<ProductDTO> add(@Validated @RequestBody ProductStoreRequest product){
-        return ApiResponse.success(productSer.add(product));
+        return ApiResponse.success(productMapper.toDTO(productSer.add(product)));
     }
 
-    @DeleteMapping
-    public ApiResponse<Boolean> delete(@Validated @ModelAttribute ProductDeleteRequest request){
-        return ApiResponse.success(productSer.delete(request.getId()));
+    @DeleteMapping("/{id}")
+    public ApiResponse<Boolean> delete(@PathVariable Long id){
+        return ApiResponse.success(productSer.delete(id));
     }
 
     @GetMapping("/{id}")
     public ApiResponse<ProductDTO> getById(@PathVariable Long id){
-        return ApiResponse.success(productSer.getById(id));
+        return ApiResponse.success(productMapper.toDTO(productSer.getById(id)));
     }
 
     @PutMapping()
     public ApiResponse<ProductDTO> update(@Validated @RequestBody ProductUpdateRequest request){
-        return ApiResponse.success(productSer.update(request));
+        return ApiResponse.success(productMapper.toDTO(productSer.update(request)));
     }
 }

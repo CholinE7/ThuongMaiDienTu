@@ -42,9 +42,8 @@ public class SupplierService implements SupplierServiceI {
     }
 
     @Override
-    public SupplierDTO getById(Long id) {
-        // TODO Auto-generated method stub
-        return null;
+    public Suppliers getById(Long id) {
+        return supplier.findById(id).orElse(null);
     }
 
     @Override
