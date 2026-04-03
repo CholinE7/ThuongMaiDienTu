@@ -3,9 +3,13 @@ package com.tmdtud.cuahang.api.purchase_order;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.tmdtud.cuahang.api.purchase_order.request.PurchaseOrderStoreRequest;
+import com.tmdtud.cuahang.api.purchase_order.response.PurchaseOrderResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,12 +20,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.tmdtud.cuahang.api.purchase_order.dto.PurOrdHasDetailDTO;
 import com.tmdtud.cuahang.api.purchase_order.dto.PurchaseOrderDTO;
 import com.tmdtud.cuahang.api.purchase_order.mapper.PurchaseOrderMapper;
 import com.tmdtud.cuahang.api.purchase_order.model.PurchaseOrders;
-import com.tmdtud.cuahang.api.purchase_order.request.PurchaseOrderStoreRequest;
 import com.tmdtud.cuahang.api.purchase_order.request.PurchaseOrderUpdateRequest;
 import com.tmdtud.cuahang.api.purchase_order.service.PurchaseOrderService;
 import com.tmdtud.cuahang.common.construct.BaseController;
@@ -29,6 +33,8 @@ import com.tmdtud.cuahang.common.response.ApiResponse;
 import com.tmdtud.cuahang.common.response.PageResponse;
 
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/purchaseOrders")
@@ -40,7 +46,7 @@ public class PurchaseOrderController extends BaseController {
     private final PurchaseOrderMapper purchaseOrderMapper;
 
     @GetMapping
-    public ApiResponse<PageResponse<PurchaseOrderDTO>> getAll(
+    public ApiResponse<PageResponse<PurchaseOrderResponse>> getAll(
             @RequestParam(value = "page_no", defaultValue = "0") int page,
             @RequestParam(value = "page_size", defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -83,6 +89,16 @@ public class PurchaseOrderController extends BaseController {
     public ApiResponse<PurOrdHasDetailDTO> update(@Validated @RequestBody PurchaseOrderUpdateRequest request){
         PurchaseOrders purchaseOrders = purchaseOrderService.update(request);
         return ApiResponse.success(purchaseOrderService.combineDTO(purchaseOrders));
+    }
+
+    @PostMapping
+    public ResponseEntity<PurchaseOrderResponse> create(@RequestBody PurchaseOrderStoreRequest request) {
+        return ResponseEntity.ok(supplier.create(request));
+    }
+
+    @GetMapping("/customer/{customerId}")
+    public ResponseEntity<List<PurchaseOrderResponse>> getByCustomer(@PathVariable Long customerId) {
+        return ResponseEntity.ok(supplier.getByCustomer(customerId));
     }
 
 }

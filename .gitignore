@@ -42,4 +42,26 @@ next-env.d.ts
 
 
 # databsae
-application.properties
+application.propertiesapplication.properties
+
+
+
+# Java/Maven
+target/
+*.class
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# Node/Next.js
+node_modules/
+.next/
+out/
+build/
+
+# Các file hệ thống & Log
+.DS_Store
+*.log
+npm-debug.log*

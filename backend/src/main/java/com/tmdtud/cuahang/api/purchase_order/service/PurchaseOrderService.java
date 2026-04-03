@@ -5,6 +5,22 @@ import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import com.tmdtud.cuahang.api.customer.dto.CustomerDTO;
+import com.tmdtud.cuahang.api.customer.model.Customers;
+import com.tmdtud.cuahang.api.customer.repository.CustomerRepository;
+import com.tmdtud.cuahang.api.employer.dto.EmployerDTO;
+import com.tmdtud.cuahang.api.employer.model.Employers;
+import com.tmdtud.cuahang.api.employer.repository.EmployerRepository;
+import com.tmdtud.cuahang.api.product.model.Products;
+import com.tmdtud.cuahang.api.product.repository.ProductRepository;
+import com.tmdtud.cuahang.api.purchase_order.request.PurchaseOrderStoreRequest;
+import com.tmdtud.cuahang.api.purchase_order.response.PurchaseOrderResponse;
+import com.tmdtud.cuahang.api.purchase_orders_detail.model.PurchaseOrdersDetails;
+import com.tmdtud.cuahang.api.purchase_orders_detail.model.PurchaseOrdersDetailsId;
+import com.tmdtud.cuahang.api.purchase_orders_detail.repository.PurchaseOrderDetailRepository;
+import com.tmdtud.cuahang.api.purchase_orders_detail.request.PurchaseOrderDetailStoreRequest;
+import com.tmdtud.cuahang.api.purchase_orders_detail.response.PurchaseOrderDetailResponse;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,6 +55,11 @@ import com.tmdtud.cuahang.common.response.PageResponse;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+import javax.swing.*;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @Data
 @RequiredArgsConstructor
@@ -62,6 +83,8 @@ public class PurchaseOrderService implements PurchaseOrderServiceI {
         Page<PurchaseOrders> puchaseOrders = purchaseOrderRepository.findAll(pageable);
         return new PageResponse<PurchaseOrders>(puchaseOrders);
     }
+
+
 
     @Override
     @Transactional
@@ -112,5 +135,5 @@ public class PurchaseOrderService implements PurchaseOrderServiceI {
     public PurOrdHasDetailDTO combineDTO(PurchaseOrders purchaseOrders){
         return purchaseOrderAggregateMapper.toPurOrdHasDetailDTO(purchaseOrders, purchaseOrderDetailService.getByPurOrderId(purchaseOrders.getId()));
     }
-    
+
 }
