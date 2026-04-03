@@ -66,3 +66,4 @@ build/
 *.log
 npm-debug.log*
 
+/backend/target
