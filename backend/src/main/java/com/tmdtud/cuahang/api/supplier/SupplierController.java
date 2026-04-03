@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tmdtud.cuahang.api.product.dto.ProductDTO;
-import com.tmdtud.cuahang.api.product.service.ProductService;
 import com.tmdtud.cuahang.api.supplier.dto.SupplierDTO;
 import com.tmdtud.cuahang.api.supplier.service.SupplierService;
 import com.tmdtud.cuahang.common.construct.BaseController;

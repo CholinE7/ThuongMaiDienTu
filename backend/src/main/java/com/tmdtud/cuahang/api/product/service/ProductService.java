@@ -3,16 +3,11 @@ package com.tmdtud.cuahang.api.product.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
 import com.tmdtud.cuahang.api.brand.model.Brands;
-import com.tmdtud.cuahang.api.brand.repository.BrandRepo;
 import com.tmdtud.cuahang.api.brand.service.BrandService;
 import com.tmdtud.cuahang.api.category.model.Categories;
-import com.tmdtud.cuahang.api.category.repository.CategoryRepo;
 import com.tmdtud.cuahang.api.category.service.CategoryService;
-import com.tmdtud.cuahang.api.product.dto.ProductDTO;
-import com.tmdtud.cuahang.api.product.mapper.ProductMapper;
 import com.tmdtud.cuahang.api.product.model.Products;
 import com.tmdtud.cuahang.api.product.repository.ProductRepository;
 import com.tmdtud.cuahang.api.product.request.ProductStoreRequest;

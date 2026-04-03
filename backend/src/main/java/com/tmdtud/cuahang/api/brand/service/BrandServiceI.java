@@ -3,7 +3,6 @@ package com.tmdtud.cuahang.api.brand.service;
 
 import org.springframework.data.domain.Pageable;
 
-import com.tmdtud.cuahang.api.brand.dto.BrandDTO;
 import com.tmdtud.cuahang.api.brand.model.Brands;
 import com.tmdtud.cuahang.api.brand.request.BrandStoreRequest;
 import com.tmdtud.cuahang.api.brand.request.BrandUpdateRequest;

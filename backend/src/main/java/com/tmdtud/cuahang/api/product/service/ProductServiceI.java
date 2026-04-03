@@ -3,7 +3,6 @@ package com.tmdtud.cuahang.api.product.service;
 
 import org.springframework.data.domain.Pageable;
 
-import com.tmdtud.cuahang.api.product.dto.ProductDTO;
 import com.tmdtud.cuahang.api.product.model.Products;
 import com.tmdtud.cuahang.api.product.request.ProductStoreRequest;
 import com.tmdtud.cuahang.api.product.request.ProductUpdateRequest;

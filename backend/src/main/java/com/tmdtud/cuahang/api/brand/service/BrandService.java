@@ -5,14 +5,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.tmdtud.cuahang.api.brand.dto.BrandDTO;
-import com.tmdtud.cuahang.api.brand.mapper.BrandMapper;
 import com.tmdtud.cuahang.api.brand.model.Brands;
 import com.tmdtud.cuahang.api.brand.repository.BrandRepo;
 import com.tmdtud.cuahang.api.brand.request.BrandStoreRequest;
 import com.tmdtud.cuahang.api.brand.request.BrandUpdateRequest;
 import com.tmdtud.cuahang.api.category.model.Categories;
-import com.tmdtud.cuahang.api.category.repository.CategoryRepo;
 import com.tmdtud.cuahang.api.category.service.CategoryService;
 import com.tmdtud.cuahang.api.product.service.ProductService;
 import com.tmdtud.cuahang.common.response.PageResponse;

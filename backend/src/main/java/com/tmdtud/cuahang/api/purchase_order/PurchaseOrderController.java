@@ -4,12 +4,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.tmdtud.cuahang.api.purchase_order.request.PurchaseOrderStoreRequest;
-import com.tmdtud.cuahang.api.purchase_order.response.PurchaseOrderResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,11 +17,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.*;
 
 import com.tmdtud.cuahang.api.purchase_order.dto.PurOrdHasDetailDTO;
-import com.tmdtud.cuahang.api.purchase_order.dto.PurchaseOrderDTO;
-import com.tmdtud.cuahang.api.purchase_order.mapper.PurchaseOrderMapper;
 import com.tmdtud.cuahang.api.purchase_order.model.PurchaseOrders;
 import com.tmdtud.cuahang.api.purchase_order.request.PurchaseOrderUpdateRequest;
 import com.tmdtud.cuahang.api.purchase_order.service.PurchaseOrderService;
@@ -34,8 +28,6 @@ import com.tmdtud.cuahang.common.response.PageResponse;
 
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("api/purchaseOrders")
 @Validated
@@ -43,10 +35,9 @@ import java.util.List;
 public class PurchaseOrderController extends BaseController {
 
     private final PurchaseOrderService purchaseOrderService;
-    private final PurchaseOrderMapper purchaseOrderMapper;
 
     @GetMapping
-    public ApiResponse<PageResponse<PurchaseOrderResponse>> getAll(
+    public ApiResponse<PageResponse<PurOrdHasDetailDTO>> getAll(
             @RequestParam(value = "page_no", defaultValue = "0") int page,
             @RequestParam(value = "page_size", defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -57,48 +48,39 @@ public class PurchaseOrderController extends BaseController {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         PageResponse<PurchaseOrders> pageResponse = purchaseOrderService.getAll(pageable);
-        
-        List<PurchaseOrderDTO> purchaseOrderDTOs = pageResponse.getContent().stream().map(item -> purchaseOrderMapper.toDTO(item)).collect(Collectors.toList());
-        PageResponse<PurchaseOrderDTO> pageResponse2 = PageResponse.<PurchaseOrderDTO>builder()
-                                                        .content(purchaseOrderDTOs)
+        List<PurchaseOrders> purchaseOrders = pageResponse.getContent();
+        List<PurOrdHasDetailDTO> purOrdHasDetailDTOs = purchaseOrders.stream()
+                                                        .map(item -> purchaseOrderService.toPurOrdHasDetailDTO(item))
+                                                        .collect(Collectors.toList());
+        PageResponse<PurOrdHasDetailDTO> pageResponse2 = PageResponse.<PurOrdHasDetailDTO>builder()
+                                                        .content(purOrdHasDetailDTOs)
                                                         .num(pageResponse.getNum())
-                                                        .total(pageResponse.getTotal())
-                                                        .size(pageResponse.getSize()).build();
-
+                                                        .size(pageResponse.getSize())
+                                                        .total(pageResponse.getTotal()).build();
+                                            
         return ApiResponse.success(pageResponse2);
     }
 
     @PostMapping()
-    public ApiResponse<PurOrdHasDetailDTO> add(@Validated @RequestBody PurchaseOrderStoreRequest request ){
+    public ApiResponse<PurOrdHasDetailDTO> add(@Validated @RequestBody PurchaseOrderStoreRequest request) {
         PurchaseOrders purchaseOrders = purchaseOrderService.add(request);
-        return ApiResponse.success(purchaseOrderService.combineDTO(purchaseOrders));
+        return ApiResponse.success(purchaseOrderService.toPurOrdHasDetailDTO(purchaseOrders));
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Boolean> delete(@PathVariable Long id){
+    public ApiResponse<Boolean> delete(@PathVariable Long id) {
         return ApiResponse.success(purchaseOrderService.delete(id));
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<PurOrdHasDetailDTO> getById(@PathVariable Long id){
+    public ApiResponse<PurOrdHasDetailDTO> getById(@PathVariable Long id) {
         PurchaseOrders purchaseOrders = purchaseOrderService.getById(id);
-        return ApiResponse.success(purchaseOrderService.combineDTO(purchaseOrders));
+        return ApiResponse.success(purchaseOrderService.toPurOrdHasDetailDTO(purchaseOrders));
     }
 
     @PutMapping()
-    public ApiResponse<PurOrdHasDetailDTO> update(@Validated @RequestBody PurchaseOrderUpdateRequest request){
+    public ApiResponse<PurOrdHasDetailDTO> update(@Validated @RequestBody PurchaseOrderUpdateRequest request) {
         PurchaseOrders purchaseOrders = purchaseOrderService.update(request);
-        return ApiResponse.success(purchaseOrderService.combineDTO(purchaseOrders));
+        return ApiResponse.success(purchaseOrderService.toPurOrdHasDetailDTO(purchaseOrders));
     }
-
-    @PostMapping
-    public ResponseEntity<PurchaseOrderResponse> create(@RequestBody PurchaseOrderStoreRequest request) {
-        return ResponseEntity.ok(supplier.create(request));
-    }
-
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<PurchaseOrderResponse>> getByCustomer(@PathVariable Long customerId) {
-        return ResponseEntity.ok(supplier.getByCustomer(customerId));
-    }
-
 }

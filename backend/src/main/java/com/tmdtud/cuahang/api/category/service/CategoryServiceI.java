@@ -2,7 +2,6 @@ package com.tmdtud.cuahang.api.category.service;
 
 import org.springframework.data.domain.Pageable;
 
-import com.tmdtud.cuahang.api.category.dto.CategoryDTO;
 import com.tmdtud.cuahang.api.category.model.Categories;
 import com.tmdtud.cuahang.api.category.request.CategoryStoreRequest;
 import com.tmdtud.cuahang.api.category.request.CategoryUpdateRequest;

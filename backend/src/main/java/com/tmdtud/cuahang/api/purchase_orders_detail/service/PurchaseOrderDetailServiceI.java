@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 
-import com.tmdtud.cuahang.api.purchase_orders_detail.dto.PurchaseOrderDetailDTO;
 import com.tmdtud.cuahang.api.purchase_orders_detail.model.PurchaseOrdersDetails;
 import com.tmdtud.cuahang.api.purchase_orders_detail.request.PurchaseOrderDetailStoreRequest;
 import com.tmdtud.cuahang.api.purchase_orders_detail.request.PurchaseOrderDetailUpdateRequest;

@@ -1,7 +1,6 @@
 package com.tmdtud.cuahang.api.employer.service;
 
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.tmdtud.cuahang.api.employer.dto.EmployerDTO;

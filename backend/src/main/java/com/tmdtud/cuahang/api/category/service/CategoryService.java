@@ -6,10 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.tmdtud.cuahang.api.brand.repository.BrandRepo;
 import com.tmdtud.cuahang.api.brand.service.BrandService;
-import com.tmdtud.cuahang.api.category.dto.CategoryDTO;
-import com.tmdtud.cuahang.api.category.mapper.CategoryMapper;
 import com.tmdtud.cuahang.api.category.model.Categories;
 import com.tmdtud.cuahang.api.category.repository.CategoryRepo;
 import com.tmdtud.cuahang.api.category.request.CategoryStoreRequest;

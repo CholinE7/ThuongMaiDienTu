@@ -5,9 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.tmdtud.cuahang.api.customer.dto.CustomerDTO;
-import com.tmdtud.cuahang.api.customer.mapper.CustomerMapper;
-import com.tmdtud.cuahang.api.customer.repository.CustomerRepository;
+
 import com.tmdtud.cuahang.api.employer.dto.EmployerDTO;
 import com.tmdtud.cuahang.api.employer.mapper.EmployerMapper;
 import com.tmdtud.cuahang.api.employer.model.Employers;

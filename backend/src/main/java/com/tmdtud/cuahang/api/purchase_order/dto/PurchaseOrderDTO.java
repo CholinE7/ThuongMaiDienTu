@@ -3,15 +3,9 @@ package com.tmdtud.cuahang.api.purchase_order.dto;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
-import org.hibernate.annotations.CreationTimestamp;
-
-import com.tmdtud.cuahang.api.customer.model.Customers;
 import com.tmdtud.cuahang.api.employer.model.Employers;
 import com.tmdtud.cuahang.api.supplier.model.Suppliers;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
