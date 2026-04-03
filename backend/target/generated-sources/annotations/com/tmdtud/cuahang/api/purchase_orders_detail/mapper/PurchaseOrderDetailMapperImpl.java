@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-04-04T00:12:40+0700",
+    date = "2026-04-04T01:39:18+0700",
     comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.45.0.v20260224-0835, environment: Java 21.0.10 (Eclipse Adoptium)"
 )
 @Component
@@ -26,8 +26,8 @@ public class PurchaseOrderDetailMapperImpl implements PurchaseOrderDetailMapper 
 
         purchaseOrderDetailDTO.setPurchaseOrderId( purchaseOrdersDetailsPurchaseOrderId( purchaseOrdersDetails ) );
         purchaseOrderDetailDTO.setProduct( purchaseOrdersDetails.getProduct() );
-        purchaseOrderDetailDTO.setQuantity( purchaseOrdersDetails.getQuantity() );
         purchaseOrderDetailDTO.setCost( purchaseOrdersDetails.getCost() );
+        purchaseOrderDetailDTO.setQuantity( purchaseOrdersDetails.getQuantity() );
         purchaseOrderDetailDTO.setTotal( purchaseOrdersDetails.getTotal() );
 
         return purchaseOrderDetailDTO;

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-04-03T23:55:14+0700",
+    date = "2026-04-04T01:39:19+0700",
     comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.45.0.v20260224-0835, environment: Java 21.0.10 (Eclipse Adoptium)"
 )
 @Component
@@ -23,12 +23,12 @@ public class PurchaseOrderMapperImpl implements PurchaseOrderMapper {
 
         PurchaseOrderDTO purchaseOrderDTO = new PurchaseOrderDTO();
 
-        purchaseOrderDTO.setId( purchaseOrder.getId() );
         purchaseOrderDTO.setCreated_at( purchaseOrder.getCreated_at() );
-        purchaseOrderDTO.setUpdated_at( purchaseOrder.getUpdated_at() );
-        purchaseOrderDTO.setTotalPrice( purchaseOrder.getTotalPrice() );
         purchaseOrderDTO.setEmployer( purchaseOrder.getEmployer() );
+        purchaseOrderDTO.setId( purchaseOrder.getId() );
         purchaseOrderDTO.setMethod( purchaseOrder.getMethod() );
+        purchaseOrderDTO.setTotalPrice( purchaseOrder.getTotalPrice() );
+        purchaseOrderDTO.setUpdated_at( purchaseOrder.getUpdated_at() );
 
         return purchaseOrderDTO;
     }
@@ -55,12 +55,12 @@ public class PurchaseOrderMapperImpl implements PurchaseOrderMapper {
 
         PurchaseOrders.PurchaseOrdersBuilder purchaseOrders = PurchaseOrders.builder();
 
+        purchaseOrders.created_at( purchaseOrder.getCreated_at() );
+        purchaseOrders.employer( purchaseOrder.getEmployer() );
         purchaseOrders.id( purchaseOrder.getId() );
         purchaseOrders.method( purchaseOrder.getMethod() );
-        purchaseOrders.created_at( purchaseOrder.getCreated_at() );
-        purchaseOrders.updated_at( purchaseOrder.getUpdated_at() );
         purchaseOrders.totalPrice( purchaseOrder.getTotalPrice() );
-        purchaseOrders.employer( purchaseOrder.getEmployer() );
+        purchaseOrders.updated_at( purchaseOrder.getUpdated_at() );
 
         return purchaseOrders.build();
     }
