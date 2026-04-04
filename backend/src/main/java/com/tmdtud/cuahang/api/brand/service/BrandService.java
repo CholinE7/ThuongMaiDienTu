@@ -1,9 +1,12 @@
 package com.tmdtud.cuahang.api.brand.service;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tmdtud.cuahang.api.brand.model.Brands;
 import com.tmdtud.cuahang.api.brand.repository.BrandRepo;
@@ -14,16 +17,20 @@ import com.tmdtud.cuahang.api.category.service.CategoryService;
 import com.tmdtud.cuahang.api.product.service.ProductService;
 import com.tmdtud.cuahang.common.response.PageResponse;
 
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 @Service
 public class BrandService implements BrandServiceI {
 
-    private final BrandRepo brandRepo;
+    @Autowired
+    private BrandRepo brandRepo;
 
-    private final CategoryService categoryService;
-    private final ProductService productService;
+    @Lazy
+    @Autowired
+    private CategoryService categoryService;
+
+    @Lazy
+    @Autowired
+    private ProductService productService;
 
     @Override
     public Brands add(BrandStoreRequest request) {
@@ -35,6 +42,7 @@ public class BrandService implements BrandServiceI {
     }
 
     @Override
+    @Transactional
     public boolean delete(Long id) {
         productService.setDefaultBrand(id);
         brandRepo.deleteById(id);

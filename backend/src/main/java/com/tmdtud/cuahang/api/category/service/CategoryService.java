@@ -1,6 +1,8 @@
 package com.tmdtud.cuahang.api.category.service;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,17 +16,21 @@ import com.tmdtud.cuahang.api.category.request.CategoryUpdateRequest;
 import com.tmdtud.cuahang.api.product.service.ProductService;
 import com.tmdtud.cuahang.common.response.PageResponse;
 
-import lombok.RequiredArgsConstructor;
 
 
-@RequiredArgsConstructor
 @Service
 public class CategoryService implements CategoryServiceI {
 
-    private final CategoryRepo categoryRepo;
+    @Autowired
+    private CategoryRepo categoryRepo;
     
-    private final BrandService brandService;
-    private final ProductService productService;
+    @Lazy
+    @Autowired
+    private BrandService brandService;
+
+    @Lazy
+    @Autowired
+    private ProductService productService;
 
     @Override
     public Categories add(CategoryStoreRequest request) {

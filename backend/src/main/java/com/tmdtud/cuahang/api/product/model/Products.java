@@ -47,11 +47,11 @@ public class Products{
     private int deleted;
 
     @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false, foreignKey = @ForeignKey(name = "fk_products_categories"))
+    @JoinColumn(name = "category_id", nullable = true, foreignKey = @ForeignKey(name = "fk_products_categories"))
     private Categories category;
 
 
     @ManyToOne
-    @JoinColumn(name = "brand_id", nullable = false, foreignKey = @ForeignKey(name = "fk_products_brands"))
+    @JoinColumn(name = "brand_id", nullable = true, foreignKey = @ForeignKey(name = "fk_products_brands"))
     private Brands brand;
 }

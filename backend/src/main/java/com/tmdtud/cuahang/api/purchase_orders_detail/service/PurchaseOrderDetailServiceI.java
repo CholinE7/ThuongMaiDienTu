@@ -19,4 +19,5 @@ public interface PurchaseOrderDetailServiceI {
     public List<PurchaseOrdersDetails> addAll(List<PurchaseOrderDetailStoreRequest> requests);
     public List<PurchaseOrdersDetails> getByPurOrderId(Long id);
     public List<PurchaseOrdersDetails> updateAll(List<PurchaseOrderDetailUpdateRequest> requests);
+    public int deleteByPurchaseOrder(Long id);
 }

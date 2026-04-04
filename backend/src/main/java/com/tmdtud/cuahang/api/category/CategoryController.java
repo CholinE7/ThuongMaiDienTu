@@ -3,6 +3,7 @@ package com.tmdtud.cuahang.api.category;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -28,13 +29,15 @@ import com.tmdtud.cuahang.common.response.PageResponse;
 
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 @RequestMapping("api/categories")
 @RestController
 @Validated
 public class CategoryController {
-    private final CategoryService categoryService;
-    private final CategoryMapper categoryMapper;
+    @Autowired
+    private CategoryService categoryService;
+
+    @Autowired
+    private CategoryMapper categoryMapper;
 
     @GetMapping
     public ApiResponse<PageResponse<CategoryDTO>> getAll(

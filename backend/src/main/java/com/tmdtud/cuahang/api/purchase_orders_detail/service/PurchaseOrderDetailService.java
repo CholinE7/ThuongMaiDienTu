@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,17 +22,20 @@ import com.tmdtud.cuahang.api.purchase_orders_detail.request.PurchaseOrderDetail
 import com.tmdtud.cuahang.common.response.PageResponse;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 @Service
 @Data
-@RequiredArgsConstructor
 public class PurchaseOrderDetailService implements PurchaseOrderDetailServiceI {
 
-    private final PurchaseOrderDetailRepository purchaseOrderDetailRepo;
+    @Autowired
+    private PurchaseOrderDetailRepository purchaseOrderDetailRepo;
 
-    private final ProductService productService;
-    private final PurchaseOrderService purchaseOrderService;
+    @Autowired
+    private ProductService productService;
+
+    @Autowired
+    @Lazy
+    private PurchaseOrderService purchaseOrderService;
 
     @Override
     public PageResponse<PurchaseOrdersDetails> getAll(Pageable pageable) {
@@ -117,5 +122,9 @@ public class PurchaseOrderDetailService implements PurchaseOrderDetailServiceI {
                                                                 .collect(Collectors.toList());
         return new ArrayList<PurchaseOrdersDetails>(purchaseOrderDetailRepo.saveAll(purchaseOrderDetailList));
     }
-    
+ 
+    @Override
+    public int deleteByPurchaseOrder(Long id){
+        return purchaseOrderDetailRepo.deleteByPurchaseOrder(id);
+    }
 }

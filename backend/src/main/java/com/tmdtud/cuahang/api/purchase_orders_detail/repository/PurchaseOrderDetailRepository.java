@@ -15,18 +15,18 @@ import com.tmdtud.cuahang.api.purchase_orders_detail.model.PurchaseOrdersDetails
 @Repository
 public interface PurchaseOrderDetailRepository extends JpaRepository<PurchaseOrdersDetails, PurchaseOrdersDetailsId>{
     @Modifying
-    @Query(value = "DELETE FROM purchase_order_detail WHERE purchase_order_id = ?1")
+    @Query(value = "DELETE FROM purchase_orders_details WHERE purchase_order_id = ?1", nativeQuery = true)
     int deleteByPurchaseOrder(Long id);
 
     @Modifying
-    @Query(value = "DELETE FROM purchase_order_detail WHERE purchase_order_id = ?1 and product_id = ?2")
+    @Query(value = "DELETE FROM purchase_orders_details WHERE purchase_order_id = ?1 and product_id = ?2", nativeQuery = true)
     int deleteByBothId(Long purchase_order_id, Long product_id);
 
     @Modifying
-    @Query(value = "SELECT * FROM purchase_order_detail WHERE purchase_order_id = ?1 and product_id = ?2")
+    @Query(value = "SELECT * FROM purchase_orders_details WHERE purchase_order_id = ?1 and product_id = ?2", nativeQuery = true)
     Optional<PurchaseOrdersDetails> getByBothId(Long purchase_order_id, Long product_id);
 
     @Modifying
-    @Query(value = "SELECT * FROM purchase_order_detail WHERE purchase_order_id = ?1")
+    @Query(value = "SELECT * FROM purchase_orders_details WHERE purchase_order_id = ?1", nativeQuery = true)
     List<Optional<PurchaseOrdersDetails>> getByPurOrderId(Long purOrderId);
 }

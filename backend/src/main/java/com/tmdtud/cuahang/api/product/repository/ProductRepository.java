@@ -21,11 +21,11 @@ public interface ProductRepository extends JpaRepository<Products, Long> {
     List<Products> findAll();
 
     @Modifying
-    @Query(value = "UPDATE product SET category_id = 0 and brand_id = 0 WHERE category_id = ?1")
+    @Query(value = "UPDATE products SET category_id = NULL, brand_id = NULL WHERE category_id = ?1", nativeQuery = true)
     int setDefaultCategoryAndBrandByCategory(Long categoryId);
 
     @Modifying
-    @Query(value = "UPDATE product SET brand_id = 0 WHERE brand_id = ?1")
+    @Query(value = "UPDATE products SET brand_id = NULL WHERE brand_id = ?1", nativeQuery = true)
     int setDefaultBrand(Long brandId);
 
 }

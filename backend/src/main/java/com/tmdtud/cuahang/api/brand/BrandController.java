@@ -3,6 +3,7 @@ package com.tmdtud.cuahang.api.brand;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -28,13 +29,15 @@ import com.tmdtud.cuahang.common.response.PageResponse;
 
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 @RequestMapping("api/brands")
 @RestController
 @Validated
 public class BrandController {
-    private final BrandService brandService;
-    private final BrandMapper brandMapper;
+    @Autowired
+    private BrandService brandService;
+    
+    @Autowired
+    private BrandMapper brandMapper;
 
     @GetMapping
     public ApiResponse<PageResponse<BrandDTO>> getAll(

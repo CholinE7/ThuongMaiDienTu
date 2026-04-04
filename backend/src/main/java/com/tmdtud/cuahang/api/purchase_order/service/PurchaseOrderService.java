@@ -6,6 +6,8 @@ import com.tmdtud.cuahang.api.product.repository.ProductRepository;
 import com.tmdtud.cuahang.api.purchase_order.request.PurchaseOrderStoreRequest;
 import com.tmdtud.cuahang.api.purchase_orders_detail.repository.PurchaseOrderDetailRepository;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,25 +28,30 @@ import com.tmdtud.cuahang.api.supplier.service.SupplierService;
 import com.tmdtud.cuahang.common.response.PageResponse;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 
 @Service
 @Data
-@RequiredArgsConstructor
+
 public class PurchaseOrderService implements PurchaseOrderServiceI {
 
-    private final PurchaseOrderRepository purchaseOrderRepository;
-    private final EmployerRepository employerRepository;
-    private final SupplierRepository supplierRepository;
-    private final PurchaseOrderDetailRepository purchaseOrderDetailRepository;
-    private final ProductRepository productRepo;
+    @Autowired
+    private PurchaseOrderRepository purchaseOrderRepository;
 
-    private final PurchaseOrderMapper purchaseOrderMapper;
-    private final PurchaseOrderAggregateMapper purchaseOrderAggregateMapper;
+    @Autowired
+    private PurchaseOrderMapper purchaseOrderMapper;
+    
+    @Autowired
+    private PurchaseOrderAggregateMapper purchaseOrderAggregateMapper;
 
-    private final PurchaseOrderDetailService purchaseOrderDetailService;
+    @Autowired
+    @Lazy
+    private PurchaseOrderDetailService purchaseOrderDetailService;
+    
+    @Autowired
     private final EmployerService employerService;
+    
+    @Autowired
     private final SupplierService supplierService;
 
     @Override
@@ -74,7 +81,7 @@ public class PurchaseOrderService implements PurchaseOrderServiceI {
 
     @Override
     public Boolean delete(Long id) {
-        purchaseOrderDetailRepository.deleteByPurchaseOrder(id);
+        purchaseOrderDetailService.deleteByPurchaseOrder(id);
         purchaseOrderRepository.deleteById(id);
         return true;
     }
@@ -86,8 +93,8 @@ public class PurchaseOrderService implements PurchaseOrderServiceI {
 
     @Override
     public PurchaseOrders update(PurchaseOrderUpdateRequest request) {
-        Employers employer = employerRepository.findById(request.getEmployer()).orElse(null);
-        Suppliers suppliers = supplierRepository.findById(request.getSupplier()).orElse(null);
+        Employers employer = employerService.getById(request.getEmployer());
+        Suppliers suppliers = supplierService.getById(request.getSupplier());
         PurchaseOrders purchase = purchaseOrderRepository.findById(request.getId()).orElse(null);
 
         purchase.setMethod(request.getMethod());
