@@ -39,3 +39,31 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+# databsae
+application.properties
+application.yaml
+
+
+# Java/Maven
+target/
+*.class
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# Node/Next.js
+node_modules/
+.next/
+out/
+build/
+
+# Các file hệ thống & Log
+.DS_Store
+*.log
+npm-debug.log*
+
+/backend/target
