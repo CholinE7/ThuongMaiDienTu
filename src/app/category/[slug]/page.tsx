@@ -19,7 +19,7 @@ const PRODUCTS_PER_PAGE = 8;
 
 export default function CategoryPage() {
   const params = useParams();
-  const slug = params.slug;
+  const slug = params?.slug;
 
   // 1. LẤY DỮ LIỆU BAN ĐẦU THEO URL
   let categoryTitle = "";
@@ -86,7 +86,8 @@ export default function CategoryPage() {
   if (selectedColors.length > 0) {
     finalProducts = finalProducts.filter(product => {
       if (!product.colors) return false;
-      return product.colors.some(color => selectedColors.includes(color));
+      // ĐÃ FIX LỖI TẠI ĐÂY: Khai báo rõ ràng (color: string)
+      return product.colors.some((color: string) => selectedColors.includes(color));
     });
   }
 
@@ -100,8 +101,8 @@ export default function CategoryPage() {
 
   if (selectedSort === "Giá: Tăng dần") finalProducts.sort((a, b) => a.price - b.price);
   else if (selectedSort === "Giá: Giảm dần") finalProducts.sort((a, b) => b.price - a.price);
-  else if (selectedSort === "Ngày: Mới đến cũ") finalProducts.sort((a, b) => b.id - a.id);
-  else if (selectedSort === "Ngày: Cũ đến mới") finalProducts.sort((a, b) => a.id - b.id);
+  else if (selectedSort === "Ngày: Mới đến cũ") finalProducts.sort((a: any, b: any) => b.id - a.id);
+  else if (selectedSort === "Ngày: Cũ đến mới") finalProducts.sort((a: any, b: any) => a.id - b.id);
 
   // 5. THUẬT TOÁN PHÂN TRANG (CẮT MẢNG THEO TRANG HIỆN TẠI)
   const totalPages = Math.ceil(finalProducts.length / PRODUCTS_PER_PAGE);
@@ -181,7 +182,7 @@ export default function CategoryPage() {
         {/* LƯỚI SẢN PHẨM */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
           {paginatedProducts.length > 0 ? (
-            paginatedProducts.map((product) => (
+            paginatedProducts.map((product: any) => (
               <ProductCard key={product.id} product={product} />
             ))
           ) : (
