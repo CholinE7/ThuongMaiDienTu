@@ -8,16 +8,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class PurchaseOrderDetailStoreRequest {
     @NotNull(message = "id product not null")
-    private Long product_id;
-
-    @NotNull(message = "id purchase_order not null")
-    private Long purchase_order_id;
+    private Long productId;
 
     @NotNull(message = "quantity not null")
     private int quantity;
@@ -26,7 +22,7 @@ public class PurchaseOrderDetailStoreRequest {
     @DecimalMin(value = "0.0", inclusive = false, message = "cost more than 0")
     private BigDecimal cost;
 
-    @NotNull(message = "cost not null")
+    @NotNull(message = "total not null")
     @DecimalMin(value = "0.0", inclusive = false, message = "total more than 0")
     private BigDecimal total;
 }

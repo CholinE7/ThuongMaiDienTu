@@ -3,10 +3,12 @@ package com.tmdtud.cuahang.api.product.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.tmdtud.cuahang.api.product.model.Products;
@@ -27,5 +29,6 @@ public interface ProductRepository extends JpaRepository<Products, Long> {
     @Modifying
     @Query(value = "UPDATE products SET brand_id = NULL WHERE brand_id = ?1", nativeQuery = true)
     int setDefaultBrand(Long brandId);
+
 
 }

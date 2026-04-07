@@ -1,6 +1,5 @@
 package com.tmdtud.cuahang.api.supplier.model;
 
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,7 +17,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
-public class Suppliers{
+public class Suppliers {
     @Id
     @Column
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,5 +1,8 @@
 package com.tmdtud.cuahang.api.product.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -86,8 +89,13 @@ public class ProductService implements ProductServiceI {
     }
 
     @Override
-    public int setDefaultBrand(Long brandId){
+    public int setDefaultBrand(Long brandId) {
         return productRepo.setDefaultBrand(brandId);
+    }
+
+    @Override
+    public List<Products> updateAll(List<Products> products) {
+        return productRepo.saveAll(products);
     }
 
 }

@@ -23,31 +23,29 @@ public class CustomerService implements CustomerServiceI {
     private final CustomerMapper customerMapper;
 
     @Override
-    public PageResponse<CustomerDTO> getAll(Pageable pageable) {
-        Page<Customers> customers = customer.findAll(pageable);
-        return new PageResponse<CustomerDTO>(customers.map(customer -> customerMapper.toDTO(customer)));
-    }
-
-    @Override
-    public void add(CustomerDTO customer) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void delete(int id) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public CustomerDTO getById(int id) {
-        // TODO Auto-generated method stub
+    public PageResponse<Customers> getAll(Pageable pageable) {
         return null;
     }
 
     @Override
-    public void update(CustomerDTO customer) {
+    public void add(Customers customer) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void delete(Long id) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public Customers getById(Long id) {
+        return customer.findById(id).orElse(null);
+    }
+
+    @Override
+    public void update(Customers customer) {
         // TODO Auto-generated method stub
         
     }

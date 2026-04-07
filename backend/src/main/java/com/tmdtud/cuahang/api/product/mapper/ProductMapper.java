@@ -10,7 +10,7 @@ import com.tmdtud.cuahang.api.product.model.Products;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface ProductMapper {
+    // vi diệu ở chỗ mapper tự chuyển đổi ngầm từ en -> dto không cần method, method chỉ để xử lí logic ở trên, quaooo
     ProductDTO toDTO(Products products);
-    
     Products toEntity(ProductDTO product);
 }

@@ -23,14 +23,8 @@ public class PurchaseOrderUpdateRequest {
     @NotNull(message = "id not null")
     private Long id;
 
-    @DecimalMin(value = "0.0", inclusive = true)
+    @DecimalMin(value = "0.0", inclusive = false)
     private BigDecimal totalPrice;
-
-    @NotNull(message = "supplier not null")
-    private Long supplier;
-
-    @NotNull(message = "employer not null")
-    private Long employer;
 
     @NotBlank(message = "method not empty")
     @NotNull(message = "method not null")

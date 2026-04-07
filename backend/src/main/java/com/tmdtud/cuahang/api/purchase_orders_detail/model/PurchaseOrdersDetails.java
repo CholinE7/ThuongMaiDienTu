@@ -1,10 +1,11 @@
 package com.tmdtud.cuahang.api.purchase_orders_detail.model;
 
-
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import com.tmdtud.cuahang.api.product.model.Products;
 import com.tmdtud.cuahang.api.purchase_order.model.PurchaseOrders;
 
@@ -26,17 +27,17 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
-public class PurchaseOrdersDetails{
+public class PurchaseOrdersDetails {
     @EmbeddedId
     private PurchaseOrdersDetailsId id;
 
     @ManyToOne
-    @MapsId("purchase_order_id")
+    @MapsId("purchaseOrderId")
     @JoinColumn(name = "purchase_order_id", updatable = false)
     private PurchaseOrders purchaseOrder;
 
     @ManyToOne
-    @MapsId("product_id")
+    @MapsId("productId")
     @JoinColumn(name = "product_id", updatable = false)
     private Products product;
 
@@ -54,6 +55,6 @@ public class PurchaseOrdersDetails{
     private Timestamp createdAt;
 
     @Column(name = "updated_at")
-    @CreationTimestamp
+    @UpdateTimestamp
     private Timestamp updatedAt;
 }

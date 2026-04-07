@@ -37,7 +37,7 @@ public class CustomerController extends BaseController {
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return ApiResponse.success(customer.getAll(pageable));
+        return null;
     }
 
 }

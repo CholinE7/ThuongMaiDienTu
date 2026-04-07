@@ -1,5 +1,7 @@
 package com.tmdtud.cuahang.api.supplier;
 
+import java.util.List;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -10,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tmdtud.cuahang.api.supplier.dto.SupplierDTO;
+import com.tmdtud.cuahang.api.supplier.mapper.SupplierMapper;
+import com.tmdtud.cuahang.api.supplier.model.Suppliers;
 import com.tmdtud.cuahang.api.supplier.service.SupplierService;
 import com.tmdtud.cuahang.common.construct.BaseController;
 import com.tmdtud.cuahang.common.response.ApiResponse;
@@ -24,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class SupplierController extends BaseController {
 
     private final SupplierService supplier;
+    private final SupplierMapper supplierMapper;
 
     @GetMapping
     public ApiResponse<PageResponse<SupplierDTO>> getAll(
@@ -36,7 +41,20 @@ public class SupplierController extends BaseController {
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return ApiResponse.success(supplier.getAll(pageable));
+        PageResponse<Suppliers> pageResponse = supplier.getAll(pageable);
+        List<SupplierDTO> supplierDTOs = pageResponse.getContent()
+                                            .stream()
+                                            .map(item -> {
+                                                return supplierMapper.toDTO(item);
+                                            })
+                                            .toList();  
+        PageResponse<SupplierDTO> pageResponse2 = PageResponse.<SupplierDTO>builder()
+                                                    .content(supplierDTOs)
+                                                    .num(pageResponse.getNum())
+                                                    .size(pageResponse.getSize())
+                                                    .total(pageResponse.getTotal()).build();
+                                        
+        return ApiResponse.success(pageResponse2);
     }
 
 }
