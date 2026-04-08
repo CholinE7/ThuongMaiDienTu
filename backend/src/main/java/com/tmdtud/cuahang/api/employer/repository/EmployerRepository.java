@@ -6,8 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.tmdtud.cuahang.api.employer.model.Employers;
 
 @Repository
-public interface EmployerRepository extends JpaRepository<Employers, Long>{
- 
-    Employers findByUsername(String username);
-
+public interface EmployerRepository extends JpaRepository<Employers, Long> {
+    Employers findByEmail(String email);
 }

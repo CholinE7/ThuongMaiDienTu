@@ -11,4 +11,5 @@ import com.tmdtud.cuahang.api.customer.model.Customers;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface CustomerMapper {
     CustomerDTO toDTO(Customers customer);
+    Customers toEntity(CustomerDTO customerDTO);
 }

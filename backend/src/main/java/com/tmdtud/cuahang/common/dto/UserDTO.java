@@ -40,4 +40,10 @@ public class UserDTO {
 
     @Column(name = "date_of_birth")
     private String dateOfBirth;
+
+    @NotBlank(message = "Mật khẩu không được để trống")
+    @NotNull(message = "Mật khẩu không được để trống")
+    private String password;
+
+    private Integer status;
 }

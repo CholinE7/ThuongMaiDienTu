@@ -1,18 +1,45 @@
 'use client';
 
-import React from 'react';
-import { Mail, Lock, ArrowRight, Chrome, Github, ChevronLeft } from 'lucide-react';
-
-/**
- * LƯU Ý: Nếu bạn gặp lỗi import Navbar, hãy đảm bảo file Navbar.tsx tồn tại trong thư mục src/components.
- * Bạn có thể thay đổi đường dẫn thành "@/components/Navbar" nếu dự án đã cấu hình alias @.
- */
-// import Navbar from '../../components/Navbar'; 
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Mail, Lock, ArrowRight, Chrome, Github, ChevronLeft, Loader2 } from 'lucide-react';
 
 const LoginPage = () => {
-  const handleSubmit = (e: React.FormEvent) => {
+  // 1. Khai báo State để hứng dữ liệu từ Form
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  // 2. Hàm xử lý gửi dữ liệu sang Backend Spring Boot
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Đang xử lý đăng nhập...");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("http://localhost:8080/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Chú ý: Gửi 'email' vào trường 'username' để khớp với MyUserDetailsService của bạn
+        body: JSON.stringify({ username: email, password }), 
+      });
+
+      const token = await res.text();
+
+      if (res.ok && token !== "fail") {
+        // Lưu chìa khóa JWT vào túi của trình duyệt
+        localStorage.setItem("token", token);
+        alert("Đăng nhập thành công!");
+        router.push("/"); // Chuyển về trang chủ
+      } else {
+        alert("Email hoặc mật khẩu không chính xác!");
+      }
+    } catch (error) {
+      console.error("Lỗi kết nối:", error);
+      alert("Không thể kết nối tới Server. Hãy kiểm tra Backend và CORS!");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,6 +83,9 @@ const LoginPage = () => {
                 <input 
                   type="email" 
                   required
+                  // THÊM 2 DÒNG NÀY:
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-gray-100 border border-gray-340 placeholder:text-gray-500 focus:border-blue-500 focus:bg-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all font-medium text-gray-900 shadow-sm"
                   placeholder="email@example.com"
                 />
@@ -75,6 +105,8 @@ const LoginPage = () => {
                 <input 
                   type="password" 
                   required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-gray-100 border border-gray-3 placeholder:text-gray-500 focus:border-blue-500 focus:bg-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all font-medium text-gray-900 shadow-sm"
                   placeholder="••••••••"
                 />

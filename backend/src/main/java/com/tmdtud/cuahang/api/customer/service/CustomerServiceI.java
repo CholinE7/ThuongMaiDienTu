@@ -3,14 +3,19 @@ package com.tmdtud.cuahang.api.customer.service;
 
 import org.springframework.data.domain.Pageable;
 
+import com.tmdtud.cuahang.api.customer.dto.CustomerDTO;
 import com.tmdtud.cuahang.api.customer.model.Customers;
 import com.tmdtud.cuahang.common.response.PageResponse;
 
 
 public interface CustomerServiceI {
-    public PageResponse<Customers> getAll(Pageable pageable);
-    public Customers getById(Long id);
-    public void delete(Long id);
-    public void add(Customers customer);
-    public void update(Customers customer);
+
+    PageResponse<CustomerDTO> getAll(Pageable pageable);
+    
+    CustomerDTO getById(Long id); 
+    void delete(Long id);       
+    
+    void add(CustomerDTO customer);
+    void update(CustomerDTO customer);
 }
+

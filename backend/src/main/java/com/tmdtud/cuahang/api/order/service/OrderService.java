@@ -1,5 +1,7 @@
 package com.tmdtud.cuahang.api.order.service;
 
+import com.tmdtud.cuahang.api.customer.dto.CustomerDTO;
+import com.tmdtud.cuahang.api.customer.mapper.CustomerMapper;
 import com.tmdtud.cuahang.api.customer.model.Customers;
 import com.tmdtud.cuahang.api.customer.service.CustomerService;
 import com.tmdtud.cuahang.api.product.model.Products;
@@ -31,6 +33,7 @@ import com.tmdtud.cuahang.api.order_detail.model.OrdersDetails;
 import com.tmdtud.cuahang.api.order_detail.service.OrderDetailService;
 import com.tmdtud.cuahang.common.response.PageResponse;
 
+
 import lombok.Data;
 
 @Service
@@ -60,6 +63,9 @@ public class OrderService implements OrderServiceI {
     @Autowired
     private final ProductService productService;
 
+    @Autowired
+    private CustomerMapper customerMapper; 
+
     @Override
     public PageResponse<Orders> getAll(Pageable pageable) {
         Page<Orders> orders = orderRepository.findAll(pageable);
@@ -69,7 +75,8 @@ public class OrderService implements OrderServiceI {
     @Override
     @Transactional
     public Orders add(OrderStoreRequest request) {
-        Customers customer = customerService.getById(request.getCustomerId());
+        CustomerDTO customerDTO = customerService.getById(request.getCustomerId());
+         Customers customer = customerMapper.toEntity(customerDTO);
 
         Orders order = Orders.builder()
                 .customer(customer)

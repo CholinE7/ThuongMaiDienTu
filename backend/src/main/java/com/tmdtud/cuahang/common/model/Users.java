@@ -36,6 +36,8 @@ public class Users {
     @Column
     private String password;
 
+    @Column(name = "status")
+    private Integer status;
 
     @Column(name = "full_name")
     private String fullName;

@@ -23,19 +23,29 @@ public class MyUserDetailsService implements UserDetailsService {
     private EmployerRepository employerRepo;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        Customers customer = customerRepo.findByUsername(username);
-        if(customer != null){
+        // 1. Kiểm tra đối với Khách hàng (Customers)
+        Customers customer = customerRepo.findByEmail(email);
+        if (customer != null) {
+            // Kiểm tra nếu trạng thái là Bị khóa (0)
+            if (customer.getStatus() != null && customer.getStatus() == 0) {
+                throw new RuntimeException("Tài khoản khách hàng đã bị khóa!");
+            }
             return new CustomerDetails(customer);
         }
 
-        Employers employer = employerRepo.findByUsername(username);
-        if(employer != null){
+        // 2. Kiểm tra đối với Nhân viên (Employers)
+        Employers employer = employerRepo.findByEmail(email);
+        if (employer != null) {
+            // Kiểm tra nếu trạng thái là Bị khóa (0)
+            if (employer.getStatus() != null && employer.getStatus() == 0) {
+                throw new RuntimeException("Tài khoản nhân viên đã bị khóa!");
+            }
             System.out.println(employer);
             return new EmployerDetails(employer);
         }
 
-        throw new UsernameNotFoundException("Not found username in db" + username);
+        throw new UsernameNotFoundException("Not found email in db: " + email);
     }
 }
