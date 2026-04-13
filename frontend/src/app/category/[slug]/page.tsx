@@ -7,7 +7,7 @@ import ProductCard from '@/src/components/ProductCard';
 import { products } from '@/src/data/products';
 import { SlidersHorizontal, ChevronDown, X } from 'lucide-react';
 
-const SORT_OPTIONS = ["Tùy chọn", "Giá: Tăng dần", "Giá: Giảm dần", "Ngày: Mới đến cũ", "Ngày: Cũ đến mới"];
+const SORT_OPTIONS = ["Tùy chọn", "Giá: Tăng dần", "Giá: Giảm dần"];
 const COLOR_FILTERS = [
   { name: "Màu Đen", hex: "#000000" }, { name: "Màu Trắng", hex: "#FFFFFF" },
   { name: "Màu Be", hex: "#F5DEB3" }, { name: "Màu Nâu", hex: "#A0522D" }, { name: "Màu Xám", hex: "#555555" }
@@ -101,8 +101,7 @@ export default function CategoryPage() {
 
   if (selectedSort === "Giá: Tăng dần") finalProducts.sort((a, b) => a.price - b.price);
   else if (selectedSort === "Giá: Giảm dần") finalProducts.sort((a, b) => b.price - a.price);
-  else if (selectedSort === "Ngày: Mới đến cũ") finalProducts.sort((a: any, b: any) => b.id - a.id);
-  else if (selectedSort === "Ngày: Cũ đến mới") finalProducts.sort((a: any, b: any) => a.id - b.id);
+  
 
   // 5. THUẬT TOÁN PHÂN TRANG (CẮT MẢNG THEO TRANG HIỆN TẠI)
   const totalPages = Math.ceil(finalProducts.length / PRODUCTS_PER_PAGE);
