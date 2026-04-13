@@ -4,6 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 
 import com.tmdtud.cuahang.api.employer.dto.EmployerDTO;
+import com.tmdtud.cuahang.api.employer.dto.EmployerSummaryDTO;
 import com.tmdtud.cuahang.api.employer.model.Employers;
 
 
@@ -11,4 +12,5 @@ import com.tmdtud.cuahang.api.employer.model.Employers;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface EmployerMapper {
     EmployerDTO toDTO(Employers employer);
+    EmployerSummaryDTO toSummaryDTO(Employers employer);
 }

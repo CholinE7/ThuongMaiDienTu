@@ -1,4 +1,4 @@
-package com.tmdtud.cuahang.api.purchase_order;
+package com.tmdtud.cuahang.api.order.model;
 
 /**
  * Vòng đời đơn hàng (một chiều, không thể lùi):

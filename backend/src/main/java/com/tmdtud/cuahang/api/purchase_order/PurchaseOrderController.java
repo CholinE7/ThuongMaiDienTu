@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tmdtud.cuahang.api.order.model.Orders;
 import com.tmdtud.cuahang.api.purchase_order.dto.PurOrdHasDetailDTO;
 import com.tmdtud.cuahang.api.purchase_order.model.PurchaseOrders;
 import com.tmdtud.cuahang.api.purchase_order.request.PurchaseOrderUpdateRequest;
+import com.tmdtud.cuahang.api.purchase_order.request.UpdateStatusRequest;
 import com.tmdtud.cuahang.api.purchase_order.service.PurchaseOrderService;
 import com.tmdtud.cuahang.common.construct.BaseController;
 import com.tmdtud.cuahang.common.response.ApiResponse;
@@ -50,14 +52,14 @@ public class PurchaseOrderController extends BaseController {
         PageResponse<PurchaseOrders> pageResponse = purchaseOrderService.getAll(pageable);
         List<PurchaseOrders> purchaseOrders = pageResponse.getContent();
         List<PurOrdHasDetailDTO> purOrdHasDetailDTOs = purchaseOrders.stream()
-                                                        .map(item -> purchaseOrderService.toPurOrdHasDetailDTO(item))
-                                                        .collect(Collectors.toList());
+                .map(item -> purchaseOrderService.toPurOrdHasDetailDTO(item))
+                .collect(Collectors.toList());
         PageResponse<PurOrdHasDetailDTO> pageResponse2 = PageResponse.<PurOrdHasDetailDTO>builder()
-                                                        .content(purOrdHasDetailDTOs)
-                                                        .num(pageResponse.getNum())
-                                                        .size(pageResponse.getSize())
-                                                        .total(pageResponse.getTotal()).build();
-                                            
+                .content(purOrdHasDetailDTOs)
+                .num(pageResponse.getNum())
+                .size(pageResponse.getSize())
+                .total(pageResponse.getTotal()).build();
+
         return ApiResponse.success(pageResponse2);
     }
 
@@ -82,5 +84,10 @@ public class PurchaseOrderController extends BaseController {
     public ApiResponse<PurOrdHasDetailDTO> update(@Validated @RequestBody PurchaseOrderUpdateRequest request) {
         PurchaseOrders purchaseOrders = purchaseOrderService.update(request);
         return ApiResponse.success(purchaseOrderService.toPurOrdHasDetailDTO(purchaseOrders));
+    }
+
+    @PutMapping("/status")
+    public ApiResponse<Boolean> updateStatus(@Validated @RequestBody UpdateStatusRequest request) {
+        return ApiResponse.success(purchaseOrderService.updateStatus(request));
     }
 }

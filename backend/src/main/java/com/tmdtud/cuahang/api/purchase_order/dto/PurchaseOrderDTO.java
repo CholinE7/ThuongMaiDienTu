@@ -3,8 +3,8 @@ package com.tmdtud.cuahang.api.purchase_order.dto;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
-import com.tmdtud.cuahang.api.employer.model.Employers;
-import com.tmdtud.cuahang.api.supplier.model.Suppliers;
+import com.tmdtud.cuahang.api.employer.dto.EmployerSummaryDTO;
+import com.tmdtud.cuahang.api.supplier.dto.SupplierDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,9 +22,9 @@ public class PurchaseOrderDTO{
 
     private BigDecimal totalPrice;
 
-    private Suppliers supplier;
+    private SupplierDTO supplier;
 
-    private Employers employer;
+    private EmployerSummaryDTO employer;
 
     private String method;
 }

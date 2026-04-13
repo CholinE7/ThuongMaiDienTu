@@ -10,12 +10,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.tmdtud.cuahang.api.order.model.Orders;
+import com.tmdtud.cuahang.api.order_detail.model.OrdersDetails;
+import com.tmdtud.cuahang.api.order_detail.model.OrdersDetailsId;
+import com.tmdtud.cuahang.api.order_detail.request.OrderDetailUpdateRequest;
 import com.tmdtud.cuahang.api.product.model.Products;
 import com.tmdtud.cuahang.api.product.service.ProductService;
 import com.tmdtud.cuahang.api.purchase_order.model.PurchaseOrders;
 import com.tmdtud.cuahang.api.purchase_order.service.PurchaseOrderService;
-
 import com.tmdtud.cuahang.api.purchase_orders_detail.model.PurchaseOrdersDetails;
+import com.tmdtud.cuahang.api.purchase_orders_detail.model.PurchaseOrdersDetailsId;
 import com.tmdtud.cuahang.api.purchase_orders_detail.repository.PurchaseOrderDetailRepository;
 import com.tmdtud.cuahang.api.purchase_orders_detail.request.PurchaseOrderDetailStoreRequest;
 import com.tmdtud.cuahang.api.purchase_orders_detail.request.PurchaseOrderDetailUpdateRequest;
@@ -45,15 +49,16 @@ public class PurchaseOrderDetailService implements PurchaseOrderDetailServiceI {
 
     @Override
     public PurchaseOrdersDetails add(PurchaseOrderDetailStoreRequest request) {
-        PurchaseOrders purchaseOrderDTO = purchaseOrderService.getById(request.getPurchase_order_id());
-        Products products = productService.getById(request.getProduct_id());
+        // PurchaseOrders purchaseOrderDTO =
+        // purchaseOrderService.getById(request.getPurchase_order_id());
+        Products products = productService.getById(request.getProductId());
 
         PurchaseOrdersDetails purchase = PurchaseOrdersDetails.builder()
-                                            .cost(request.getCost())
-                                            .total(request.getTotal())
-                                            .product(products)
-                                            .purchaseOrder(purchaseOrderDTO)
-                                            .quantity(request.getQuantity()).build();
+                .cost(request.getCost())
+                .total(request.getTotal())
+                .product(products)
+                // .purchaseOrder(purchaseOrderDTO)
+                .quantity(request.getQuantity()).build();
         return purchaseOrderDetailRepo.save(purchase);
     }
 
@@ -65,13 +70,14 @@ public class PurchaseOrderDetailService implements PurchaseOrderDetailServiceI {
 
     @Override
     public PurchaseOrdersDetails getById(Long purchase, Long product) {
-        return purchaseOrderDetailRepo.getByBothId(purchase, product).orElse(null);
+        return purchaseOrderDetailRepo.getByBothId(purchase, product);
     }
 
     @Override
-    public PurchaseOrdersDetails update(PurchaseOrderDetailUpdateRequest request) {
-        PurchaseOrdersDetails purchaseOrdersDetails = purchaseOrderDetailRepo.getByBothId(request.getPurchase_order_id(), request.getProduct_id()).orElse(null);
-    
+    public PurchaseOrdersDetails update(PurchaseOrderDetailUpdateRequest request, Long purchaseOrderId) {
+        PurchaseOrdersDetails purchaseOrdersDetails = purchaseOrderDetailRepo
+                .getByBothId(purchaseOrderId, request.getProductId());
+
         purchaseOrdersDetails.setCost(request.getCost());
         purchaseOrdersDetails.setQuantity(request.getQuantity());
         purchaseOrdersDetails.setTotal(request.getTotal());
@@ -79,52 +85,59 @@ public class PurchaseOrderDetailService implements PurchaseOrderDetailServiceI {
     }
 
     @Override
-    public List<PurchaseOrdersDetails> addAll(List<PurchaseOrderDetailStoreRequest> requests){
+    public List<PurchaseOrdersDetails> addAll(List<PurchaseOrderDetailStoreRequest> requests, Long purchaseOrderId) {
         List<PurchaseOrdersDetails> purchaseOrderDetailList = requests
-                                                                .stream()
-                                                                .map((item) -> {
-                                                                    Products product = productService.getById(item.getProduct_id());
-                                                                    PurchaseOrders purchaseOrders = purchaseOrderService.getById(item.getPurchase_order_id());
-                                                                    PurchaseOrdersDetails _new = PurchaseOrdersDetails.builder()
-                                                                                                    .product(product)
-                                                                                                    .purchaseOrder(purchaseOrders)
-                                                                                                    .quantity(item.getQuantity())
-                                                                                                    .total(item.getTotal()).build();
-                                                                    return _new;             
-                                                                })
-                                                                .collect(Collectors.toList());
-        return new ArrayList<PurchaseOrdersDetails>(purchaseOrderDetailRepo.saveAll(purchaseOrderDetailList));
-    }
-
-    @Override
-    public List<PurchaseOrdersDetails> getByPurOrderId(Long id){
-        return 
-            purchaseOrderDetailRepo.getByPurOrderId(id)
                 .stream()
-                .map(item -> item.orElse(null))
+                .map((item) -> {
+                    Products product = productService.getById(item.getProductId());
+                    PurchaseOrders purchaseOrders = purchaseOrderService.getById(purchaseOrderId);
+                    PurchaseOrdersDetailsId id = new PurchaseOrdersDetailsId(item.getProductId(), purchaseOrderId);
+
+                    PurchaseOrdersDetails _new = PurchaseOrdersDetails.builder()
+                            .product(product)
+                            .purchaseOrder(purchaseOrders)
+                            .quantity(item.getQuantity())
+                            .id(id)
+                            .cost(item.getCost())
+                            .total(item.getTotal()).build();
+                    return _new;
+                })
                 .collect(Collectors.toList());
+        return new ArrayList<PurchaseOrdersDetails>(purchaseOrderDetailRepo.saveAll(purchaseOrderDetailList));
     }
 
     @Override
-    public List<PurchaseOrdersDetails> updateAll(List<PurchaseOrderDetailUpdateRequest> requests){
+    public List<PurchaseOrdersDetails> getByPurOrderId(Long id) {
+        return purchaseOrderDetailRepo.getByPurOrderId(id);
+    }
+
+    @Override
+    public List<PurchaseOrdersDetails> updateAll(List<PurchaseOrderDetailUpdateRequest> requests,
+            Long purchaseOrderId) {
         List<PurchaseOrdersDetails> purchaseOrderDetailList = requests
-                                                                .stream()
-                                                                .map((item) -> {
-                                                                    Products product = productService.getById(item.getProduct_id());
-                                                                    PurchaseOrders purchaseOrders = purchaseOrderService.getById(item.getPurchase_order_id());
-                                                                    PurchaseOrdersDetails _new = PurchaseOrdersDetails.builder()
-                                                                                                    .product(product)
-                                                                                                    .purchaseOrder(purchaseOrders)
-                                                                                                    .quantity(item.getQuantity())
-                                                                                                    .total(item.getTotal()).build();
-                                                                    return _new;             
-                                                                })
-                                                                .collect(Collectors.toList());
+                .stream()
+                .map((item) -> {
+                    Products product = productService.getById(item.getProductId());
+                    PurchaseOrders purchaseOrders = purchaseOrderService.getById(purchaseOrderId);
+                    PurchaseOrdersDetailsId purchaseOrdersDetailsId = PurchaseOrdersDetailsId.builder()
+                            .productId(item.getProductId())
+                            .purchaseOrderId(purchaseOrderId)
+                            .build();
+                    PurchaseOrdersDetails _new = PurchaseOrdersDetails.builder()
+                            .product(product)
+                            .purchaseOrder(purchaseOrders)
+                            .quantity(item.getQuantity())
+                            .id(purchaseOrdersDetailsId)
+                            .cost(item.getCost())
+                            .total(item.getTotal()).build();
+                    return _new;
+                })
+                .collect(Collectors.toList());
         return new ArrayList<PurchaseOrdersDetails>(purchaseOrderDetailRepo.saveAll(purchaseOrderDetailList));
     }
- 
+
     @Override
-    public int deleteByPurchaseOrder(Long id){
+    public int deleteByPurchaseOrder(Long id) {
         return purchaseOrderDetailRepo.deleteByPurchaseOrder(id);
     }
 }

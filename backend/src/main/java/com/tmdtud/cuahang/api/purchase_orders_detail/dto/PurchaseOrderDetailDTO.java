@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import com.tmdtud.cuahang.api.customer.model.Customers;
 import com.tmdtud.cuahang.api.employer.model.Employers;
+import com.tmdtud.cuahang.api.product.dto.ProductSummaryDTO;
 import com.tmdtud.cuahang.api.product.model.Products;
 
 import jakarta.validation.constraints.DecimalMin;
@@ -19,9 +20,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PurchaseOrderDetailDTO{
-    private Products product;
-
-    private Long purchaseOrderId;
+    private ProductSummaryDTO product;
 
     private int quantity;
 

@@ -1,7 +1,6 @@
 package com.tmdtud.cuahang.api.purchase_orders_detail.repository;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -11,9 +10,8 @@ import org.springframework.stereotype.Repository;
 import com.tmdtud.cuahang.api.purchase_orders_detail.model.PurchaseOrdersDetails;
 import com.tmdtud.cuahang.api.purchase_orders_detail.model.PurchaseOrdersDetailsId;
 
-
 @Repository
-public interface PurchaseOrderDetailRepository extends JpaRepository<PurchaseOrdersDetails, PurchaseOrdersDetailsId>{
+public interface PurchaseOrderDetailRepository extends JpaRepository<PurchaseOrdersDetails, PurchaseOrdersDetailsId> {
     @Modifying
     @Query(value = "DELETE FROM purchase_orders_details WHERE purchase_order_id = ?1", nativeQuery = true)
     int deleteByPurchaseOrder(Long id);
@@ -24,9 +22,9 @@ public interface PurchaseOrderDetailRepository extends JpaRepository<PurchaseOrd
 
     @Modifying
     @Query(value = "SELECT * FROM purchase_orders_details WHERE purchase_order_id = ?1 and product_id = ?2", nativeQuery = true)
-    Optional<PurchaseOrdersDetails> getByBothId(Long purchase_order_id, Long product_id);
+    PurchaseOrdersDetails getByBothId(Long purchase_order_id, Long product_id);
 
     @Modifying
     @Query(value = "SELECT * FROM purchase_orders_details WHERE purchase_order_id = ?1", nativeQuery = true)
-    List<Optional<PurchaseOrdersDetails>> getByPurOrderId(Long purOrderId);
+    List<PurchaseOrdersDetails> getByPurOrderId(Long purOrderId);
 }

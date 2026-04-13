@@ -39,4 +39,7 @@ public class ProductUpdateRequest {
 
     @NotNull(message = "category not null")
     private Long category_id;
+
+    @NotNull(message = "deleted not null")
+    private int deleted;
 }

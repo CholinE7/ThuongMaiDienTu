@@ -27,8 +27,6 @@ import com.tmdtud.cuahang.api.brand.service.BrandService;
 import com.tmdtud.cuahang.common.response.ApiResponse;
 import com.tmdtud.cuahang.common.response.PageResponse;
 
-import lombok.RequiredArgsConstructor;
-
 @RequestMapping("api/brands")
 @RestController
 @Validated

@@ -11,12 +11,10 @@ import com.tmdtud.cuahang.api.purchase_order.model.PurchaseOrders;
 import com.tmdtud.cuahang.api.purchase_orders_detail.mapper.PurchaseOrderDetailMapper;
 import com.tmdtud.cuahang.api.purchase_orders_detail.model.PurchaseOrdersDetails;
 
-@Mapper(
-    componentModel = MappingConstants.ComponentModel.SPRING,
-    uses = {PurchaseOrderMapper.class, PurchaseOrderDetailMapper.class}
-)
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = { PurchaseOrderMapper.class,
+        PurchaseOrderDetailMapper.class })
 public interface PurchaseOrderAggregateMapper {
-    @Mapping(source = "order", target = "purchaseOrderDTO")
-    @Mapping(source = "details", target = "purchaseOrderDetailDTOs")
+    @Mapping(source = "order", target = "purchaseOrder")
+    @Mapping(source = "details", target = "details")
     PurOrdHasDetailDTO toPurOrdHasDetailDTO(PurchaseOrders order, List<PurchaseOrdersDetails> details);
 }

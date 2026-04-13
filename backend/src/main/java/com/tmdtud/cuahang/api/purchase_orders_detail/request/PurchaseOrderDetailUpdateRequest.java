@@ -13,10 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PurchaseOrderDetailUpdateRequest {
     @NotNull(message = "id product not null")
-    private Long product_id;
-
-    @NotNull(message = "id purchase_order not null")
-    private Long purchase_order_id;
+    private Long productId;
 
     @NotNull(message = "quantity not null")
     private int quantity;

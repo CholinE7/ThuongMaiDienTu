@@ -14,6 +14,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PurOrdHasDetailDTO {
-    private PurchaseOrderDTO purchaseOrderDTO;
-    private List<PurchaseOrderDetailDTO> purchaseOrderDetailDTOs;
+    private PurchaseOrderDTO purchaseOrder;
+    private List<PurchaseOrderDetailDTO> details;
 }

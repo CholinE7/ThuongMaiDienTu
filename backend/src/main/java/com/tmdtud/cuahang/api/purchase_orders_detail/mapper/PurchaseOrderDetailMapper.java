@@ -10,15 +10,10 @@ import com.tmdtud.cuahang.api.product.mapper.ProductMapper;
 import com.tmdtud.cuahang.api.purchase_orders_detail.dto.PurchaseOrderDetailDTO;
 import com.tmdtud.cuahang.api.purchase_orders_detail.model.PurchaseOrdersDetails;
 
-
-@Mapper(
-    componentModel = MappingConstants.ComponentModel.SPRING,
-    uses = {ProductMapper.class}
-)
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = { ProductMapper.class })
 public interface PurchaseOrderDetailMapper {
-    @Mapping(source = "purchaseOrder.id", target = "purchaseOrderId")
     @Mapping(source = "product", target = "product")
     PurchaseOrderDetailDTO toDTO(PurchaseOrdersDetails purchaseOrdersDetails);
-    
+
     List<PurchaseOrderDetailDTO> toDTOList(List<PurchaseOrdersDetails> purchaseOrdersDetails);
 }

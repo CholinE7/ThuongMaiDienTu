@@ -5,7 +5,8 @@ import org.springframework.stereotype.Repository;
 
 import com.tmdtud.cuahang.api.supplier.model.Suppliers;
 
+
 @Repository
-public interface SupplierRepository extends JpaRepository<Suppliers, Long>{
+public interface SupplierRepository extends JpaRepository<Suppliers, Long> {
 
 }
