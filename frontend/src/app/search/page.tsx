@@ -1,23 +1,39 @@
 "use client";
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Navbar from '@/src/components/Navbar';
 import ProductCard from '@/src/components/ProductCard';
 import { products } from '@/src/data/products';
-import { Search } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
-// Component con xử lý logic tìm kiếm
+// Số lượng sản phẩm hiển thị trên 1 trang
+const ITEMS_PER_PAGE = 8;
+
 function SearchContent() {
   const searchParams = useSearchParams();
-  const query = searchParams.get('q') || ""; // Lấy từ khóa "q" từ URL
+  const query = searchParams.get('q') || ""; 
   const queryLower = query.toLowerCase();
 
-  // Lọc sản phẩm khớp với Tên hoặc Danh mục
+  // State lưu trang hiện tại
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset về trang 1 mỗi khi người dùng đổi từ khóa tìm kiếm mới
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query]);
+
+  // 1. Lọc sản phẩm (Đạt yêu cầu 3)
   const searchResults = products.filter(product => 
     product.name.toLowerCase().includes(queryLower) ||
     product.category.toLowerCase().includes(queryLower)
   );
+
+  // 2. Logic Phân trang (Đạt yêu cầu 4)
+  const totalPages = Math.ceil(searchResults.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  // Cắt ra danh sách sản phẩm chỉ riêng cho trang hiện tại
+  const paginatedResults = searchResults.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <div className="pt-24 pb-20 container mx-auto px-4">
@@ -32,20 +48,56 @@ function SearchContent() {
         <div className="w-16 h-0.5 bg-gray-300 mx-auto mt-4"></div>
       </div>
 
-      {/* Danh sách sản phẩm */}
+      {/* Danh sách sản phẩm theo trang */}
       {searchResults.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
-          {searchResults.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12 mb-12">
+            {paginatedResults.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+
+          {/* THANH PHÂN TRANG (PAGINATION UI) */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2">
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+                disabled={currentPage === 1} 
+                className={`w-10 h-10 flex items-center justify-center border rounded-lg transition ${currentPage === 1 ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50" : "border-gray-300 text-gray-600 bg-white hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 shadow-sm"}`}
+              >
+                <ChevronLeft size={20} />
+              </button>
+              
+              {Array.from({ length: totalPages }).map((_, index) => {
+                const pageNumber = index + 1;
+                return (
+                  <button 
+                    key={pageNumber} 
+                    onClick={() => setCurrentPage(pageNumber)} 
+                    className={`w-10 h-10 flex items-center justify-center border rounded-lg font-bold transition shadow-sm ${currentPage === pageNumber ? "border-blue-600 bg-blue-600 text-white shadow-md" : "border-gray-300 bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"}`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              })}
+
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+                disabled={currentPage === totalPages} 
+                className={`w-10 h-10 flex items-center justify-center border rounded-lg transition ${currentPage === totalPages ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50" : "border-gray-300 text-gray-600 bg-white hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 shadow-sm"}`}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
+        </>
       ) : (
         /* Giao diện khi không tìm thấy kết quả nào */
         <div className="flex flex-col items-center justify-center py-20 text-gray-500">
           <Search size={60} className="text-gray-200 mb-6" />
           <h2 className="text-xl font-medium text-gray-800 mb-2">Không tìm thấy sản phẩm nào!</h2>
           <p>Xin lỗi, chúng tôi không tìm thấy sản phẩm nào khớp với từ khóa của bạn.</p>
-          <p>Vui lòng thử lại với một từ khóa khác ngắn gọn hơn (Ví dụ: "G270", "Nam").</p>
+          <p>Vui lòng thử lại với một từ khóa khác ngắn gọn hơn.</p>
         </div>
       )}
     </div>
@@ -57,9 +109,6 @@ export default function SearchPage() {
   return (
     <main className="min-h-screen bg-white font-sans">
       <Navbar />
-      {/* Bắt buộc phải bọc trong Suspense khi dùng useSearchParams 
-        để tránh lỗi khi build dự án trên Next.js 
-      */}
       <Suspense fallback={<div className="pt-32 text-center text-gray-500">Đang tìm kiếm...</div>}>
         <SearchContent />
       </Suspense>
