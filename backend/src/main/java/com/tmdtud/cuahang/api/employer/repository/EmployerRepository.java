@@ -8,4 +8,7 @@ import com.tmdtud.cuahang.api.employer.model.Employers;
 @Repository
 public interface EmployerRepository extends JpaRepository<Employers, Long> {
     Employers findByEmail(String email);
+    boolean existsByEmail(String email);
+    boolean existsByPhone(String phone);
+
 }

@@ -64,13 +64,15 @@ public class CustomerService implements CustomerServiceI {
         customer.save(entity);
     }
 
-    @Override
+   @Override
     public void update(CustomerDTO customerDTO) {
-        // Kiểm tra xem ID có tồn tại trước khi cập nhật không
-        if (!customer.existsById(customerDTO.getId())) {
-            throw new RuntimeException("ID khách hàng không tồn tại để cập nhật");
-        }
-        Customers entity = customerMapper.toEntity(customerDTO);
-        customer.save(entity);
+        // 1. Tìm khách hàng cũ trong DB
+        Customers existing = customer.findById(customerDTO.getId())
+                .orElseThrow(() -> new RuntimeException("ID khách hàng không tồn tại"));
+    
+        customerMapper.updateEntityFromDTO(customerDTO, existing);
+        
+        // 3. Lưu lại entity đã được cập nhật
+        customer.save(existing);
     }
 }

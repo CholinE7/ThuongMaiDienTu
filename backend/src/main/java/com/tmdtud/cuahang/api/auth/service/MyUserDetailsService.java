@@ -24,28 +24,24 @@ public class MyUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // 1. Kiểm tra Nhân viên trước (Ưu tiên)
+        Employers employer = employerRepo.findByEmail(email);
+        if (employer != null) {
+            if (employer.getStatus() == 0) throw new RuntimeException("Tài khoản nhân viên bị khóa");
+            
+            // Trả về EmployerDetails kèm Role: ROLE_STAFF
+            return new EmployerDetails(employer); 
+        }
 
-        // 1. Kiểm tra đối với Khách hàng (Customers)
+        // 2. Kiểm tra Khách hàng
         Customers customer = customerRepo.findByEmail(email);
         if (customer != null) {
-            // Kiểm tra nếu trạng thái là Bị khóa (0)
-            if (customer.getStatus() != null && customer.getStatus() == 0) {
-                throw new RuntimeException("Tài khoản khách hàng đã bị khóa!");
-            }
+            if (customer.getStatus() == 0) throw new RuntimeException("Tài khoản khách hàng bị khóa");
+            
+            // Trả về CustomerDetails kèm Role: ROLE_USER
             return new CustomerDetails(customer);
         }
 
-        // 2. Kiểm tra đối với Nhân viên (Employers)
-        Employers employer = employerRepo.findByEmail(email);
-        if (employer != null) {
-            // Kiểm tra nếu trạng thái là Bị khóa (0)
-            if (employer.getStatus() != null && employer.getStatus() == 0) {
-                throw new RuntimeException("Tài khoản nhân viên đã bị khóa!");
-            }
-            System.out.println(employer);
-            return new EmployerDetails(employer);
-        }
-
-        throw new UsernameNotFoundException("Not found email in db: " + email);
+        throw new UsernameNotFoundException("Không tìm thấy email: " + email);
     }
 }

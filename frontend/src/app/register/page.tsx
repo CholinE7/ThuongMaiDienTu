@@ -18,6 +18,7 @@ export default function RegisterPage() {
     lastName: '', 
     phone: '',
     dateOfBirth: '',
+    address: '',
   });
 
   // Hàm cập nhật state chung
@@ -49,6 +50,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       fullName: `${formData.lastName} ${formData.firstName}`.trim(),
       phone: formData.phone,
       dateOfBirth: formData.dateOfBirth,
+      address: formData.address,
     };
 
     try {
@@ -143,6 +145,18 @@ const handleSubmit = async (e: React.FormEvent) => {
                     </button>
                   </div>
                 </div>
+                <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Địa chỉ hiện tại *</label>
+                    <input 
+                      name="address" 
+                      type="text" 
+                      required // Nếu bạn muốn bắt buộc nhập
+                      value={formData.address} 
+                      onChange={handleChange}
+                      placeholder="Số nhà, tên đường, quận/huyện..."
+                      className="w-full bg-gray-100 border border-gray-300 rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900 focus:bg-white focus:border-blue-500"
+                    />
+                  </div>
               </div>
 
               {/* CỘT PHẢI */}

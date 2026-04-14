@@ -50,4 +50,7 @@ public class Users {
 
     @Column(name = "date_of_birth")
     private String dateOfBirth;
+
+    @Column(name = "address")
+    private String address;
 }

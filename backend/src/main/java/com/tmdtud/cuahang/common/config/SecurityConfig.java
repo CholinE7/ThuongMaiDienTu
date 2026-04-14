@@ -35,7 +35,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> request
-                .requestMatchers("/login", "/api/customers/register/customers").permitAll()                    
+                .requestMatchers("/login", "/api/customers/register/customers").permitAll()   
+                .requestMatchers("/api/employers/**").hasAnyRole("STAFF", "ADMIN")
+            //    .requestMatchers("/api/employers/**").permitAll() // Cho phép tất cả truy cập vào endpoint này (dùng để test)
+                .requestMatchers("/api/customers/**").hasAnyRole("STAFF", "ADMIN")
                 .anyRequest().authenticated()) 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())

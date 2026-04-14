@@ -46,4 +46,6 @@ public class UserDTO {
     private String password;
 
     private Integer status;
+
+    private String address;
 }

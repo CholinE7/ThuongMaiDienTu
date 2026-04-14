@@ -20,7 +20,7 @@ public class EmployerDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority("ROLE_EMPLOYER"));
+        return Collections.singleton(new SimpleGrantedAuthority("ROLE_STAFF"));
     }
 
     @Override
