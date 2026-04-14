@@ -1,9 +1,9 @@
 "use client"; 
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // THÊM DÒNG NÀY ĐỂ CHUYỂN TRANG
-import { ShoppingCart, Search, User, Menu, X } from 'lucide-react';
+import { useRouter } from 'next/navigation'; 
+import { ShoppingCart, Search, User, Menu, X, LogOut, FileText } from 'lucide-react';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -12,13 +12,30 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
+  // --- STATE LƯU THÔNG TIN ĐĂNG NHẬP ---
+  const [userName, setUserName] = useState<string | null>(null);
+
+  // KHI NAVBAR LOAD LÊN, KIỂM TRA XEM CÓ TÊN NGƯỜI DÙNG TRONG LOCAL STORAGE KHÔNG
+  useEffect(() => {
+    const storedName = localStorage.getItem("customerName");
+    if (storedName) {
+      setUserName(storedName);
+    }
+  }, []);
+
+  // HÀM XỬ LÝ ĐĂNG XUẤT
+  const handleLogout = () => {
+    localStorage.removeItem("customerName"); // Xóa dữ liệu đăng nhập
+    setUserName(null); // Xóa trên giao diện
+    router.push('/'); 
+  };
+
   // Hàm xử lý khi người dùng bấm Enter hoặc Kính lúp
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault(); // Ngăn trang bị reload lại
+    e.preventDefault(); 
     if (searchQuery.trim() !== "") {
-      // Chuyển hướng sang trang /search kèm theo từ khóa
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setIsMobileMenuOpen(false); // Đóng menu nếu đang ở trên điện thoại
+      setIsMobileMenuOpen(false); 
     }
   };
 
@@ -26,23 +43,18 @@ export default function Navbar() {
     <nav className="fixed top-0 w-full bg-white shadow-md z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
 
-        
-        {/* LOGO */}
-
         {/* 1. LOGO */}
-
         <Link href="/" className="text-2xl font-bold text-gray-800 flex-shrink-0">
           SHOE<span className="text-blue-600">STORE</span>
         </Link>
 
         {/* THANH TÌM KIẾM (Desktop) */}
         <div className="hidden md:block flex-1 max-w-md mx-8">
-          {/* Bọc input bằng thẻ form */}
           <form onSubmit={handleSearch} className="relative group">
             <input 
               type="text" 
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)} // Lưu chữ khách gõ
+              onChange={(e) => setSearchQuery(e.target.value)} 
               placeholder="Tìm tên hoặc danh mục..." 
               className="w-full bg-gray-100 border border-transparent text-gray-800 text-sm rounded-full pl-4 pr-12 py-2.5 focus:outline-none focus:bg-white focus:border-blue-500 transition-all"
             />
@@ -61,15 +73,46 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4">
+            
+            {/* KIỂM TRA ĐĂNG NHẬP ĐỂ HIỂN THỊ TÊN HOẶC NÚT ĐĂNG NHẬP */}
             <div className="relative group cursor-pointer">
-              <div className="p-2 rounded-full text-gray-600 group-hover:bg-gray-100 group-hover:text-blue-600 transition">
-                <User size={24} />
-              </div>
-              <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-y-1 transition-all duration-300 z-50">
+              {userName ? (
+                // --- ĐÃ ĐĂNG NHẬP ---
+                <div className="flex items-center gap-2 p-2 rounded-full text-gray-700 hover:bg-gray-100 transition">
+                  <div className="bg-blue-100 text-blue-600 p-1.5 rounded-full">
+                    <User size={18} />
+                  </div>
+                  <span className="font-bold text-sm hidden md:block max-w-[120px] truncate">
+                    {userName}
+                  </span>
+                </div>
+              ) : (
+                // --- CHƯA ĐĂNG NHẬP ---
+                <div className="p-2 rounded-full text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition">
+                  <User size={24} />
+                </div>
+              )}
+
+              <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-y-1 transition-all duration-300 z-50">
                 <div className="absolute -top-4 left-0 w-full h-4 bg-transparent"></div>
                 <div className="py-2 flex flex-col">
-                  <Link href="/login" className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">Đăng nhập</Link>
-                  <Link href="/register" className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">Đăng ký</Link>
+                  {userName ? (
+                    // Menu khi đã đăng nhập
+                    <>
+                      <div className="px-4 py-2 border-b border-gray-100 md:hidden">
+                        <span className="text-sm font-bold text-blue-600">Xin chào, {userName}</span>
+                      </div>
+                      <Link href="/profile" className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2"><User size={16}/> Tài khoản của tôi</Link>
+                      <Link href="/orders" className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2"><FileText size={16}/> Lịch sử mua hàng</Link>
+                      <button onClick={handleLogout} className="px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 transition flex items-center gap-2 text-left border-t border-gray-100 mt-1"><LogOut size={16}/> Đăng xuất</button>
+                    </>
+                  ) : (
+                    // Menu khi chưa đăng nhập
+                    <>
+                      <Link href="/login" className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">Đăng nhập</Link>
+                      <Link href="/register" className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">Đăng ký</Link>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -109,9 +152,20 @@ export default function Navbar() {
           <Link href="/category/nu" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Giày Thể Thao Nữ</Link>
           <Link href="/category/cap" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Giày Cặp</Link>
           
-          <div className="flex gap-4 pt-2">
-            <Link href="/login" className="flex-1 text-center bg-gray-100 text-gray-800 py-2 rounded-lg font-semibold">Đăng nhập</Link>
-            <Link href="/register" className="flex-1 text-center bg-blue-600 text-white py-2 rounded-lg font-semibold">Đăng ký</Link>
+          <div className="flex flex-col gap-2 pt-2">
+            {userName ? (
+              <>
+                <div className="py-2 text-center text-sm text-gray-500">Đang đăng nhập với: <span className="font-bold text-blue-600">{userName}</span></div>
+                <Link href="/profile" className="w-full text-center bg-gray-100 text-gray-800 py-2.5 rounded-lg font-semibold">Tài khoản của tôi</Link>
+                <Link href="/orders" className="w-full text-center bg-gray-100 text-gray-800 py-2.5 rounded-lg font-semibold">Lịch sử đơn hàng</Link>
+                <button onClick={handleLogout} className="w-full text-center bg-red-50 text-red-600 py-2.5 rounded-lg font-bold">Đăng xuất</button>
+              </>
+            ) : (
+              <div className="flex gap-4">
+                <Link href="/login" className="flex-1 text-center bg-gray-100 text-gray-800 py-2.5 rounded-lg font-semibold">Đăng nhập</Link>
+                <Link href="/register" className="flex-1 text-center bg-blue-600 text-white py-2.5 rounded-lg font-semibold">Đăng ký</Link>
+              </div>
+            )}
           </div>
         </div>
       )}
