@@ -5,25 +5,30 @@ import { Search, RefreshCcw, CheckCircle2, Clock, XCircle, Eye, ChevronLeft, Che
 
 const ORDERS_PER_PAGE = 5;
 
+const TABS = [
+  { key: "all", label: "Tất cả" },
+  { key: "pending", label: "Chờ xử lý" },
+  { key: "delivered", label: "Đã giao" },
+  { key: "cancelled", label: "Đã hủy" },
+];
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
 
-  const [appliedFilters, setAppliedFilters] = useState({
-    fromDate: "", toDate: "", status: "all"
-  });
+  const [appliedFilters, setAppliedFilters] = useState({ fromDate: "", toDate: "" });
 
+  const [activeTab, setActiveTab] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   const [toastMsg, setToastMsg] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
-  
+
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToastMsg(msg); setToastType(type); setTimeout(() => setToastMsg(""), 3000);
   };
@@ -34,7 +39,7 @@ export default function AdminOrdersPage() {
       const query = new URLSearchParams({
         fromDate: appliedFilters.fromDate,
         toDate: appliedFilters.toDate,
-        status: appliedFilters.status
+        status: "all", // Luôn lấy tất cả, tab lọc phía client
       }).toString();
 
       const response = await fetch(`/api/orders?${query}`);
@@ -53,26 +58,21 @@ export default function AdminOrdersPage() {
     setCurrentPage(1);
   }, [appliedFilters]);
 
-  // ==========================================
-  // HÀM MỚI: XỬ LÝ CHUYỂN GIAI ĐOẠN / HỦY ĐƠN (Theo Barem điểm)
-  // ==========================================
   const handleUpdateStatus = async (id: number, newStatus: string) => {
-    if (newStatus === 'cancelled') {
+    if (newStatus === "cancelled") {
       if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không? Hành động này không thể hoàn tác.")) return;
     }
-
     setIsLoading(true);
     try {
-      const response = await fetch('/api/orders', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: newStatus })
+      const response = await fetch("/api/orders", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: newStatus }),
       });
       const result = await response.json();
-      
       if (result.success) {
         showToast(result.message, "success");
-        fetchOrders(); // Tải lại bảng dữ liệu để cập nhật trạng thái mới
+        fetchOrders();
       } else {
         showToast(result.message, "error");
       }
@@ -83,44 +83,74 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const totalPages = Math.ceil(orders.length / ORDERS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ORDERS_PER_PAGE;
-  const paginatedOrders = orders.slice(startIndex, startIndex + ORDERS_PER_PAGE);
-
-  const handleSearchClick = () => setAppliedFilters({ fromDate, toDate, status: filterStatus });
-  const handleResetFilters = () => {
-    setFromDate(""); setToDate(""); setFilterStatus("all");
-    setAppliedFilters({ fromDate: "", toDate: "", status: "all" });
+  const handleSearchClick = () => {
+    setAppliedFilters({ fromDate, toDate });
+    setActiveTab("all");
+    setCurrentPage(1);
   };
+
+  const handleResetFilters = () => {
+    setFromDate(""); setToDate("");
+    setAppliedFilters({ fromDate: "", toDate: "" });
+    setActiveTab("all");
+    setCurrentPage(1);
+  };
+
   const handleOpenDetails = (order: any) => { setSelectedOrder(order); setIsModalOpen(true); };
 
-  const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN').format(price) + " đ";
+  const formatPrice = (price: number) => new Intl.NumberFormat("vi-VN").format(price) + " đ";
+
   const formatDateDisplay = (isoDate: string) => {
+    if (!isoDate) return "";
     const [year, month, day] = isoDate.split("-");
     return `${day}-${month}-${year}`;
   };
 
+  const calculateRevenue = () => {
+    let total = 0, success = 0, pending = 0, cancelled = 0;
+    orders.forEach(order => {
+      const money = order.totalAmount || 0;
+      total += money;
+      if (order.status === "delivered") success += money;
+      else if (order.status === "pending") pending += money;
+      else if (order.status === "cancelled") cancelled += money;
+    });
+    return { total, success, pending, cancelled };
+  };
+
+  const revenue = calculateRevenue();
+
+  const tabCount = (key: string) =>
+    key === "all" ? orders.length : orders.filter(o => o.status === key).length;
+
+  // Lọc theo tab ở phía client
+  const filteredByTab = activeTab === "all" ? orders : orders.filter(o => o.status === activeTab);
+
+  const totalPages = Math.ceil(filteredByTab.length / ORDERS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ORDERS_PER_PAGE;
+  const paginatedOrders = filteredByTab.slice(startIndex, startIndex + ORDERS_PER_PAGE);
+
   const renderStatusBadge = (status: string) => {
     switch (status) {
-      case 'delivered': return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-green-500 text-green-600 bg-green-50 text-xs font-bold tracking-wide"><CheckCircle2 size={14} /> Đã giao</span>;
-      case 'pending': return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-orange-400 text-orange-500 bg-orange-50 text-xs font-bold tracking-wide"><Clock size={14} /> Chờ xử lý</span>;
-      case 'cancelled': return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-500 text-red-600 bg-red-50 text-xs font-bold tracking-wide"><XCircle size={14} /> Đã hủy</span>;
+      case "delivered": return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-green-500 text-green-600 bg-green-50 text-xs font-bold tracking-wide"><CheckCircle2 size={14} /> Đã giao</span>;
+      case "pending": return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-orange-400 text-orange-500 bg-orange-50 text-xs font-bold tracking-wide"><Clock size={14} /> Chờ xử lý</span>;
+      case "cancelled": return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-500 text-red-600 bg-red-50 text-xs font-bold tracking-wide"><XCircle size={14} /> Đã hủy</span>;
       default: return null;
     }
   };
 
   return (
     <div className="relative min-h-[80vh] font-sans pb-10">
-      
-      {/* THÔNG BÁO TOAST */}
+
+      {/* TOAST */}
       {toastMsg && (
-        <div className={`fixed top-6 right-6 bg-white border-l-4 shadow-xl px-6 py-4 rounded-lg flex items-center gap-3 z-[60] animate-in slide-in-from-right-8 ${toastType === 'success' ? 'border-green-500' : 'border-red-500'}`}>
-          {toastType === 'success' ? <CheckCircle2 className="text-green-500" size={24} /> : <XCircle className="text-red-500" size={24} />}
+        <div className={`fixed top-6 right-6 bg-white border-l-4 shadow-xl px-6 py-4 rounded-lg flex items-center gap-3 z-[60] animate-in slide-in-from-right-8 ${toastType === "success" ? "border-green-500" : "border-red-500"}`}>
+          {toastType === "success" ? <CheckCircle2 className="text-green-500" size={24} /> : <XCircle className="text-red-500" size={24} />}
           <span className="font-medium text-gray-800">{toastMsg}</span>
         </div>
       )}
 
-      {/* MODAL CHI TIẾT ĐƠN HÀNG (GIỮ NGUYÊN) */}
+      {/* MODAL */}
       {isModalOpen && selectedOrder && (
         <div className="fixed inset-0 bg-gray-500/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95">
@@ -150,10 +180,15 @@ export default function AdminOrdersPage() {
 
       {/* BỘ LỌC */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div><label className="block text-sm font-semibold text-gray-900 mb-2">Từ ngày</label><input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all" /></div>
-          <div><label className="block text-sm font-semibold text-gray-900 mb-2">Đến ngày</label><input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all" /></div>
-          <div><label className="block text-sm font-semibold text-gray-900 mb-2">Tình trạng đơn hàng</label><select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all bg-white font-medium"><option value="all">Tất cả trạng thái</option><option value="pending">Chờ xử lý</option><option value="delivered">Đã giao hàng</option><option value="cancelled">Đã hủy</option></select></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">Từ ngày</label>
+            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">Đến ngày</label>
+            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all" />
+          </div>
         </div>
         <div className="flex gap-3">
           <button onClick={handleSearchClick} className="bg-[#22C55E] text-white px-6 py-2.5 rounded-lg shadow-sm hover:bg-[#16A34A] transition flex items-center gap-2 font-bold"><Search size={18} /> Tìm kiếm</button>
@@ -161,76 +196,132 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      {/* BẢNG DỮ LIỆU ĐƠN HÀNG */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8 min-h-[400px] relative">
-        {isLoading && (
-          <div className="absolute inset-0 bg-white/70 z-10 flex items-center justify-center backdrop-blur-[1px]">
-            <div className="flex flex-col items-center gap-2">
-              <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-              <span className="font-semibold text-gray-600">Đang tải dữ liệu...</span>
-            </div>
+      {/* THỐNG KÊ DOANH THU */}
+      <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-l-4 border-green-600 pl-3">
+        💰 Thống kê doanh thu
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 rounded-xl shadow-md text-white flex items-center gap-5">
+          <div className="text-3xl">💵</div>
+          <div>
+            <p className="text-blue-100 text-sm font-medium">Tổng tất cả đơn</p>
+            <h3 className="text-2xl font-bold">{formatPrice(revenue.total)}</h3>
           </div>
-        )}
+        </div>
+        <div className="bg-gradient-to-r from-green-600 to-green-800 p-6 rounded-xl shadow-md text-white flex items-center gap-5">
+          <div className="text-3xl">✅</div>
+          <div>
+            <p className="text-green-100 text-sm font-medium">Đã thanh toán</p>
+            <h3 className="text-2xl font-bold">{formatPrice(revenue.success)}</h3>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-5">
+          <div className="text-3xl text-orange-500">⏳</div>
+          <div>
+            <p className="text-gray-500 text-sm font-semibold">Chờ thanh toán</p>
+            <h3 className="text-xl font-bold text-gray-900">{formatPrice(revenue.pending)}</h3>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-5">
+          <div className="text-3xl text-red-500">❌</div>
+          <div>
+            <p className="text-gray-500 text-sm font-semibold">Đơn đã hủy</p>
+            <h3 className="text-xl font-bold text-gray-900">{formatPrice(revenue.cancelled)}</h3>
+          </div>
+        </div>
+      </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-center border-collapse">
-            <thead>
-              <tr className="bg-blue-600 text-white text-sm font-semibold uppercase tracking-wide">
-                <th className="px-4 py-4 whitespace-nowrap">STT</th>
-                <th className="px-4 py-4 whitespace-nowrap">MÃ ĐƠN</th>
-                <th className="px-4 py-4 whitespace-nowrap text-left">KHÁCH HÀNG</th>
-                <th className="px-4 py-4 whitespace-nowrap">SỐ ĐIỆN THOẠI</th>
-                <th className="px-4 py-4 whitespace-nowrap">TỔNG TIỀN</th>
-                <th className="px-4 py-4 whitespace-nowrap">THANH TOÁN</th>
-                <th className="px-4 py-4 whitespace-nowrap">TRẠNG THÁI</th>
-                <th className="px-4 py-4 whitespace-nowrap">THAO TÁC</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 text-sm text-gray-700">
-              {!isLoading && paginatedOrders.length > 0 ? (
-                paginatedOrders.map((order, index) => (
-                  <tr key={order.id} className="hover:bg-blue-50/50 transition-colors">
-                    <td className="px-4 py-5">{startIndex + index + 1}</td>
-                    <td className="px-4 py-5 font-bold text-blue-700">{order.orderCode}</td>
-                    <td className="px-4 py-5 text-left">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-gray-900 text-base">{order.customerName}</span>
-                        <span className="text-gray-500 text-xs font-medium mt-0.5">{order.totalProducts} sản phẩm</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-5 font-medium">{order.phone}</td>
-                    <td className="px-4 py-5 font-bold text-red-500">{formatPrice(order.totalAmount)}</td>
-                    <td className="px-4 py-5 font-semibold text-gray-800">{order.paymentMethod}</td>
-                    <td className="px-4 py-5">{renderStatusBadge(order.status)}</td>
-                    
-                    {/* CỘT THAO TÁC MỚI */}
-                    <td className="px-4 py-5">
-                      <div className="flex justify-center items-center gap-2">
-                        {/* Nút Xem (Luôn hiện) */}
-                        <button onClick={() => handleOpenDetails(order)} className="bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg shadow-sm transition font-semibold inline-flex items-center gap-1.5" title="Xem chi tiết">
-                          <Eye size={16} /> Xem
-                        </button>
+      {/* TABS + BẢNG gộp trong 1 card */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
 
-                        {/* Nút Giao Hàng & Hủy Đơn (Chỉ hiện khi đơn đang Chờ xử lý) */}
-                        {order.status === 'pending' && (
-                          <>
-                            <button onClick={() => handleUpdateStatus(order.id, 'delivered')} className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-3 py-1.5 rounded-lg shadow-sm transition font-semibold inline-flex items-center gap-1.5" title="Xác nhận & Giao hàng">
-                              <Truck size={16} /> Giao
-                            </button>
-                            <button onClick={() => handleUpdateStatus(order.id, 'cancelled')} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg shadow-sm transition font-semibold inline-flex items-center gap-1.5" title="Hủy đơn hàng này">
-                              <XCircle size={16} /> Hủy
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                !isLoading && <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-500 font-medium">Không tìm thấy đơn hàng nào.</td></tr>
-              )}
-            </tbody>
-          </table>
+        {/* TABS */}
+        <div className="flex border-b border-gray-200">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => { setActiveTab(tab.key); setCurrentPage(1); }}
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-bold transition border-b-2 -mb-px whitespace-nowrap
+                ${activeTab === tab.key
+                  ? "border-blue-600 text-blue-600 bg-blue-50/50"
+                  : "border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50"}`}
+            >
+              {tab.label}
+              <span className={`text-xs px-2 py-0.5 rounded-full font-bold
+                ${tab.key === "all" ? "bg-blue-100 text-blue-700" :
+                  tab.key === "pending" ? "bg-orange-100 text-orange-600" :
+                    tab.key === "delivered" ? "bg-green-100 text-green-700" :
+                      "bg-red-100 text-red-600"}`}>
+                {tabCount(tab.key)}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* BẢNG */}
+        <div className="min-h-[400px] relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/70 z-10 flex items-center justify-center backdrop-blur-[1px]">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                <span className="font-semibold text-gray-600">Đang tải dữ liệu...</span>
+              </div>
+            </div>
+          )}
+          <div className="overflow-x-auto">
+            <table className="w-full text-center border-collapse">
+              <thead>
+                <tr className="bg-blue-600 text-white text-sm font-semibold uppercase tracking-wide">
+                  <th className="px-4 py-4 whitespace-nowrap">STT</th>
+                  <th className="px-4 py-4 whitespace-nowrap">MÃ ĐƠN</th>
+                  <th className="px-4 py-4 whitespace-nowrap text-left">KHÁCH HÀNG</th>
+                  <th className="px-4 py-4 whitespace-nowrap">SỐ ĐIỆN THOẠI</th>
+                  <th className="px-4 py-4 whitespace-nowrap">TỔNG TIỀN</th>
+                  <th className="px-4 py-4 whitespace-nowrap">THANH TOÁN</th>
+                  <th className="px-4 py-4 whitespace-nowrap">TRẠNG THÁI</th>
+                  <th className="px-4 py-4 whitespace-nowrap">THAO TÁC</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 text-sm text-gray-700">
+                {!isLoading && paginatedOrders.length > 0 ? (
+                  paginatedOrders.map((order, index) => (
+                    <tr key={order.id} className="hover:bg-blue-50/50 transition-colors">
+                      <td className="px-4 py-5">{startIndex + index + 1}</td>
+                      <td className="px-4 py-5 font-bold text-blue-700">{order.orderCode}</td>
+                      <td className="px-4 py-5 text-left">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-gray-900 text-base">{order.customerName}</span>
+                          <span className="text-gray-500 text-xs font-medium mt-0.5">{order.totalProducts} sản phẩm</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-5 font-medium">{order.phone}</td>
+                      <td className="px-4 py-5 font-bold text-red-500">{formatPrice(order.totalAmount)}</td>
+                      <td className="px-4 py-5 font-semibold text-gray-800">{order.paymentMethod}</td>
+                      <td className="px-4 py-5">{renderStatusBadge(order.status)}</td>
+                      <td className="px-4 py-5">
+                        <div className="flex justify-center items-center gap-2">
+                          <button onClick={() => handleOpenDetails(order)} className="bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg shadow-sm transition font-semibold inline-flex items-center gap-1.5" title="Xem chi tiết">
+                            <Eye size={16} /> Xem
+                          </button>
+                          {order.status === "pending" && (
+                            <>
+                              <button onClick={() => handleUpdateStatus(order.id, "delivered")} className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-3 py-1.5 rounded-lg shadow-sm transition font-semibold inline-flex items-center gap-1.5" title="Xác nhận & Giao hàng">
+                                <Truck size={16} /> Giao
+                              </button>
+                              <button onClick={() => handleUpdateStatus(order.id, "cancelled")} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg shadow-sm transition font-semibold inline-flex items-center gap-1.5" title="Hủy đơn hàng này">
+                                <XCircle size={16} /> Hủy
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  !isLoading && <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-500 font-medium">Không tìm thấy đơn hàng nào.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

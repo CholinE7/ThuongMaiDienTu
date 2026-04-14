@@ -7,6 +7,7 @@ import com.tmdtud.cuahang.api.customer.service.CustomerService;
 import com.tmdtud.cuahang.api.product.model.Products;
 import com.tmdtud.cuahang.api.product.service.ProductService;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,7 +33,6 @@ import com.tmdtud.cuahang.api.order.request.UpdateOrderStatusRequest;
 import com.tmdtud.cuahang.api.order_detail.model.OrdersDetails;
 import com.tmdtud.cuahang.api.order_detail.service.OrderDetailService;
 import com.tmdtud.cuahang.common.response.PageResponse;
-
 
 import lombok.Data;
 
@@ -64,7 +64,7 @@ public class OrderService implements OrderServiceI {
     private final ProductService productService;
 
     @Autowired
-    private CustomerMapper customerMapper; 
+    private CustomerMapper customerMapper;
 
     @Override
     public PageResponse<Orders> getAll(Pageable pageable) {
@@ -76,7 +76,7 @@ public class OrderService implements OrderServiceI {
     @Transactional
     public Orders add(OrderStoreRequest request) {
         CustomerDTO customerDTO = customerService.getById(request.getCustomerId());
-         Customers customer = customerMapper.toEntity(customerDTO);
+        Customers customer = customerMapper.toEntity(customerDTO);
 
         Orders order = Orders.builder()
                 .customer(customer)
@@ -87,7 +87,7 @@ public class OrderService implements OrderServiceI {
 
         Orders newOrder = orderRepository.save(order);
         orderDetailService.addAll(request.getDetails(), newOrder.getId()); // tạo chi tiết đơn
-                                                                                                    // nhập
+                                                                           // nhập
         return newOrder;
     }
 
@@ -95,21 +95,23 @@ public class OrderService implements OrderServiceI {
     @Transactional
     public Orders delete(Long id) {
         Orders order = getById(id);
-        if(order.getStatus().isTerminal()) return order;
-        if(!order.getStatus().isCancellable()) return order;
+        if (order.getStatus().isTerminal())
+            return order;
+        if (!order.getStatus().isCancellable())
+            return order;
 
-        if(!order.getStatus().equals(OrderStatus.PENDING)){
+        if (!order.getStatus().equals(OrderStatus.PENDING)) {
             List<OrdersDetails> ordersDetails = orderDetailService
-                .getByOrderId(order.getId());
+                    .getByOrderId(order.getId());
             List<Products> products = new ArrayList<>();
-        
-            for(OrdersDetails item : ordersDetails){
+
+            for (OrdersDetails item : ordersDetails) {
                 Products pro = item.getProduct();
                 pro.setQuantity(pro.getQuantity() + item.getQuantity());
                 products.add(pro);
-        }
+            }
 
-        productService.updateAll(products);
+            productService.updateAll(products);
         }
 
         order.setStatus(OrderStatus.CANCELLED);
@@ -128,7 +130,8 @@ public class OrderService implements OrderServiceI {
     @Transactional
     public Orders update(OrderUpdateRequest request) {
         Orders order = orderRepository.findById(request.getId()).orElse(null);
-        if(order.getDeleted() == 1) return order; // nếu đã xóa đơn hàng thì k làm gì cả
+        if (order.getDeleted() == 1)
+            return order; // nếu đã xóa đơn hàng thì k làm gì cả
 
         order.setMethod(request.getMethod());
         order.setTotalPrice(request.getTotalPrice());
@@ -152,7 +155,8 @@ public class OrderService implements OrderServiceI {
         Employers employer = employerService.getById(request.getEmployerId());
         Orders order = getById(request.getOrderId());
 
-        if(order.getDeleted() == 1) return order; 
+        if (order.getDeleted() == 1)
+            return order;
 
         if (order.getStatus().isTerminal() || !order.getStatus().canAdvanceTo(request.getOrderStatusNext())) {
             return order;
@@ -163,14 +167,14 @@ public class OrderService implements OrderServiceI {
         order.setStatus(request.getOrderStatusNext());
         orderRepository.save(order);
 
-        if(request.getOrderStatusNext().equals(OrderStatus.CONFIRMED)){
+        if (request.getOrderStatusNext().equals(OrderStatus.CONFIRMED)) {
             List<OrdersDetails> ordersDetails = orderDetailService
-                .getByOrderId(request.getOrderId());
+                    .getByOrderId(request.getOrderId());
             List<Products> products = new ArrayList<>();
-        
-            for(OrdersDetails item : ordersDetails){
+
+            for (OrdersDetails item : ordersDetails) {
                 Products pro = item.getProduct();
-                if(pro.getQuantity() <= item.getQuantity() + 1){ //sản phẩm tồn tại tối thiểu 1 số lượng
+                if (pro.getQuantity() <= item.getQuantity() + 1) { // sản phẩm tồn tại tối thiểu 1 số lượng
                     return order;
                 }
                 pro.setQuantity(pro.getQuantity() - item.getQuantity());
@@ -181,5 +185,14 @@ public class OrderService implements OrderServiceI {
         }
 
         return order;
+    }
+
+    @Override
+    public PageResponse<Orders> getAllByDateRange(String fromDate, String toDate, Pageable pageable) {
+        // TODO Auto-generated method stub
+        LocalDate from = (fromDate != null & !fromDate.isEmpty()) ? LocalDate.parse(fromDate) : null;
+        LocalDate to = (toDate != null & !toDate.isEmpty()) ? LocalDate.parse(toDate) : null;
+        Page<Orders> orders = orderRepository.findAllByDateRange(from, to, pageable);
+        return new PageResponse<Orders>(orders);
     }
 }

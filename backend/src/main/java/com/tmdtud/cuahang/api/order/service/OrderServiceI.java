@@ -1,5 +1,7 @@
 package com.tmdtud.cuahang.api.order.service;
 
+import java.time.LocalDate;
+
 import org.springframework.data.domain.Pageable;
 
 import com.tmdtud.cuahang.api.order.dto.OrdHasDetailDTO;
@@ -23,4 +25,6 @@ public interface OrderServiceI {
     public OrdHasDetailDTO toOrdHasDetailDTO(Orders orders);
 
     public Orders updateStatus(UpdateOrderStatusRequest request);
+
+    public PageResponse<Orders> getAllByDateRange(String fromDate, String toDate, Pageable pageable);
 }

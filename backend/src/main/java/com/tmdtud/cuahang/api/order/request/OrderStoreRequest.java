@@ -21,14 +21,17 @@ public class OrderStoreRequest {
     @DecimalMin(value = "0.0", inclusive = true)
     private BigDecimal totalPrice;
 
-    @NotNull(message = "supplier not null")
+    @NotNull(message = "customer not null")
     private Long customerId;
+
+    @NotNull(message = "employer not null")
+    private Long employerId;
 
     @NotBlank(message = "method not empty")
     @NotNull(message = "method not null")
     private String method;
 
-    @NotNull(message = "purchase_order_detail not null")
+    @NotNull(message = "order_detail not null")
     @Valid
     private List<OrderDetailStoreRequest> details;
 
