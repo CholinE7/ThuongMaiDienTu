@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [confirmEmail, setConfirmEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [address, setAddress] = useState(''); // THÊM STATE CHO ĐỊA CHỈ
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -27,8 +28,13 @@ export default function RegisterPage() {
       return;
     }
 
+    if (address.trim() === '') {
+      setErrorMsg('Vui lòng nhập địa chỉ của bạn!');
+      return;
+    }
+
     // BƯỚC 2: Nếu mọi thứ OK, gửi dữ liệu lên Backend
-    console.log("Dữ liệu hợp lệ. Đang xử lý đăng ký cho:", email);
+    console.log("Dữ liệu hợp lệ. Đang xử lý đăng ký cho:", email, "tại địa chỉ:", address);
     alert("Đăng ký thành công (Mô phỏng)!");
   };
 
@@ -68,108 +74,120 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+            {/* Cấu trúc Grid mới: Render theo từng hàng ngang (Row) thay vì chia 2 cột */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 items-start">
               
-              {/* ================= CỘT TRÁI ================= */}
-              <div className="space-y-6">
+              {/* --- HÀNG 1 --- */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Email *</label>
+                <input 
+                  type="email" 
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-gray-100 border border-gray-300 placeholder:text-gray-500 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Danh xưng *</label>
+                <select required defaultValue="" className="w-full bg-gray-100 border border-gray-300 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900 appearance-none cursor-pointer">
+                  <option value="" disabled>Chọn danh xưng</option>
+                  <option value="mr">Ông (Mr.)</option>
+                  <option value="ms">Bà (Ms.)</option>
+                  <option value="mrs">Cô (Mrs.)</option>
+                  <option value="other">Khác</option>
+                </select>
+              </div>
+
+              {/* --- HÀNG 2 --- */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Xác nhận Email *</label>
+                <input 
+                  type="email" 
+                  required
+                  value={confirmEmail}
+                  onChange={(e) => setConfirmEmail(e.target.value)}
+                  className={`w-full bg-gray-100 border ${errorMsg.includes('Email') ? 'border-red-500 focus:border-red-600' : 'border-gray-300 focus:border-blue-500'} placeholder:text-gray-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900`}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Email *</label>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Tên *</label>
                   <input 
-                    type="email" 
+                    type="text" 
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-gray-100 border border-gray-300 placeholder:text-gray-500 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Xác nhận Email *</label>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Họ *</label>
                   <input 
-                    type="email" 
+                    type="text" 
                     required
-                    value={confirmEmail}
-                    onChange={(e) => setConfirmEmail(e.target.value)}
-                    className={`w-full bg-gray-100 border ${errorMsg.includes('Email') ? 'border-red-500 focus:border-red-600' : 'border-gray-300 focus:border-blue-500'} placeholder:text-gray-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900`}
+                    className="w-full bg-gray-100 border border-gray-300 placeholder:text-gray-500 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Mật khẩu *</label>
-                  <div className="relative">
-                    <input 
-                      type={showPassword ? "text" : "password"} 
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-gray-100 border border-gray-300 placeholder:text-gray-500 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 pr-12 outline-none transition-all font-medium text-gray-900"
-                    />
-                    <button 
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
-                    >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-gray-400 mt-2">Mật khẩu phải dài ít nhất 8 ký tự, bao gồm chữ cái và số.</p>
                 </div>
               </div>
 
-              {/* ================= CỘT PHẢI ================= */}
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Danh xưng *</label>
-                  <select required defaultValue="" className="w-full bg-gray-100 border border-gray-300 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900 appearance-none cursor-pointer">
-                    <option value="" disabled>Chọn danh xưng</option>
-                    <option value="mr">Ông (Mr.)</option>
-                    <option value="ms">Bà (Ms.)</option>
-                    <option value="mrs">Cô (Mrs.)</option>
-                    <option value="other">Khác</option>
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Tên *</label>
-                    <input 
-                      type="text" 
-                      required
-                      className="w-full bg-gray-100 border border-gray-300 placeholder:text-gray-500 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Họ *</label>
-                    <input 
-                      type="text" 
-                      required
-                      className="w-full bg-gray-100 border border-gray-300 placeholder:text-gray-500 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Số điện thoại *</label>
-                  <div className="flex gap-2">
-                    <select defaultValue="+84" className="bg-gray-100 border border-gray-300 rounded-xl py-3 px-3 outline-none font-medium text-gray-900 w-24 text-center cursor-pointer">
-                      <option value="+84">+84</option>
-                    </select>
-                    <input 
-                      type="tel" 
-                      required
-                      className="flex-1 bg-gray-100 border border-gray-300 placeholder:text-gray-500 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Ngày sinh</label>
+              {/* --- HÀNG 3 --- */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Mật khẩu *</label>
+                <div className="relative">
                   <input 
-                    type="date" 
-                    className="w-full bg-gray-100 border border-gray-300 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900 uppercase cursor-pointer text-sm"
+                    type={showPassword ? "text" : "password"} 
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-gray-100 border border-gray-300 placeholder:text-gray-500 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 pr-12 outline-none transition-all font-medium text-gray-900"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-2">Mật khẩu phải dài ít nhất 8 ký tự, bao gồm chữ cái và số.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Số điện thoại *</label>
+                <div className="flex gap-2">
+                  <select defaultValue="+84" className="bg-gray-100 border border-gray-300 rounded-xl py-3 px-3 outline-none font-medium text-gray-900 w-24 text-center cursor-pointer">
+                    <option value="+84">+84</option>
+                  </select>
+                  <input 
+                    type="tel" 
+                    required
+                    className="flex-1 bg-gray-100 border border-gray-300 placeholder:text-gray-500 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900"
                   />
                 </div>
               </div>
+
+              {/* --- HÀNG 4: ĐỊA CHỈ & NGÀY SINH NGANG HÀNG --- */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Địa chỉ *</label>
+                <input 
+                  type="text" 
+                  required
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Số nhà, tên đường, phường/xã..."
+                  className="w-full bg-gray-100 border border-gray-300 placeholder:text-gray-500 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Ngày sinh</label>
+                <input 
+                  type="date" 
+                  className="w-full bg-gray-100 border border-gray-300 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900 uppercase cursor-pointer text-sm"
+                />
+              </div>
+
             </div>
 
             {/* ================= PHẦN CHECKBOX & NÚT SUBMIT ================= */}

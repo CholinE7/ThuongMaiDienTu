@@ -1,8 +1,7 @@
 "use client"; 
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // THÊM DÒNG NÀY ĐỂ CHUYỂN TRANG
+
 import { ShoppingCart, Search, User, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
@@ -10,14 +9,13 @@ export default function Navbar() {
   
   // --- STATE CHO TÌM KIẾM ---
   const [searchQuery, setSearchQuery] = useState("");
-  const router = useRouter();
+
 
   // Hàm xử lý khi người dùng bấm Enter hoặc Kính lúp
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault(); // Ngăn trang bị reload lại
     if (searchQuery.trim() !== "") {
-      // Chuyển hướng sang trang /search kèm theo từ khóa
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
       setIsMobileMenuOpen(false); // Đóng menu nếu đang ở trên điện thoại
     }
   };
@@ -26,14 +24,10 @@ export default function Navbar() {
     <nav className="fixed top-0 w-full bg-white shadow-md z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
 
-        
-        {/* LOGO */}
-
         {/* 1. LOGO */}
-
-        <Link href="/" className="text-2xl font-bold text-gray-800 flex-shrink-0">
+        <a href="/" className="text-2xl font-bold text-gray-800 flex-shrink-0">
           SHOE<span className="text-blue-600">STORE</span>
-        </Link>
+        </a>
 
         {/* THANH TÌM KIẾM (Desktop) */}
         <div className="hidden md:block flex-1 max-w-md mx-8">
@@ -55,9 +49,9 @@ export default function Navbar() {
         {/* MENU & ICONS */}
         <div className="flex items-center space-x-6">
           <div className="hidden lg:flex space-x-6 text-gray-600 font-medium text-sm">
-            <Link href="/category/nam" className="hover:text-blue-600 transition">Giày Thể Thao Nam</Link>
-            <Link href="/category/nu" className="hover:text-blue-600 transition">Giày Thể Thao Nữ</Link>
-            <Link href="/category/cap" className="hover:text-blue-600 transition">Giày Cặp</Link>
+            <a href="/category/nam" className="hover:text-blue-600 transition">Giày Thể Thao Nam</a>
+            <a href="/category/nu" className="hover:text-blue-600 transition">Giày Thể Thao Nữ</a>
+            <a href="/category/cap" className="hover:text-blue-600 transition">Giày Cặp</a>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -68,18 +62,19 @@ export default function Navbar() {
               <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-y-1 transition-all duration-300 z-50">
                 <div className="absolute -top-4 left-0 w-full h-4 bg-transparent"></div>
                 <div className="py-2 flex flex-col">
-                  <Link href="/login" className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">Đăng nhập</Link>
-                  <Link href="/register" className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">Đăng ký</Link>
+                  <a href="/login" className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">Đăng nhập</a>
+                  <a href="/register" className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">Đăng ký</a>
                 </div>
               </div>
             </div>
 
-            <div className="relative cursor-pointer group" title="Giỏ hàng">
+            {/* Link trỏ tới /cart */}
+            <a href="/cart" className="relative cursor-pointer group" title="Giỏ hàng">
               <div className="p-2 rounded-full group-hover:bg-gray-100 transition">
                 <ShoppingCart size={24} className="text-gray-600 group-hover:text-blue-600 transition" />
               </div>
               <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">0</span>
-            </div>
+            </a>
 
             <button className="lg:hidden text-gray-600" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
               {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
@@ -104,14 +99,16 @@ export default function Navbar() {
             </button>
           </form>
 
-          <Link href="/" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Trang chủ</Link>
-          <Link href="/category/nam" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Giày Thể Thao Nam</Link>
-          <Link href="/category/nu" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Giày Thể Thao Nữ</Link>
-          <Link href="/category/cap" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Giày Cặp</Link>
+          <a href="/" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Trang chủ</a>
+          <a href="/category/nam" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Giày Thể Thao Nam</a>
+          <a href="/category/nu" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Giày Thể Thao Nữ</a>
+          <a href="/category/cap" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Giày Cặp</a>
+          {/* Thêm link Giỏ hàng cho Mobile Menu */}
+          <a href="/cart" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Giỏ hàng</a>
           
           <div className="flex gap-4 pt-2">
-            <Link href="/login" className="flex-1 text-center bg-gray-100 text-gray-800 py-2 rounded-lg font-semibold">Đăng nhập</Link>
-            <Link href="/register" className="flex-1 text-center bg-blue-600 text-white py-2 rounded-lg font-semibold">Đăng ký</Link>
+            <a href="/login" className="flex-1 text-center bg-gray-100 text-gray-800 py-2 rounded-lg font-semibold">Đăng nhập</a>
+            <a href="/register" className="flex-1 text-center bg-blue-600 text-white py-2 rounded-lg font-semibold">Đăng ký</a>
           </div>
         </div>
       )}
