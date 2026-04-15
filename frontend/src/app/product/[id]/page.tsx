@@ -12,26 +12,25 @@ import {
   Minus,
   ShoppingCart,
   Search,
-  Loader2 
+  Loader2,
+  CheckCircle2, // Icon cho thông báo thành công
+  AlertCircle   // Icon cho thông báo lỗi
 } from 'lucide-react';
 
-// Bảng mã màu Hex code để hiển thị màu sắc chuẩn xác
 const COLOR_HEX_MAP: Record<string, string> = {
   "Đen": "#171717",
   "Trắng": "#FFFFFF",
-  "Đỏ": "#991B1B",    // Đỏ mận/Đỏ đô sang trọng
-  "Nâu": "#78350F",    // Nâu da bò
-  "Be": "#D4B996",     // Đã chỉnh lại màu Be (Nude/Beige) đậm và thực tế hơn, không bị chìm vào nền
+  "Đỏ": "#991B1B",    
+  "Nâu": "#78350F",    
+  "Be": "#D4B996",     
   "Xám": "#6B7280",
   "Kem": "#FEFCE8"
 };
 
-// Hàm kiểm tra màu sáng/tối để đổi màu chữ tự động cho dễ đọc
 const isLightColor = (colorName: string) => {
   return ["Trắng", "Be", "Kem"].includes(colorName);
 };
 
-// Giả lập một "Database" chứa thông tin các sản phẩm
 const MOCK_DATABASE: Record<string, any> = {
   "1": {
     id: "1",
@@ -77,12 +76,6 @@ const MOCK_DATABASE: Record<string, any> = {
 };
 
 export default function ProductDetailPage() {
-  // --- LẤY ID THỰC TẾ TỪ URL ---
-  // Trong dự án thực tế, bạn sẽ mở comment 2 dòng này để lấy ID thực từ Next.js:
-  // const params = useParams();
-  // const productId = params?.id as string;
-  
-  // Dòng này chỉ dùng để hiển thị mô phỏng trong môi trường Xem trước hiện tại:
   const productId = "1"; 
 
   // --- STATE ---
@@ -91,8 +84,14 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState<string | null>('description');
+  
+  // STATE CHO THÔNG BÁO (TOAST)
+  const [notification, setNotification] = useState<{show: boolean, type: 'success'|'error', message: string}>({
+    show: false,
+    type: 'success',
+    message: ''
+  });
 
-  // --- MÔ PHỎNG GỌI API LẤY DỮ LIỆU ---
   useEffect(() => {
     if (!productId) return; 
 
@@ -107,7 +106,6 @@ export default function ProductDetailPage() {
       
       setProduct(foundProduct);
       
-      // Mặc định chọn màu đầu tiên
       if (foundProduct.colors?.length > 0) {
         setSelectedColor(foundProduct.colors[0]);
       }
@@ -122,7 +120,61 @@ export default function ProductDetailPage() {
     setOpenSection(openSection === section ? null : section);
   };
 
-  // Màn hình Loading
+  // HÀM HIỂN THỊ THÔNG BÁO
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ show: true, type, message });
+    // Tự động tắt sau 3 giây
+    setTimeout(() => {
+      setNotification({ show: false, type: 'success', message: '' });
+    }, 3000);
+  };
+
+  // HÀM XỬ LÝ KHI ẤN "THÊM VÀO GIỎ HÀNG"
+  const handleAddToCart = () => {
+    // 1. Kiểm tra điều kiện
+    if (!selectedSize) {
+      showNotification('error', 'Vui lòng chọn Kích thước trước khi thêm!');
+      return;
+    }
+    if (!selectedColor) {
+      showNotification('error', 'Vui lòng chọn Màu sắc trước khi thêm!');
+      return;
+    }
+
+    // 2. Tạo đối tượng sản phẩm để lưu
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images[0],
+      size: selectedSize,
+      color: selectedColor,
+      quantity: 1
+    };
+
+    // 3. Lấy giỏ hàng cũ từ localStorage (nếu có)
+    const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
+    
+    // Kiểm tra xem sản phẩm cùng màu, cùng size đã có trong giỏ chưa
+    const existingItemIndex = existingCart.findIndex(
+      (item: any) => item.id === cartItem.id && item.size === cartItem.size && item.color === cartItem.color
+    );
+
+    if (existingItemIndex >= 0) {
+      // Nếu có rồi thì tăng số lượng
+      existingCart[existingItemIndex].quantity += 1;
+    } else {
+      // Chưa có thì thêm mới vào mảng
+      existingCart.push(cartItem);
+    }
+
+    // 4. Lưu ngược lại vào localStorage
+    localStorage.setItem('cart', JSON.stringify(existingCart));
+
+    // 5. Kích hoạt thông báo thành công
+    showNotification('success', 'Đã thêm sản phẩm vào giỏ hàng thành công!');
+  };
+
   if (isLoading || !product) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center">
@@ -133,11 +185,25 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white font-sans">
+    <main className="min-h-screen bg-white font-sans relative">
+      
+      {/* --- UI THÔNG BÁO (TOAST) --- */}
+      <div className={`fixed top-24 right-4 z-[60] transition-all duration-300 transform ${notification.show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
+        <div className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl border ${notification.type === 'success' ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+          {notification.type === 'success' ? (
+            <CheckCircle2 className="text-green-600 w-6 h-6" />
+          ) : (
+            <AlertCircle className="text-red-600 w-6 h-6" />
+          )}
+          <p className={`font-medium text-sm ${notification.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+            {notification.message}
+          </p>
+        </div>
+      </div>
+
       {/* --- HEADER --- */}
       <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 z-50">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
-          
           <div className="flex items-center gap-2 sm:gap-4">
             <a href="/" className="p-2 hover:bg-gray-50 rounded-full transition-colors md:hidden">
               <ChevronLeft size={20} className="text-gray-900" />
@@ -162,17 +228,17 @@ export default function ProductDetailPage() {
             <span className="text-sm font-medium text-gray-900 uppercase tracking-widest hidden sm:block">Liên hệ</span>
             <a href="/cart" className="relative p-2 hover:bg-gray-50 rounded-full transition-colors group">
               <ShoppingCart size={24} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+              {/* Note: Số lượng này bạn có thể cập nhật linh động bằng cách đọc từ localStorage ở một bước sau */}
               <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-medium rounded-full h-4 w-4 flex items-center justify-center border-2 border-white">2</span>
             </a>
           </div>
-
         </div>
       </nav>
 
       {/* --- LAYOUT CHÍNH (CHIA 2 CỘT) --- */}
       <div className="max-w-[1400px] mx-auto pt-16 grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-16">
         
-        {/* ================= CỘT TRÁI: DÃY ẢNH ================= */}
+        {/* CỘT TRÁI: DÃY ẢNH */}
         <div className="lg:col-span-7 flex flex-col">
           {product.images.map((img: string, idx: number) => (
             <div key={idx} className="w-full bg-gray-50 border-b border-gray-100 last:border-b-0">
@@ -185,7 +251,7 @@ export default function ProductDetailPage() {
           ))}
         </div>
 
-        {/* ================= CỘT PHẢI: THÔNG TIN ================= */}
+        {/* CỘT PHẢI: THÔNG TIN */}
         <div className="lg:col-span-5 px-6 lg:px-0 py-10 lg:py-16 relative">
           <div className="sticky top-24 max-w-md">
             
@@ -234,11 +300,10 @@ export default function ProductDetailPage() {
                   const isSelected = selectedColor === color;
                   const hexValue = COLOR_HEX_MAP[color] || "#000000";
                   
-                  // Tính toán màu nền và màu chữ dựa trên trạng thái
                   const bgColor = isSelected ? hexValue : "#ffffff";
                   const textColor = isSelected 
-                    ? (isLightColor(color) ? "#111827" : "#ffffff") // Nền sáng chữ đen, nền tối chữ trắng
-                    : "#111827"; // Mặc định chữ đen
+                    ? (isLightColor(color) ? "#111827" : "#ffffff") 
+                    : "#111827"; 
 
                   return (
                     <button
@@ -248,12 +313,8 @@ export default function ProductDetailPage() {
                         ${isSelected 
                           ? 'border-transparent shadow-md ring-1 ring-offset-2 ring-gray-200' 
                           : 'border-gray-200 hover:border-gray-900'}`}
-                      style={{ 
-                        backgroundColor: bgColor,
-                        color: textColor
-                      }}
+                      style={{ backgroundColor: bgColor, color: textColor }}
                     >
-                      {/* Chấm màu nhỏ (chỉ hiện khi chưa được chọn để nút nhìn thanh thoát) */}
                       {!isSelected && (
                         <span 
                           className="w-3 h-3 rounded-full border border-gray-300"
@@ -267,7 +328,11 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            <button className="w-full bg-black text-white py-4 rounded-full font-medium text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors mb-10 active:scale-95 shadow-lg shadow-gray-200">
+            {/* ĐÃ GẮN SỰ KIỆN onClick CHO NÚT NÀY */}
+            <button 
+              onClick={handleAddToCart}
+              className="w-full bg-black text-white py-4 rounded-full font-medium text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors mb-10 active:scale-95 shadow-lg shadow-gray-200"
+            >
               Thêm vào giỏ hàng
             </button>
 
@@ -277,12 +342,8 @@ export default function ProductDetailPage() {
 
             {/* CÁC THẺ ACCORDION */}
             <div className="border-t border-gray-200">
-              
               <div className="border-b border-gray-200">
-                <button 
-                  onClick={() => toggleSection('details')}
-                  className="w-full py-5 flex items-center justify-between text-left focus:outline-none group"
-                >
+                <button onClick={() => toggleSection('details')} className="w-full py-5 flex items-center justify-between text-left focus:outline-none group">
                   <span className="text-xs font-medium text-gray-900 uppercase tracking-widest group-hover:text-gray-600 transition-colors">Chi tiết sản phẩm</span>
                   {openSection === 'details' ? <Minus size={16} className="text-gray-900" /> : <Plus size={16} className="text-gray-900" />}
                 </button>
@@ -300,10 +361,7 @@ export default function ProductDetailPage() {
               </div>
 
               <div className="border-b border-gray-200">
-                <button 
-                  onClick={() => toggleSection('store')}
-                  className="w-full py-5 flex items-center justify-between text-left focus:outline-none group"
-                >
+                <button onClick={() => toggleSection('store')} className="w-full py-5 flex items-center justify-between text-left focus:outline-none group">
                   <span className="text-xs font-medium text-gray-900 uppercase tracking-widest group-hover:text-gray-600 transition-colors">Dịch vụ tại cửa hàng</span>
                   {openSection === 'store' ? <Minus size={16} className="text-gray-900" /> : <Plus size={16} className="text-gray-900" />}
                 </button>
@@ -315,10 +373,7 @@ export default function ProductDetailPage() {
               </div>
 
               <div className="border-b border-gray-200">
-                <button 
-                  onClick={() => toggleSection('shipping')}
-                  className="w-full py-5 flex items-center justify-between text-left focus:outline-none group"
-                >
+                <button onClick={() => toggleSection('shipping')} className="w-full py-5 flex items-center justify-between text-left focus:outline-none group">
                   <span className="text-xs font-medium text-gray-900 uppercase tracking-widest group-hover:text-gray-600 transition-colors">Chính sách giao hàng và đổi hàng</span>
                   {openSection === 'shipping' ? <Minus size={16} className="text-gray-900" /> : <Plus size={16} className="text-gray-900" />}
                 </button>
@@ -328,7 +383,6 @@ export default function ProductDetailPage() {
                   </div>
                 )}
               </div>
-
             </div>
 
           </div>
