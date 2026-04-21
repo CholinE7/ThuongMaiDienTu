@@ -36,7 +36,7 @@ public class AuthService {
         return customer;
     }
 
-    public Employers registerEmployer(Employers employer){
+    public Employers registerEmployer(Employers employer) {
         employer.setPassword(encoder.encode(employer.getPassword()));
         employerRepo.save(employer);
         return employer;

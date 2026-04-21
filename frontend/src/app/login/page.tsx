@@ -12,7 +12,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // TOAST THÔNG BÁO
   const [toastMsg, setToastMsg] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
@@ -34,7 +34,7 @@ const LoginPage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // Gửi 'email' vào trường 'username' để khớp với MyUserDetailsService của bạn
-        body: JSON.stringify({ username: email, password }), 
+        body: JSON.stringify({ username: email, password }),
       });
 
       const token = await res.text();
@@ -43,10 +43,10 @@ const LoginPage = () => {
         // Lưu chìa khóa JWT vào túi của trình duyệt
         localStorage.setItem("token", token);
         showToast("Đăng nhập thành công!", "success");
-        
+
         // Chờ 1 giây để hiện hiệu ứng thành công rồi mới chuyển hướng
         setTimeout(() => {
-          router.push("/"); 
+          router.push("/");
         }, 1000);
       } else {
         showToast("Email hoặc mật khẩu không chính xác!", "error");
@@ -61,7 +61,7 @@ const LoginPage = () => {
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col font-sans relative">
-      
+
       {/* THÔNG BÁO TOAST */}
       {toastMsg && (
         <div className={`fixed top-20 right-6 bg-white border-l-4 shadow-xl px-6 py-4 rounded-lg flex items-center gap-3 z-[60] animate-in slide-in-from-right-8 ${toastType === 'success' ? 'border-green-500' : 'border-red-500'}`}>
@@ -81,10 +81,10 @@ const LoginPage = () => {
           </a>
         </div>
       </nav>
-      
+
       <div className="flex-grow flex items-center justify-center px-4 pt-24 pb-12">
         <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl shadow-blue-100/30 p-8 md:p-12 border border-gray-100 relative overflow-hidden">
-          
+
           {/* Hiệu ứng loading mờ nền */}
           {isLoading && (
             <div className="absolute inset-0 bg-white/60 z-20 flex items-center justify-center backdrop-blur-[2px]">
@@ -107,8 +107,8 @@ const LoginPage = () => {
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500 transition-colors">
                   <Mail size={18} />
                 </div>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -125,7 +125,7 @@ const LoginPage = () => {
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500 transition-colors">
                   <Lock size={18} />
                 </div>
-                <input 
+                <input
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
@@ -144,7 +144,7 @@ const LoginPage = () => {
               </div>
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={isLoading}
               className="w-full bg-gray-900 text-white py-5 rounded-2xl font-bold text-lg hover:bg-black transition-all active:scale-95 shadow-xl shadow-gray-200 flex items-center justify-center gap-3 group uppercase tracking-wide disabled:opacity-70"

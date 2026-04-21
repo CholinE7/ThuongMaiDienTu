@@ -19,7 +19,7 @@ import io.jsonwebtoken.security.Keys;
 public class JWTService {
     private String secretKey = "dG1kdF91ZF9zZWNyZXRfa2V5X2F0X2xlYXN0XzI1Nl9iaXRzX2xvbmc=";
 
-    public String generateToken(String username){
+    public String generateToken(String username) {
         Map<String, Object> claims = new HashMap();
         return Jwts.builder()
                 .claims()
@@ -32,7 +32,7 @@ public class JWTService {
                 .compact();
     }
 
-    private SecretKey getKey(){
+    private SecretKey getKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }

@@ -43,6 +43,15 @@ public class Products{
     @Column
     private String description;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "discount_percentage")
+    private BigDecimal discountPercentage;
+
+    @Column
+    private BigDecimal rating;
+
     @Column 
     private int deleted;
 
