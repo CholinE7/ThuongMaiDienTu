@@ -48,12 +48,4 @@ public class OrdersDetails{
 
     @Column(nullable = false)
     private BigDecimal total;
-
-    @Column(name = "created_at")
-    @CreationTimestamp
-    private Timestamp createdAt;
-
-    @Column(name = "updated_at")
-    @CreationTimestamp
-    private Timestamp updatedAt;
 }

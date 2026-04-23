@@ -1,23 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, RefreshCcw, CheckCircle2, Clock, XCircle, Eye, ChevronLeft, ChevronRight, X, Loader2, Truck, Package, ArrowLeft,Save } from "lucide-react";
+import { Search, RefreshCcw, CheckCircle2, Clock, XCircle, Eye, ChevronLeft, ChevronRight, X, Loader2, Truck, Package, ArrowLeft, Save } from "lucide-react";
 import Image from "next/image";
 
 const ORDERS_PER_PAGE = 5;
 
+const TABS = [
+  { key: "all", label: "Tất cả" },
+  { key: "pending", label: "Chờ xử lý" },
+  { key: "delivered", label: "Đã giao" },
+  { key: "cancelled", label: "Đã hủy" },
+];
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
 
-  const [appliedFilters, setAppliedFilters] = useState({
-    fromDate: "", toDate: "", status: "all"
-  });
+  const [appliedFilters, setAppliedFilters] = useState({ fromDate: "", toDate: "" });
 
+  const [activeTab, setActiveTab] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -25,7 +30,7 @@ export default function AdminOrdersPage() {
 
   const [toastMsg, setToastMsg] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
-  
+
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToastMsg(msg); setToastType(type); setTimeout(() => setToastMsg(""), 3000);
   };
@@ -36,7 +41,7 @@ export default function AdminOrdersPage() {
       const query = new URLSearchParams({
         fromDate: appliedFilters.fromDate,
         toDate: appliedFilters.toDate,
-        status: appliedFilters.status
+        status: "all", // Luôn lấy tất cả, tab lọc phía client
       }).toString();
 
       const response = await fetch(`/api/orders?${query}`);
@@ -58,11 +63,10 @@ export default function AdminOrdersPage() {
   // HÀM CẬP NHẬT TRẠNG THÁI (Trong Modal Chi tiết)
   const handleUpdateStatus = async () => {
     if (!statusUpdateValue || !selectedOrder) return;
-    
+
     if (statusUpdateValue === 'cancelled') {
       if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
     }
-
     setIsLoading(true);
     try {
       const response = await fetch('/api/orders', {
@@ -71,11 +75,10 @@ export default function AdminOrdersPage() {
         body: JSON.stringify({ id: selectedOrder.id, status: statusUpdateValue })
       });
       const result = await response.json();
-      
       if (result.success) {
         showToast(result.message, "success");
-        setSelectedOrder({...selectedOrder, status: statusUpdateValue});
-        fetchOrders(); 
+        setSelectedOrder({ ...selectedOrder, status: statusUpdateValue });
+        fetchOrders();
       } else {
         showToast(result.message, "error");
       }
@@ -86,35 +89,31 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const totalPages = Math.ceil(orders.length / ORDERS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ORDERS_PER_PAGE;
-  const paginatedOrders = orders.slice(startIndex, startIndex + ORDERS_PER_PAGE);
-
-  const handleSearchClick = () => setAppliedFilters({ fromDate, toDate, status: filterStatus });
-  const handleResetFilters = () => {
-    setFromDate(""); setToDate(""); setFilterStatus("all");
-    setAppliedFilters({ fromDate: "", toDate: "", status: "all" });
+  const handleSearchClick = () => {
+    setAppliedFilters({ fromDate, toDate });
+    setActiveTab("all");
+    setCurrentPage(1);
   };
-  
-  const handleOpenDetails = (order: any) => { 
-    setSelectedOrder(order); 
-    setStatusUpdateValue(order.status); 
-    setIsModalOpen(true); 
+
+  const handleOpenDetails = (order: any) => {
+    setSelectedOrder(order);
+    setStatusUpdateValue(order.status);
+    setIsModalOpen(true);
   };
 
   const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN').format(price) + " đ";
-  
+
   const formatDateDisplay = (isoDate: string) => {
-    if(!isoDate) return "";
+    if (!isoDate) return "";
     const [year, month, day] = isoDate.split("-");
     return `${day}-${month}-${year}`;
   };
 
   const renderStatusBadge = (status: string, forModal: boolean = false) => {
-    const baseClass = forModal 
-      ? "inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border text-sm font-bold" 
+    const baseClass = forModal
+      ? "inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border text-sm font-bold"
       : "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold tracking-wide";
-      
+
     switch (status) {
       case 'unpaid': return <span className={`${baseClass} border-orange-400 text-orange-600 bg-orange-50`}><Clock size={forModal ? 16 : 14} /> Chưa thanh toán</span>;
       case 'paid': return <span className={`${baseClass} border-blue-400 text-blue-600 bg-blue-50`}><CheckCircle2 size={forModal ? 16 : 14} /> Đã thanh toán</span>;
@@ -128,7 +127,7 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="relative min-h-[80vh] font-sans pb-10 bg-gray-50">
-      
+
       {/* THÔNG BÁO TOAST */}
       {toastMsg && (
         <div className={`fixed top-6 right-6 bg-white border-l-4 shadow-xl px-6 py-4 rounded-lg flex items-center gap-3 z-[100] animate-in slide-in-from-right-8 ${toastType === 'success' ? 'border-green-500' : 'border-red-500'}`}>
@@ -143,7 +142,7 @@ export default function AdminOrdersPage() {
       {isModalOpen && selectedOrder && (
         <div className="fixed inset-0 bg-gray-500/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl my-8 animate-in zoom-in-95 overflow-hidden">
-            
+
             {/* Header: Chi tiết đơn hàng */}
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
               <h2 className="text-lg font-bold text-blue-600">Chi tiết đơn hàng</h2>
@@ -156,7 +155,7 @@ export default function AdminOrdersPage() {
             </div>
 
             <div className="p-8 space-y-8 bg-white">
-              
+
               {/* BLOCK 1: THÔNG TIN KHÁCH HÀNG */}
               <div>
                 <h4 className="text-lg font-bold text-gray-800 border-b border-gray-200 pb-2 mb-4">Thông tin khách hàng</h4>
@@ -185,9 +184,9 @@ export default function AdminOrdersPage() {
                 <div className="flex flex-col gap-4">
                   <div className="w-full md:w-1/3">
                     <label className="block text-sm text-gray-500 mb-2">Chọn trạng thái mới</label>
-                    <select 
-                      value={statusUpdateValue} 
-                      onChange={(e) => setStatusUpdateValue(e.target.value)} 
+                    <select
+                      value={statusUpdateValue}
+                      onChange={(e) => setStatusUpdateValue(e.target.value)}
                       className="w-full border border-gray-300 rounded px-4 py-2.5 outline-none focus:border-blue-500 bg-white"
                     >
                       <option value="unpaid">Chưa thanh toán</option>
@@ -200,7 +199,7 @@ export default function AdminOrdersPage() {
                   </div>
                   <div>
                     <button onClick={handleUpdateStatus} className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-5 py-2.5 rounded shadow-sm font-semibold text-sm transition flex items-center gap-2">
-                       <Save size={18} /> Cập nhật trạng thái
+                      <Save size={18} /> Cập nhật trạng thái
                     </button>
                   </div>
                 </div>
@@ -226,10 +225,10 @@ export default function AdminOrdersPage() {
                           <tr key={idx} className="hover:bg-gray-50">
                             <td className="px-4 py-4">{idx + 1}</td>
                             <td className="px-4 py-4 text-left font-medium text-gray-800">
-                               <div className="flex items-center gap-3">
-                                  {item.image && <div className="relative w-10 h-10 border rounded flex-shrink-0"><Image src={item.image} alt="shoes" fill className="object-cover rounded" /></div>}
-                                  <span>{item.name || "Sản phẩm giày"}</span>
-                               </div>
+                              <div className="flex items-center gap-3">
+                                {item.image && <div className="relative w-10 h-10 border rounded flex-shrink-0"><Image src={item.image} alt="shoes" fill className="object-cover rounded" /></div>}
+                                <span>{item.name || "Sản phẩm giày"}</span>
+                              </div>
                             </td>
                             <td className="px-4 py-4">{item.quantity || 1}</td>
                             <td className="px-4 py-4">{formatPrice(item.price || selectedOrder.totalAmount)}</td>
@@ -237,11 +236,11 @@ export default function AdminOrdersPage() {
                           </tr>
                         ))
                       ) : (
-                         <tr>
-                            <td colSpan={5} className="px-4 py-8 text-center text-gray-500 italic">
-                               Đơn hàng này chưa có dữ liệu chi tiết sản phẩm trong hệ thống (Dữ liệu mẫu).
-                            </td>
-                         </tr>
+                        <tr>
+                          <td colSpan={5} className="px-4 py-8 text-center text-gray-500 italic">
+                            Đơn hàng này chưa có dữ liệu chi tiết sản phẩm trong hệ thống (Dữ liệu mẫu).
+                          </td>
+                        </tr>
                       )}
                     </tbody>
                   </table>
@@ -257,7 +256,7 @@ export default function AdminOrdersPage() {
                     <span className="font-bold text-blue-600 text-xl">{formatPrice(selectedOrder.totalAmount)}</span>
                   </div>
                 </div>
-                
+
                 <button onClick={() => setIsModalOpen(false)} className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2.5 rounded shadow-sm font-semibold transition flex items-center gap-2">
                   <ArrowLeft size={18} /> Quay về
                 </button>
@@ -340,7 +339,7 @@ export default function AdminOrdersPage() {
                     <td className="px-4 py-5 font-bold text-red-500">{formatPrice(order.totalAmount)}</td>
                     <td className="px-4 py-5 font-semibold text-gray-800">{order.paymentMethod}</td>
                     <td className="px-4 py-5">{renderStatusBadge(order.status)}</td>
-                    
+
                     <td className="px-4 py-5">
                       <div className="flex justify-center items-center">
                         <button onClick={() => handleOpenDetails(order)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded shadow-sm transition font-semibold inline-flex items-center gap-1.5" title="Xem chi tiết">

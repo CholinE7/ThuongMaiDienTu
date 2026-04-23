@@ -42,13 +42,15 @@ public class OrderController extends BaseController {
             @RequestParam(value = "page_no", defaultValue = "0") int page,
             @RequestParam(value = "page_size", defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate) {
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        PageResponse<Orders> pageResponse = orderService.getAll(pageable);
+        PageResponse<Orders> pageResponse = orderService.getAllByDateRange(fromDate, toDate, pageable);
         List<Orders> orders = pageResponse.getContent();
         List<OrdHasDetailDTO> ordHasDetailDTOs = orders.stream()
                 .map(item -> orderService.toOrdHasDetailDTO(item))

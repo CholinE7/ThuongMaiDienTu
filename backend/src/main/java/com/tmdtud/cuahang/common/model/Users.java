@@ -3,7 +3,7 @@ package com.tmdtud.cuahang.common.model;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
-
+import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -28,7 +28,7 @@ public class Users {
 
     @CreationTimestamp
     @Column(name = "created_at")
-    String createdAt;
+    LocalDateTime createdAt;
 
     @Column(name = "username")
     private String username;
@@ -48,9 +48,18 @@ public class Users {
     @Column(name = "phone")
     private String phone;
 
+    @Column(name = "street")
+    private String street;
+
+    @Column(name = "ward")
+    private String ward;
+
+    @Column(name = "city")
+    private String city;
+
     @Column(name = "date_of_birth")
     private String dateOfBirth;
 
-    @Column(name = "address")
-    private String address;
+    // @Column(name = "address")
+    // private String address;
 }

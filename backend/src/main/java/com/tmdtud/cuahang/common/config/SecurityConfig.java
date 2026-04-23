@@ -28,25 +28,26 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
     private final UserDetailsService userDetailsService;
-    
-    @Bean 
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> request
-                .requestMatchers("/login", "/api/customers/register/customers").permitAll()   
-                .requestMatchers("/api/employers/**").hasAnyRole("STAFF", "ADMIN")
-            //    .requestMatchers("/api/employers/**").permitAll() // Cho phép tất cả truy cập vào endpoint này (dùng để test)
-                .requestMatchers("/api/customers/**").hasAnyRole("STAFF", "ADMIN")
-                .anyRequest().authenticated()) 
+                        .requestMatchers("/login", "/api/customers/register/customers").permitAll()
+                        .requestMatchers("/api/employers/**").hasAnyRole("STAFF", "ADMIN")
+                        // .requestMatchers("/api/employers/**").permitAll() // Cho phép tất cả truy cập
+                        // vào endpoint này (dùng để test)
+                        .requestMatchers("/api/customers/**").hasAnyRole("STAFF", "ADMIN")
+                        .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
-    // Cấu hình CORS 
+    // Cấu hình CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
@@ -54,7 +55,7 @@ public class SecurityConfig {
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         config.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
@@ -69,9 +70,9 @@ public class SecurityConfig {
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
-        
-        provider.setPasswordEncoder(passwordEncoder()); 
-        
+
+        provider.setPasswordEncoder(passwordEncoder());
+
         return provider;
     }
 

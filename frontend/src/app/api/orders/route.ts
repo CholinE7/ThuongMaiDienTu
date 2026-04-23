@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 
 // DATABASE GIẢ: Đã bổ sung email, address và mảng items (danh sách giày) cho các đơn hàng
 let mockOrdersDatabase = [
-  { 
-    id: 1, orderCode: "#ORD-089", customerName: "Nguyễn Văn An", totalProducts: 2, phone: "0901234567", 
+  {
+    id: 1, orderCode: "#ORD-089", customerName: "Nguyễn Văn An", totalProducts: 2, phone: "0901234567",
     email: "an.nguyen@gmail.com", address: "123 Đường Giày, Quận 1, TP.HCM",
     orderDate: "2026-04-06", orderTime: "14:30", totalAmount: 850000, paymentMethod: "COD", status: "unpaid",
     items: [
@@ -12,16 +12,16 @@ let mockOrdersDatabase = [
       { id: "#SP102", name: "Giày Chạy Bộ Nữ A-Boost", image: "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?q=80&w=150", quantity: 1, price: 450000, discount: 0, total: 450000 }
     ]
   },
-  { 
-    id: 2, orderCode: "#ORD-088", customerName: "Trần Thị Bích", totalProducts: 1, phone: "0912345678", 
+  {
+    id: 2, orderCode: "#ORD-088", customerName: "Trần Thị Bích", totalProducts: 1, phone: "0912345678",
     email: "bichtran.99@gmail.com", address: "45 Lê Lợi, Phường Bến Nghé, Quận 1",
     orderDate: "2026-04-05", orderTime: "09:15", totalAmount: 350000, paymentMethod: "MOMO", status: "paid",
     items: [
       { id: "#SP105", name: "Giày Vải Canvas Classic", image: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=150", quantity: 1, price: 350000, discount: 0, total: 350000 }
     ]
   },
-  { 
-    id: 3, orderCode: "#ORD-087", customerName: "Lê Hoàng Cường", totalProducts: 1, phone: "0923456789", 
+  {
+    id: 3, orderCode: "#ORD-087", customerName: "Lê Hoàng Cường", totalProducts: 1, phone: "0923456789",
     email: "cuong.le@yahoo.com", address: "Khu công nghệ cao, Quận 9, TP.Thủ Đức",
     orderDate: "2026-04-05", orderTime: "16:45", totalAmount: 1250000, paymentMethod: "VNPAY", status: "processing",
     items: [
@@ -42,7 +42,7 @@ let mockOrdersDatabase = [
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function GET(request: Request) {
-  await delay(800); 
+  await delay(800);
 
   const { searchParams } = new URL(request.url);
   const fromDate = searchParams.get('fromDate') || "";
@@ -60,10 +60,10 @@ export async function GET(request: Request) {
     return matchFromDate && matchToDate && matchStatus;
   });
 
-  return NextResponse.json({ 
-    success: true, 
+  return NextResponse.json({
+    success: true,
     total: filteredData.length,
-    data: filteredData 
+    data: filteredData
   });
 }
 
@@ -76,9 +76,9 @@ export async function PUT(request: Request) {
     const orderIndex = mockOrdersDatabase.findIndex(o => o.id === id);
     if (orderIndex > -1) {
       mockOrdersDatabase[orderIndex].status = status;
-      return NextResponse.json({ 
-        success: true, 
-        message: status === 'cancelled' ? "Đã hủy đơn hàng thành công!" : "Đã cập nhật trạng thái đơn hàng!" 
+      return NextResponse.json({
+        success: true,
+        message: status === 'cancelled' ? "Đã hủy đơn hàng thành công!" : "Đã cập nhật trạng thái đơn hàng!"
       });
     }
 
