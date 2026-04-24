@@ -1,57 +1,49 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, 
   X, MapPin, Phone, User, Ticket, QrCode, CreditCard, Banknote,
-  Wallet, Landmark, CircleDollarSign
+  Wallet, Landmark, CircleDollarSign, Loader2
 } from 'lucide-react';
-
-// Định nghĩa kiểu dữ liệu cho sản phẩm giày dép
-interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;
-  category: string;
-}
+import { getCart, updateQuantity as updateCartQuantity, removeFromCart, clearCart, CartItem } from '@/utils/cartUtils';
+import { apiRequest } from '@/services/app';
 
 const Cart = () => {
   // Dữ liệu mẫu khởi tạo
-  const [items, setItems] = useState<CartItem[]>([
-    {
-      id: 1,
-      name: "Nike Air Max 270 Red Edition",
-      price: 3500000,
-      quantity: 1,
-      image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400&h=400&auto=format&fit=crop",
-      category: "Giày Nam"
-    },
-    {
-      id: 2,
-      name: "Adidas Ultraboost 22 Core Black",
-      price: 4200000,
-      quantity: 1,
-      image: "https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?q=80&w=400&h=400&auto=format&fit=crop",
-      category: "Giày Chạy Bộ"
-    }
-  ]);
+  const [items, setItems] = useState<CartItem[]>([]);
+  
+  useEffect(() => {
+    setItems(getCart());
+    const handleCartUpdate = () => setItems(getCart());
+    window.addEventListener("cartUpdated", handleCartUpdate);
+    return () => window.removeEventListener("cartUpdated", handleCartUpdate);
+  }, []);
 
   // State cho Checkout Modal & Phương thức vận chuyển/thanh toán
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('qr'); // Mặc định chọn thanh toán QR
   const [shippingMethod, setShippingMethod] = useState('standard'); // 'standard' hoặc 'express'
 
-  const updateQuantity = (id: number, delta: number) => {
-    setItems(prev => prev.map(item => 
-      item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-    ));
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
+  useEffect(() => {
+    // Tự động điền thông tin nếu đã đăng nhập
+    setCustomerName(localStorage.getItem('customerName') || '');
+    // Tạm thời chưa có sđt và địa chỉ trong localStorage, có thể lấy từ /me nếu cần
+  }, [showCheckoutModal]);
+
+  const updateQuantity = (id: string, delta: number) => {
+    updateCartQuantity(id, delta);
   };
 
-  const removeItem = (id: number) => {
-    setItems(prev => prev.filter(item => item.id !== id));
+  const removeItem = (id: string) => {
+    removeFromCart(id);
   };
+
 
   // Tính toán Tạm tính, Phí vận chuyển và Tổng tiền
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -209,15 +201,15 @@ const Cart = () => {
               <div className="space-y-4 mb-10">
                 <div className="relative">
                   <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input type="text" placeholder="Họ và tên người nhận" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all font-medium text-gray-900" />
+                  <input value={customerName} onChange={e => setCustomerName(e.target.value)} type="text" placeholder="Họ và tên người nhận" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all font-medium text-gray-900" />
                 </div>
                 <div className="relative">
                   <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input type="tel" placeholder="Số điện thoại di động" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all font-medium text-gray-900" />
+                  <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} type="tel" placeholder="Số điện thoại di động" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all font-medium text-gray-900" />
                 </div>
                 <div className="relative">
                   <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input type="text" placeholder="Địa chỉ giao hàng chi tiết" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all font-medium text-gray-900" />
+                  <input value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} type="text" placeholder="Địa chỉ giao hàng chi tiết" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all font-medium text-gray-900" />
                 </div>
                 <div className="flex items-center gap-2 mt-2 ml-1">
                   <input type="checkbox" id="save-info" className="w-4 h-4 rounded text-blue-600 border-gray-300 cursor-pointer" />
@@ -409,13 +401,55 @@ const Cart = () => {
 
               {/* Nút Xác nhận thanh toán cuối cùng */}
               <button 
-                onClick={() => {
-                  alert(`Đặt hàng thành công với phương thức thanh toán: ${paymentMethod} | Giao hàng: ${shippingMethod}`);
-                  setShowCheckoutModal(false);
+                disabled={isPlacingOrder}
+                onClick={async () => {
+                  const customerId = localStorage.getItem("customerId");
+                  if (!customerId) {
+                    alert("Vui lòng đăng nhập để đặt hàng!");
+                    return;
+                  }
+                  
+                  if (!customerName || !customerPhone || !customerAddress) {
+                    alert("Vui lòng điền đầy đủ thông tin giao hàng!");
+                    return;
+                  }
+
+                  setIsPlacingOrder(true);
+                  try {
+                    const orderDetails = items.map(item => ({
+                      productId: item.productId,
+                      quantity: item.quantity,
+                      cost: item.price,
+                      total: item.price * item.quantity
+                    }));
+
+                    const requestBody = {
+                      customerId: Number(customerId),
+                      method: paymentMethod,
+                      totalPrice: total,
+                      details: orderDetails
+                    };
+
+                    const response = await apiRequest('/api/orders', 'POST', requestBody);
+                    const res = await response.json();
+                    if (res.code === 200) {
+                      alert(`Đặt hàng thành công với phương thức thanh toán: ${paymentMethod}`);
+                      clearCart();
+                      setShowCheckoutModal(false);
+                    } else {
+                      alert("Lỗi khi đặt hàng: " + res.message);
+                    }
+                  } catch (error) {
+                    console.error("Error placing order", error);
+                    alert("Đã xảy ra lỗi, vui lòng thử lại sau!");
+                  } finally {
+                    setIsPlacingOrder(false);
+                  }
                 }}
-                className="w-full bg-black text-white py-5 rounded-2xl font-bold text-lg hover:bg-gray-800 transition-all uppercase tracking-wide shadow-xl active:scale-95"
+                className="w-full flex items-center justify-center gap-2 bg-black text-white py-5 rounded-2xl font-bold text-lg hover:bg-gray-800 disabled:bg-gray-600 transition-all uppercase tracking-wide shadow-xl active:scale-95"
               >
-                Xác nhận đặt hàng
+                {isPlacingOrder ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                {isPlacingOrder ? "Đang xử lý..." : "Xác nhận đặt hàng"}
               </button>
             </div>
 

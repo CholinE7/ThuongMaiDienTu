@@ -4,9 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 import com.tmdtud.cuahang.api.auth.service.AuthService;
 import com.tmdtud.cuahang.api.customer.model.Customers;
@@ -44,5 +46,31 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Đã xảy ra lỗi hệ thống!");
         }
-}
+    }
+
+    @GetMapping("/api/auth/me")
+    public ApiResponse<?> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return ApiResponse.error(401, "Chưa đăng nhập");
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof com.tmdtud.cuahang.api.auth.model.CustomerDetails) {
+            com.tmdtud.cuahang.api.auth.model.CustomerDetails userDetails = (com.tmdtud.cuahang.api.auth.model.CustomerDetails) principal;
+            return ApiResponse.success(java.util.Map.of(
+                "id", userDetails.getCustomer().getId(),
+                "fullName", userDetails.getCustomer().getFullName(),
+                "email", userDetails.getCustomer().getEmail(),
+                "role", "CUSTOMER"
+            ));
+        } else if (principal instanceof com.tmdtud.cuahang.api.auth.model.EmployerDetails) {
+            com.tmdtud.cuahang.api.auth.model.EmployerDetails userDetails = (com.tmdtud.cuahang.api.auth.model.EmployerDetails) principal;
+            return ApiResponse.success(java.util.Map.of(
+                "id", userDetails.getEmployer().getId(),
+                "fullName", userDetails.getEmployer().getFullName(),
+                "email", userDetails.getEmployer().getEmail(),
+                "role", "STAFF"
+            ));
+        }
+        return ApiResponse.error(400, "Không nhận diện được người dùng");
+    }
 }

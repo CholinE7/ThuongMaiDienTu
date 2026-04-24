@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-// LƯU Ý: Trong dự án Next.js thực tế của bạn, hãy mở comment 2 dòng bên dưới.
-// Tạm thời tôi comment lại để tránh lỗi biên dịch trong môi trường Xem trước (Preview).
-// import { useParams } from 'next/navigation'; 
-
+import { useParams, useRouter } from 'next/navigation';
+import { apiRequest } from '@/services/app';
+import { addToCart } from '@/utils/cartUtils';
+import Navbar from '@/components/Navbar';
 import { 
   Heart, 
   ChevronLeft, 
@@ -78,42 +78,63 @@ const MOCK_DATABASE: Record<string, any> = {
 
 export default function ProductDetailPage() {
   // --- LẤY ID THỰC TẾ TỪ URL ---
-  // Trong dự án thực tế, bạn sẽ mở comment 2 dòng này để lấy ID thực từ Next.js:
-  // const params = useParams();
-  // const productId = params?.id as string;
-  
-  // Dòng này chỉ dùng để hiển thị mô phỏng trong môi trường Xem trước hiện tại:
-  const productId = "1"; 
+  const params = useParams();
+  const productId = params?.id as string;
+
 
   // --- STATE ---
   const [product, setProduct] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState<string | null>('description');
 
-  // --- MÔ PHỎNG GỌI API LẤY DỮ LIỆU ---
+  // --- GỌI API LẤY DỮ LIỆU ---
   useEffect(() => {
     if (!productId) return; 
 
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      const foundProduct = MOCK_DATABASE[productId] || {
-        ...MOCK_DATABASE["default"],
-        id: productId,
-        name: `Sản phẩm mã ${productId}` 
-      };
-      
-      setProduct(foundProduct);
-      
-      // Mặc định chọn màu đầu tiên
-      if (foundProduct.colors?.length > 0) {
-        setSelectedColor(foundProduct.colors[0]);
+    const fetchProduct = async () => {
+      setIsLoading(true);
+      try {
+        const response = await apiRequest(`/api/products/${productId}`, 'GET');
+        const res = await response.json();
+        if (res.code === 200 && res.result) {
+          const apiProduct = res.result;
+          
+          // Chuyển đổi dữ liệu API sang định dạng hiển thị
+          const foundProduct = {
+            id: apiProduct.id,
+            name: apiProduct.name,
+            price: apiProduct.price,
+            category: apiProduct.category?.name || 'Giày',
+            description: apiProduct.description || 'Chưa có mô tả',
+            sizes: [39, 40, 41, 42, 43], // Mock sizes vì backend chưa có sizes
+            colors: ["Đen", "Trắng"], // Mock colors vì backend chưa có colors
+            images: [
+              apiProduct.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop"
+            ]
+          };
+
+          setProduct(foundProduct);
+          if (foundProduct.colors?.length > 0) {
+            setSelectedColor(foundProduct.colors[0]);
+          }
+          if (foundProduct.sizes?.length > 0) {
+            setSelectedSize(foundProduct.sizes[0]);
+          }
+        } else {
+          setError(res.message || "Không tìm thấy sản phẩm");
+        }
+      } catch (error) {
+        console.error("Lỗi lấy thông tin sản phẩm", error);
+        setError("Lỗi kết nối đến máy chủ. Vui lòng thử lại sau.");
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
-    }, 500);
+    };
+
+    fetchProduct();
   }, [productId]);
 
   const formatPrice = (p: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p);
@@ -121,6 +142,16 @@ export default function ProductDetailPage() {
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
   };
+
+  // Màn hình Error
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center">
+        <p className="font-medium text-red-500 uppercase tracking-widest text-sm mb-4">{error}</p>
+        <button onClick={() => window.location.reload()} className="px-6 py-2 bg-black text-white rounded-full text-sm font-medium hover:bg-gray-800 transition">Thử lại</button>
+      </div>
+    );
+  }
 
   // Màn hình Loading
   if (isLoading || !product) {
@@ -135,39 +166,7 @@ export default function ProductDetailPage() {
   return (
     <main className="min-h-screen bg-white font-sans">
       {/* --- HEADER --- */}
-      <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 z-50">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
-          
-          <div className="flex items-center gap-2 sm:gap-4">
-            <a href="/" className="p-2 hover:bg-gray-50 rounded-full transition-colors md:hidden">
-              <ChevronLeft size={20} className="text-gray-900" />
-            </a>
-            <a href="/" className="text-2xl font-semibold text-gray-900 tracking-tight uppercase">
-              SHOE<span className="text-blue-600">STORE</span>
-            </a>
-          </div>
-          
-          <div className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <input 
-                type="text" 
-                placeholder="Tìm kiếm sản phẩm..." 
-                className="w-full bg-gray-50 border border-gray-200 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm font-medium text-gray-900"
-              />
-              <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-gray-900 uppercase tracking-widest hidden sm:block">Liên hệ</span>
-            <a href="/cart" className="relative p-2 hover:bg-gray-50 rounded-full transition-colors group">
-              <ShoppingCart size={24} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
-              <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-medium rounded-full h-4 w-4 flex items-center justify-center border-2 border-white">2</span>
-            </a>
-          </div>
-
-        </div>
-      </nav>
+      <Navbar />
 
       {/* --- LAYOUT CHÍNH (CHIA 2 CỘT) --- */}
       <div className="max-w-[1400px] mx-auto pt-16 grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-16">
@@ -267,7 +266,12 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            <button className="w-full bg-black text-white py-4 rounded-full font-medium text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors mb-10 active:scale-95 shadow-lg shadow-gray-200">
+            <button 
+              onClick={() => {
+                addToCart(product, 1, selectedSize, selectedColor);
+                alert("Đã thêm vào giỏ hàng!");
+              }}
+              className="w-full bg-black text-white py-4 rounded-full font-medium text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors mb-10 active:scale-95 shadow-lg shadow-gray-200">
               Thêm vào giỏ hàng
             </button>
 

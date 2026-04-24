@@ -38,4 +38,6 @@ public class ProductDTO{
 
     @NotNull(message = "category not null")
     private Categories category;
+
+    private String imageUrl;
 }

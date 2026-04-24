@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation'; 
 import { ShoppingCart, Search, User, Menu, X, LogOut, FileText } from 'lucide-react';
+import { getCartCount } from '@/utils/cartUtils';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -15,17 +16,35 @@ export default function Navbar() {
   // --- STATE LƯU THÔNG TIN ĐĂNG NHẬP ---
   const [userName, setUserName] = useState<string | null>(null);
 
+  const [cartCount, setCartCount] = useState(0);
+
   // KHI NAVBAR LOAD LÊN, KIỂM TRA XEM CÓ TÊN NGƯỜI DÙNG TRONG LOCAL STORAGE KHÔNG
   useEffect(() => {
     const storedName = localStorage.getItem("customerName");
     if (storedName) {
       setUserName(storedName);
     }
+    
+    // Khởi tạo số lượng giỏ hàng
+    setCartCount(getCartCount());
+    
+    // Lắng nghe sự kiện cập nhật giỏ hàng
+    const handleCartUpdate = () => {
+      setCartCount(getCartCount());
+    };
+    window.addEventListener("cartUpdated", handleCartUpdate);
+    
+    return () => {
+      window.removeEventListener("cartUpdated", handleCartUpdate);
+    };
   }, []);
 
   // HÀM XỬ LÝ ĐĂNG XUẤT
   const handleLogout = () => {
-    localStorage.removeItem("customerName"); // Xóa dữ liệu đăng nhập
+    localStorage.removeItem("token");
+    localStorage.removeItem("customerName");
+    localStorage.removeItem("customerEmail");
+    localStorage.removeItem("customerId");
     setUserName(null); // Xóa trên giao diện
     router.push('/'); 
   };
@@ -117,12 +136,16 @@ export default function Navbar() {
               </div>
             </div>
 
-            <div className="relative cursor-pointer group" title="Giỏ hàng">
+            <Link href="/cart" className="relative cursor-pointer group" title="Giỏ hàng">
               <div className="p-2 rounded-full group-hover:bg-gray-100 transition">
                 <ShoppingCart size={24} className="text-gray-600 group-hover:text-blue-600 transition" />
               </div>
-              <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">0</span>
-            </div>
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
 
             <button className="lg:hidden text-gray-600" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
               {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}

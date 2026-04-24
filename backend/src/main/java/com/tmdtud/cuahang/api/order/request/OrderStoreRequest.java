@@ -24,7 +24,6 @@ public class OrderStoreRequest {
     @NotNull(message = "customer not null")
     private Long customerId;
 
-    @NotNull(message = "employer not null")
     private Long employerId;
 
     @NotBlank(message = "method not empty")

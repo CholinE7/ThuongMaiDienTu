@@ -42,6 +42,24 @@ const LoginPage = () => {
       if (res.ok && token !== "fail") {
         // Lưu chìa khóa JWT vào túi của trình duyệt
         localStorage.setItem("token", token);
+
+        // Gọi /api/auth/me để lấy user info
+        try {
+          const meRes = await fetch("http://localhost:8080/api/auth/me", {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (meRes.ok) {
+            const meData = await meRes.json();
+            if (meData.code === 200) {
+              localStorage.setItem("customerName", meData.result.fullName);
+              localStorage.setItem("customerEmail", meData.result.email);
+              localStorage.setItem("customerId", meData.result.id.toString());
+            }
+          }
+        } catch (e) {
+          console.error("Lỗi lấy thông tin user", e);
+        }
+
         showToast("Đăng nhập thành công!", "success");
 
         // Chờ 1 giây để hiện hiệu ứng thành công rồi mới chuyển hướng

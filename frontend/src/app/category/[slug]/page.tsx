@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import Navbar from '@/src/components/Navbar';
-import ProductCard from '@/src/components/ProductCard';
-import { products } from '@/src/data/products';
+import Navbar from '@/components/Navbar';
+import ProductCard from '@/components/ProductCard';
+import { products } from '@/data/products';
 import { SlidersHorizontal, ChevronDown, X } from 'lucide-react';
 
 const SORT_OPTIONS = ["Tùy chọn", "Giá: Tăng dần", "Giá: Giảm dần"];

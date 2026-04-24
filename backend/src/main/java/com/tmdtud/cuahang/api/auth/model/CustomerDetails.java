@@ -9,8 +9,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.tmdtud.cuahang.api.customer.model.Customers;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+@Getter
 @RequiredArgsConstructor
 public class CustomerDetails implements UserDetails {
     
