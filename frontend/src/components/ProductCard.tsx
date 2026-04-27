@@ -17,7 +17,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Khối hình ảnh */}
       <Link href={`/product/${product.id}`} className="block relative aspect-square w-full bg-gray-100 overflow-hidden mb-4">
         <Image
-          src={product.image}
+          src={product.image || product.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400"}
           alt={product.name}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"

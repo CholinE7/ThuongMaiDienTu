@@ -73,6 +73,12 @@ public class OrderService implements OrderServiceI {
     }
 
     @Override
+    public PageResponse<Orders> getMyOrders(Long customerId, Pageable pageable) {
+        Page<Orders> orders = orderRepository.findByCustomerId(customerId, pageable);
+        return new PageResponse<Orders>(orders);
+    }
+
+    @Override
     @Transactional
     public Orders add(OrderStoreRequest request) {
         CustomerDTO customerDTO = customerService.getById(request.getCustomerId());
@@ -84,6 +90,11 @@ public class OrderService implements OrderServiceI {
                 .status(OrderStatus.PENDING)
                 .deleted(0)
                 .totalPrice(request.getTotalPrice()).build();
+
+        if (request.getEmployerId() != null) {
+            Employers employer = employerService.getById(request.getEmployerId());
+            order.setEmployer(employer);
+        }
 
         Orders newOrder = orderRepository.save(order);
         orderDetailService.addAll(request.getDetails(), newOrder.getId()); // tạo chi tiết đơn

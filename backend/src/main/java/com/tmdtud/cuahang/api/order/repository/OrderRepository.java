@@ -24,4 +24,7 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate,
             Pageable pageable);
+
+    @Query("SELECT o FROM Orders o WHERE o.customer.id = :customerId AND o.deleted = 0")
+    Page<Orders> findByCustomerId(@Param("customerId") Long customerId, Pageable pageable);
 }

@@ -2,9 +2,9 @@
 
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState, useEffect } from 'react';
-import Navbar from '@/src/components/Navbar';
-import ProductCard from '@/src/components/ProductCard';
-import { products } from '@/src/data/products';
+import Navbar from '@/components/Navbar';
+import ProductCard from '@/components/ProductCard';
+import { products } from '@/data/products';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Số lượng sản phẩm hiển thị trên 1 trang

@@ -1,13 +1,36 @@
-import Navbar from '../components/Navbar';
-import HeroSlider from '../components/HeroSlider';
-import ProductCard from '../components/ProductCard';
-import { products } from '../data/products';
+import Navbar from '@/components/Navbar';
+import HeroSlider from '@/components/HeroSlider';
+import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 import { Truck, ShieldCheck, RefreshCw } from 'lucide-react';
 
-export default function Home() {
-  const shoesNu = products.filter(product => product.category === "Giày Thể Thao Nữ").slice(0,4);
-  const shoesNam = products.filter(product => product.category === "Giày Thể Thao Nam").slice(0,4);
+// Hàm lấy dữ liệu sản phẩm từ API
+async function getProducts() {
+  try {
+    const res = await fetch('http://localhost:8080/api/products?page_size=50', { 
+      cache: 'no-store' 
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    
+    // Map dữ liệu từ API về định dạng Frontend cần
+    return (data.result?.content || []).map((p: any) => ({
+      ...p,
+      category: p.category?.name || "Khác", // Backend trả về object category
+      imageUrl: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400",
+      image: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400"
+    }));
+  } catch (error) {
+    console.error("Lỗi lấy sản phẩm trang chủ:", error);
+    return [];
+  }
+}
+
+export default async function Home() {
+  const products = await getProducts();
+
+  const shoesNu = products.filter((product: any) => product.category === "Giày Thể Thao Nữ").slice(0,4);
+  const shoesNam = products.filter((product: any) => product.category === "Giày Thể Thao Nam").slice(0,4);
   
   // Lấy 4 sản phẩm đầu tiên làm sản phẩm bán chạy
   const bestSellers = products.slice(0, 4); 

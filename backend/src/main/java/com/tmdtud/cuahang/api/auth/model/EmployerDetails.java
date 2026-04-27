@@ -9,7 +9,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.tmdtud.cuahang.api.employer.model.Employers;
 
+import lombok.Getter;
 
+@Getter
 public class EmployerDetails implements UserDetails {
  
     private Employers employer;
