@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class ProductSummaryDTO {
     private Long id;
     private String name;
+    private String imageUrl;
 }

@@ -105,57 +105,60 @@ export default function OrdersPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {orders.map((order) => (
-              <div key={order.id} className="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
-                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex flex-wrap justify-between items-center gap-4">
-                  <div>
-                    <span className="text-xs text-gray-500 uppercase tracking-widest">Mã đơn hàng: </span>
-                    <span className="font-bold text-gray-900">#{order.id}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-gray-500 uppercase tracking-widest">Phương thức: </span>
-                    <span className="font-medium text-gray-900">{order.method}</span>
-                  </div>
-                  <div>
-                    {getStatusBadge(order.status)}
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  {/* Danh sách sản phẩm trong đơn */}
-                  <div className="space-y-4 mb-6">
-                    {order.details && order.details.map((detail: any) => (
-                      <div key={detail.id} className="flex items-center gap-4 border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-                        {/* Mock ảnh nếu backend chưa trả chi tiết ảnh trong detail */}
-                        <div className="w-20 h-20 bg-gray-100 flex-shrink-0">
-                          {detail.product?.imageUrl && (
-                            <img src={detail.product.imageUrl} alt={detail.product?.name || "Product"} className="w-full h-full object-cover" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-sm font-medium text-gray-900 mb-1">{detail.product?.name || "Sản phẩm"}</h3>
-                          <div className="text-xs text-gray-500 mb-1">
-                            Màu sắc: {detail.color || "N/A"} | Kích thước: {detail.size || "N/A"}
-                          </div>
-                          <div className="text-sm text-gray-900">
-                            Số lượng: x{detail.quantity}
-                          </div>
-                        </div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {formatPrice(detail.price)}
-                        </div>
-                      </div>
-                    ))}
+            {orders.map((item) => {
+              const { order, details } = item;
+              return (
+                <div key={order.id} className="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase tracking-widest">Mã đơn hàng: </span>
+                      <span className="font-bold text-gray-900">#{order.id}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase tracking-widest">Phương thức: </span>
+                      <span className="font-medium text-gray-900">{order.method}</span>
+                    </div>
+                    <div>
+                      {getStatusBadge(order.status)}
+                    </div>
                   </div>
 
-                  {/* Tổng tiền */}
-                  <div className="flex justify-end items-center border-t border-gray-100 pt-4">
-                    <span className="text-sm text-gray-500 uppercase tracking-widest mr-4">Tổng tiền:</span>
-                    <span className="text-xl font-bold text-[#FA5C52]">{formatPrice(order.totalPrice)}</span>
+                  <div className="p-6">
+                    {/* Danh sách sản phẩm trong đơn */}
+                    <div className="space-y-4 mb-6">
+                      {details && details.map((detail: any, index: number) => (
+                        <div key={index} className="flex items-center gap-4 border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                          <div className="w-20 h-20 bg-gray-100 flex-shrink-0">
+                            {detail.product?.imageUrl ? (
+                              <img src={detail.product.imageUrl} alt={detail.product?.name || "Product"} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                    <Package size={24} />
+                                </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-sm font-medium text-gray-900 mb-1">{detail.product?.name || "Sản phẩm"}</h3>
+                            <div className="text-sm text-gray-900">
+                              Số lượng: x{detail.quantity}
+                            </div>
+                          </div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {formatPrice(detail.cost)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Tổng tiền */}
+                    <div className="flex justify-end items-center border-t border-gray-100 pt-4">
+                      <span className="text-sm text-gray-500 uppercase tracking-widest mr-4">Tổng tiền:</span>
+                      <span className="text-xl font-bold text-[#FA5C52]">{formatPrice(order.totalPrice)}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
