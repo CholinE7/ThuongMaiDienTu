@@ -68,11 +68,33 @@ public class CustomerService implements CustomerServiceI {
     public void update(CustomerDTO customerDTO) {
         // 1. Tìm khách hàng cũ trong DB
         Customers existing = customer.findById(customerDTO.getId())
-                .orElseThrow(() -> new RuntimeException("ID khách hàng không tồn tại"));
-    
-        customerMapper.updateEntityFromDTO(customerDTO, existing);
+                .orElseThrow(() -> new RuntimeException("ID khách hàng không tồn tại: " + customerDTO.getId()));
+
+        // 2. Cập nhật các thông tin cơ bản
+        existing.setFullName(customerDTO.getFullName());
+        existing.setPhone(customerDTO.getPhone());
+        existing.setCity(customerDTO.getCity());
+        existing.setWard(customerDTO.getWard());
+        existing.setStreet(customerDTO.getStreet());
+        existing.setDateOfBirth(customerDTO.getDateOfBirth());
         
-        // 3. Lưu lại entity đã được cập nhật
+        // 3. Quan trọng: Chỉ cập nhật mật khẩu nếu FE có gửi mật khẩu mới lên
+        if (customerDTO.getPassword() != null && !customerDTO.getPassword().trim().isEmpty()) {
+            // Mã hóa mật khẩu mới trước khi lưu
+            String encodedPassword = passwordEncoder.encode(customerDTO.getPassword());
+            existing.setPassword(encodedPassword);
+            System.out.println("Đã cập nhật mật khẩu mới cho user: " + existing.getEmail());
+        } else {
+            // Nếu mật khẩu gửi lên trống, giữ nguyên mật khẩu cũ trong DB
+            System.out.println("Không thay đổi mật khẩu cho user: " + existing.getEmail());
+        }
+
+        // 4. Giữ nguyên trạng thái (Status)
+        if (customerDTO.getStatus() != null) {
+            existing.setStatus(customerDTO.getStatus());
+        }
+
+        // 5. Lưu lại vào DB
         customer.save(existing);
     }
 }

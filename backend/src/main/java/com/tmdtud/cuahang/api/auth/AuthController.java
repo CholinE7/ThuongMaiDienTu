@@ -54,12 +54,19 @@ public class AuthController {
             return ApiResponse.error(401, "Chưa đăng nhập");
         }
         Object principal = authentication.getPrincipal();
+        // Trong AuthController.java, chỗ hàm getCurrentUser
         if (principal instanceof com.tmdtud.cuahang.api.auth.model.CustomerDetails) {
             com.tmdtud.cuahang.api.auth.model.CustomerDetails userDetails = (com.tmdtud.cuahang.api.auth.model.CustomerDetails) principal;
+            Customers customer = userDetails.getCustomer(); // Lấy đối tượng customer
             return ApiResponse.success(java.util.Map.of(
-                "id", userDetails.getCustomer().getId(),
-                "fullName", userDetails.getCustomer().getFullName(),
-                "email", userDetails.getCustomer().getEmail(),
+                "id", customer.getId(),
+                "fullName", customer.getFullName(),
+                "email", customer.getEmail(),
+                "phone", customer.getPhone(), // Bổ sung thêm các dòng này
+                "dateOfBirth", customer.getDateOfBirth(),
+                "city", customer.getCity(),
+                "ward", customer.getWard(),
+                "street", customer.getStreet(),
                 "role", "CUSTOMER"
             ));
         } else if (principal instanceof com.tmdtud.cuahang.api.auth.model.EmployerDetails) {
