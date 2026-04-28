@@ -31,8 +31,23 @@ public class ProductService implements ProductServiceI {
     private final CategoryService categoryService;
 
     @Override
+    public PageResponse<Products> getAll(String name, Long categoryId, Pageable pageable) {
+        org.springframework.data.domain.Page<Products> products;
+        if (name != null && !name.isEmpty() && categoryId != null) {
+            products = productRepo.findByNameContainingIgnoreCaseAndCategoryId(name, categoryId, pageable);
+        } else if (name != null && !name.isEmpty()) {
+            products = productRepo.findByNameContainingIgnoreCase(name, pageable);
+        } else if (categoryId != null) {
+            products = productRepo.findByCategoryId(categoryId, pageable);
+        } else {
+            products = productRepo.findAll(pageable);
+        }
+        return new PageResponse<Products>(products);
+    }
+
+    @Override
     public PageResponse<Products> getAll(Pageable pageable) {
-        Page<Products> products = productRepo.findAll(pageable);
+        org.springframework.data.domain.Page<Products> products = productRepo.findAll(pageable);
         return new PageResponse<Products>(products);
     }
 

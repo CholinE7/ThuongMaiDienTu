@@ -1,7 +1,5 @@
 package com.tmdtud.cuahang.api.customer.mapper;
 
-
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
@@ -11,12 +9,11 @@ import com.tmdtud.cuahang.api.customer.dto.CustomerDTO;
 import com.tmdtud.cuahang.api.customer.model.Customers;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-    public interface CustomerMapper {
-        CustomerDTO toDTO(Customers customer);
-        
-        Customers toEntity(CustomerDTO customerDTO);
+public interface CustomerMapper {
+    CustomerDTO toDTO(Customers customer);
 
-        @Mapping(target = "password", ignore = true) 
-        void updateEntityFromDTO(CustomerDTO customerDTO, @MappingTarget Customers entity);
-    }
+    Customers toEntity(CustomerDTO customerDTO);
 
+    @Mapping(target = "password", ignore = true)
+    void updateEntityFromDTO(CustomerDTO customerDTO, @MappingTarget Customers entity);
+}

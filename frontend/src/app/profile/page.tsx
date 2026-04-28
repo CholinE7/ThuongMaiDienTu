@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Edit, CheckCircle2, Loader2, Lock, Eye, EyeOff, MapPin } from 'lucide-react';
+import Navbar from '@/components/Navbar';
 
 export default function ProfilePage() {
   // 1. STATE QUẢN LÝ DỮ LIỆU
@@ -32,7 +33,13 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       setIsLoading(true);
       try {
-        const token = localStorage.getItem("token");
+        let token = localStorage.getItem("token");
+        
+        // Làm sạch token (loại bỏ dấu ngoặc kép nếu có)
+        if (token) {
+          token = token.replace(/^["'](.+)["']$/, '$1').trim();
+        }
+
         const response = await fetch(`http://localhost:8080/api/auth/me`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
@@ -55,7 +62,10 @@ export default function ProfilePage() {
 
           setUserInfo(profileData);
           setEditForm(profileData);
-          if (data.fullName) localStorage.setItem("customerName", data.fullName);
+          if (data.fullName) {
+            localStorage.setItem("customerName", data.fullName);
+            window.dispatchEvent(new Event("authUpdated"));
+          }
         }
       } catch (error) {
         console.error("Lỗi khi tải thông tin:", error);
@@ -82,7 +92,12 @@ export default function ProfilePage() {
 
   setIsSaving(true);
   try {
-    const token = localStorage.getItem("token");
+    let token = localStorage.getItem("token");
+    
+    // Làm sạch token
+    if (token) {
+      token = token.replace(/^["'](.+)["']$/, '$1').trim();
+    }
     
     // 2. Chuẩn bị Payload gửi lên
     // Quan trọng: Gửi kèm 'password' nếu người dùng có nhập vào ô đổi mật khẩu
@@ -111,6 +126,7 @@ export default function ProfilePage() {
       setPasswords({ newPassword: "", confirmPassword: "" });
       
       localStorage.setItem("customerName", editForm.fullName);
+      window.dispatchEvent(new Event("authUpdated"));
       setIsEditing(false);
       setToast("Cập nhật thông tin thành công!");
       setTimeout(() => setToast(""), 3000);
@@ -135,6 +151,7 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-screen bg-[#F4F6F9] pt-24 pb-12 font-sans relative">
+      <Navbar />
       
       {toast && (
         <div className="fixed top-24 right-6 bg-white border-l-4 border-green-500 shadow-xl px-6 py-4 rounded-lg flex items-center gap-3 z-50 animate-in slide-in-from-right-8">

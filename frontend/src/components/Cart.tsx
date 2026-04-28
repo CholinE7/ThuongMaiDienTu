@@ -14,8 +14,13 @@ const Cart = () => {
   const [items, setItems] = useState<CartItem[]>([]);
   
   useEffect(() => {
-    setItems(getCart());
-    const handleCartUpdate = () => setItems(getCart());
+    const fetchCart = async () => {
+      const data = await getCart();
+      setItems(data);
+    };
+    fetchCart();
+    
+    const handleCartUpdate = () => fetchCart();
     window.addEventListener("cartUpdated", handleCartUpdate);
     return () => window.removeEventListener("cartUpdated", handleCartUpdate);
   }, []);
@@ -32,16 +37,25 @@ const Cart = () => {
 
   useEffect(() => {
     // Tự động điền thông tin nếu đã đăng nhập
-    setCustomerName(localStorage.getItem('customerName') || '');
-    // Tạm thời chưa có sđt và địa chỉ trong localStorage, có thể lấy từ /me nếu cần
+    const updateCustomerInfo = () => {
+      setCustomerName(localStorage.getItem('customerName') || '');
+    };
+    
+    updateCustomerInfo();
+    window.addEventListener("authUpdated", updateCustomerInfo);
+    return () => window.removeEventListener("authUpdated", updateCustomerInfo);
   }, [showCheckoutModal]);
 
-  const updateQuantity = (id: string, delta: number) => {
-    updateCartQuantity(id, delta);
+  const updateQuantity = async (id: number, delta: number) => {
+    const item = items.find(i => i.id === id);
+    if (item) {
+      const newQuantity = Math.max(1, item.quantity + delta);
+      await updateCartQuantity(id, newQuantity);
+    }
   };
 
-  const removeItem = (id: string) => {
-    removeFromCart(id);
+  const removeItem = async (id: number) => {
+    await removeFromCart(id);
   };
 
 
@@ -434,7 +448,7 @@ const Cart = () => {
                     const res = await response.json();
                     if (res.code === 200) {
                       alert(`Đặt hàng thành công với phương thức thanh toán: ${paymentMethod}`);
-                      clearCart();
+                      await clearCart();
                       setShowCheckoutModal(false);
                     } else {
                       alert("Lỗi khi đặt hàng: " + res.message);

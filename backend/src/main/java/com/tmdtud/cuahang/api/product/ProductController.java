@@ -43,13 +43,15 @@ public class ProductController extends BaseController {
             @RequestParam(value = "page_no", defaultValue = "0") int page,
             @RequestParam(value = "page_size", defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Long category_id) {
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
         
-        PageResponse<Products> pageResponse = productSer.getAll(pageable);
+        PageResponse<Products> pageResponse = productSer.getAll(name, category_id, pageable);
         List<ProductDTO> productDTOs = pageResponse.getContent()
                                         .stream()
                                         .map(item -> productMapper.toDTO(item))

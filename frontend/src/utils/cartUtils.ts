@@ -1,92 +1,103 @@
 import { Product } from "@/types";
+import { apiRequest } from "@/services/app";
 
 export interface CartItem {
-  id: string; // Combination of productId, size, color
+  id: number;
   productId: number;
   name: string;
   price: number;
   quantity: number;
   image: string;
   category: string;
-  size?: number | null;
+  size?: string | null;
   color?: string | null;
 }
 
-const CART_KEY = "shopping_cart";
-
-export const getCart = (): CartItem[] => {
-  if (typeof window === "undefined") return [];
+export const getCart = async (): Promise<CartItem[]> => {
   try {
-    const stored = localStorage.getItem(CART_KEY);
-    return stored ? JSON.parse(stored) : [];
+    const response = await apiRequest("/api/cart", "GET");
+    if (!response.ok) return [];
+    const data = await response.json();
+    if (data.code === 200 && Array.isArray(data.result)) {
+      return data.result.map((item: any) => ({
+        id: item.id,
+        productId: item.product.id,
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        image: item.product.imageUrl || item.product.image || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400",
+        category: item.product.category?.name || "Giày",
+        size: item.size,
+        color: item.color
+      }));
+    }
+    return [];
   } catch (error) {
-    console.error("Error reading cart from localStorage", error);
+    console.error("Error fetching cart:", error);
     return [];
   }
 };
 
-export const saveCart = (cart: CartItem[]) => {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(CART_KEY, JSON.stringify(cart));
-    // Dispatch event to update navbar badge
-    window.dispatchEvent(new Event("cartUpdated"));
-  }
-};
-
-export const addToCart = (product: Product, quantity: number, size?: number | null, color?: string | null) => {
-  const cart = getCart();
-  const id = `${product.id}-${size || 'nosize'}-${color || 'nocolor'}`;
-  
-  const existingItemIndex = cart.findIndex(item => item.id === id);
-  if (existingItemIndex >= 0) {
-    cart[existingItemIndex].quantity += quantity;
-  } else {
-    // Check if category is object or string
-    let categoryName = "Giày";
-    if (typeof product.category === 'object' && product.category !== null) {
-      categoryName = product.category.name || "Giày";
-    } else if (typeof product.category === 'string') {
-      categoryName = product.category;
-    }
-
-    cart.push({
-      id,
+export const addToCart = async (product: Product, quantity: number, size?: string | null, color?: string | null) => {
+  try {
+    const response = await apiRequest("/api/cart", "POST", {
       productId: product.id,
-      name: product.name,
-      price: product.price,
       quantity,
-      image: product.image || product.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400",
-      category: categoryName,
       size,
       color
     });
-  }
-  
-  saveCart(cart);
-};
-
-export const updateQuantity = (id: string, delta: number) => {
-  const cart = getCart();
-  const updatedCart = cart.map(item => {
-    if (item.id === id) {
-      return { ...item, quantity: Math.max(1, item.quantity + delta) };
+    if (response.ok) {
+      window.dispatchEvent(new Event("cartUpdated"));
     }
-    return item;
-  });
-  saveCart(updatedCart);
+    return response.ok;
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    return false;
+  }
 };
 
-export const removeFromCart = (id: string) => {
-  const cart = getCart();
-  const updatedCart = cart.filter(item => item.id !== id);
-  saveCart(updatedCart);
+export const updateQuantity = async (id: number, quantity: number) => {
+  try {
+    const response = await apiRequest(`/api/cart/${id}`, "PUT", {
+      quantity
+    });
+    if (response.ok) {
+      window.dispatchEvent(new Event("cartUpdated"));
+    }
+    return response.ok;
+  } catch (error) {
+    console.error("Error updating quantity:", error);
+    return false;
+  }
 };
 
-export const clearCart = () => {
-  saveCart([]);
+export const removeFromCart = async (id: number) => {
+  try {
+    const response = await apiRequest(`/api/cart/${id}`, "DELETE");
+    if (response.ok) {
+      window.dispatchEvent(new Event("cartUpdated"));
+    }
+    return response.ok;
+  } catch (error) {
+    console.error("Error removing from cart:", error);
+    return false;
+  }
 };
 
-export const getCartCount = (): number => {
-  const cart = getCart();
+export const clearCart = async () => {
+  try {
+    const response = await apiRequest("/api/cart/clear", "DELETE");
+    if (response.ok) {
+      window.dispatchEvent(new Event("cartUpdated"));
+    }
+    return response.ok;
+  } catch (error) {
+    console.error("Error clearing cart:", error);
+    return false;
+  }
+};
+
+export const getCartCount = async (): Promise<number> => {
+  const cart = await getCart();
   return cart.reduce((total, item) => total + item.quantity, 0);
 };

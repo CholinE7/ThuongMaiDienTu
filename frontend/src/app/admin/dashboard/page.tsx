@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Search, RefreshCcw, Loader2, ShoppingBag, CheckCircle, Clock, XCircle, DollarSign, CreditCard, AlertCircle, TrendingDown } from "lucide-react";
+import { apiRequest } from "@/services/app";
 
 export default function AdminDashboardPage() {
   // 1. STATES BỘ LỌC NGÀY
@@ -29,11 +30,11 @@ export default function AdminDashboardPage() {
       if (appliedFilters.fromDate) query.append('fromDate', appliedFilters.fromDate);
       if (appliedFilters.toDate) query.append('toDate', appliedFilters.toDate);
 
-      const response = await fetch(`/api/dashboard?${query.toString()}`);
+      const response = await apiRequest(`/api/dashboard?${query.toString()}`);
       const result = await response.json();
       
-      if (result.success) {
-        setStats(result.data);
+      if (result.code === 200) {
+        setStats(result.result);
       }
     } catch (error) {
       console.error("Lỗi lấy dữ liệu thống kê:", error);

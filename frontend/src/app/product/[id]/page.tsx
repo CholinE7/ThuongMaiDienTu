@@ -31,50 +31,7 @@ const isLightColor = (colorName: string) => {
   return ["Trắng", "Be", "Kem"].includes(colorName);
 };
 
-// Giả lập một "Database" chứa thông tin các sản phẩm
-const MOCK_DATABASE: Record<string, any> = {
-  "1": {
-    id: "1",
-    name: "Nike Air Max 270 Red Edition",
-    price: 3500000,
-    category: "Giày Nam",
-    description: "Phiên bản nổi bật với công nghệ đế đệm khí Air Max cực êm ái. Phù hợp cho hoạt động thể thao và dạo phố.",
-    sizes: [39, 40, 41, 42, 43],
-    colors: ["Đen", "Trắng", "Đỏ", "Nâu", "Be"],
-    images: [
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop",
-    ]
-  },
-  "2": {
-    id: "2",
-    name: "Adidas Ultraboost 22 Core Black",
-    price: 4200000,
-    category: "Giày Chạy Bộ",
-    description: "Đôi giày chạy bộ huyền thoại với công nghệ đệm Boost hoàn trả năng lượng vô tận. Thiết kế thể thao mạnh mẽ.",
-    sizes: [40, 41, 42],
-    colors: ["Đen", "Trắng", "Đỏ", "Nâu", "Be"],
-    images: [
-      "https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?q=80&w=1200&auto=format&fit=crop",
-    ]
-  },
-  "default": {
-    id: "G270",
-    name: "Giày Cao Gót G270 - Sandal Gót Trụ",
-    price: 235000,
-    category: "Giày Nữ",
-    description: "Thiết kế thanh lịch, dễ phối đồ. Phù hợp cho cả môi trường công sở lẫn những buổi tiệc nhẹ nhàng. Chất liệu da PU cao cấp, đế êm ái chống trượt.",
-    sizes: [35, 36, 37, 38, 39],
-    colors: ["Đen", "Trắng", "Đỏ", "Nâu", "Be"],
-    images: [
-      "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=1200&auto=format&fit=crop", 
-      "https://images.unsplash.com/photo-1562183241-b937e95585b6?q=80&w=1200&auto=format&fit=crop", 
-      "https://images.unsplash.com/photo-1515347619362-7ddbf0fb48b0?q=80&w=1200&auto=format&fit=crop", 
-      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=1200&auto=format&fit=crop", 
-    ]
-  }
-};
+
 
 export default function ProductDetailPage() {
   // --- LẤY ID THỰC TẾ TỪ URL ---
@@ -267,9 +224,19 @@ export default function ProductDetailPage() {
             </div>
 
             <button 
-              onClick={() => {
-                addToCart(product, 1, selectedSize, selectedColor);
-                alert("Đã thêm vào giỏ hàng!");
+              onClick={async () => {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                  alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+                  router.push("/login");
+                  return;
+                }
+                const success = await addToCart(product, 1, String(selectedSize), selectedColor);
+                if (success) {
+                  alert("Đã thêm vào giỏ hàng!");
+                } else {
+                  alert("Lỗi khi thêm vào giỏ hàng. Vui lòng thử lại!");
+                }
               }}
               className="w-full bg-black text-white py-4 rounded-full font-medium text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors mb-10 active:scale-95 shadow-lg shadow-gray-200">
               Thêm vào giỏ hàng

@@ -10,6 +10,7 @@ import com.tmdtud.cuahang.api.product.request.ProductUpdateRequest;
 import com.tmdtud.cuahang.common.response.PageResponse;
 
 public interface ProductServiceI {
+    public PageResponse<Products> getAll(String name, Long categoryId, Pageable pageable);
     public PageResponse<Products> getAll(Pageable pageable);
 
     public Products getById(Long id);

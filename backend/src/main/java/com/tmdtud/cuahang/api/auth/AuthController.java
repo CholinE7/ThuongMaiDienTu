@@ -40,7 +40,7 @@ public class AuthController {
             
             String token = service.verify(user);
             
-            return ResponseEntity.ok(token);
+            return ResponseEntity.ok(java.util.Map.of("token", token));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         } catch (Exception e) {
@@ -57,26 +57,26 @@ public class AuthController {
         // Trong AuthController.java, chỗ hàm getCurrentUser
         if (principal instanceof com.tmdtud.cuahang.api.auth.model.CustomerDetails) {
             com.tmdtud.cuahang.api.auth.model.CustomerDetails userDetails = (com.tmdtud.cuahang.api.auth.model.CustomerDetails) principal;
-            Customers customer = userDetails.getCustomer(); // Lấy đối tượng customer
-            return ApiResponse.success(java.util.Map.of(
-                "id", customer.getId(),
-                "fullName", customer.getFullName(),
-                "email", customer.getEmail(),
-                "phone", customer.getPhone(), // Bổ sung thêm các dòng này
-                "dateOfBirth", customer.getDateOfBirth(),
-                "city", customer.getCity(),
-                "ward", customer.getWard(),
-                "street", customer.getStreet(),
-                "role", "CUSTOMER"
-            ));
+            Customers customer = userDetails.getCustomer();
+            java.util.Map<String, Object> data = new java.util.HashMap<>();
+            data.put("id", customer.getId());
+            data.put("fullName", customer.getFullName());
+            data.put("email", customer.getEmail());
+            data.put("phone", customer.getPhone());
+            data.put("dateOfBirth", customer.getDateOfBirth());
+            data.put("city", customer.getCity());
+            data.put("ward", customer.getWard());
+            data.put("street", customer.getStreet());
+            data.put("role", "CUSTOMER");
+            return ApiResponse.success(data);
         } else if (principal instanceof com.tmdtud.cuahang.api.auth.model.EmployerDetails) {
             com.tmdtud.cuahang.api.auth.model.EmployerDetails userDetails = (com.tmdtud.cuahang.api.auth.model.EmployerDetails) principal;
-            return ApiResponse.success(java.util.Map.of(
-                "id", userDetails.getEmployer().getId(),
-                "fullName", userDetails.getEmployer().getFullName(),
-                "email", userDetails.getEmployer().getEmail(),
-                "role", "STAFF"
-            ));
+            java.util.Map<String, Object> data = new java.util.HashMap<>();
+            data.put("id", userDetails.getEmployer().getId());
+            data.put("fullName", userDetails.getEmployer().getFullName());
+            data.put("email", userDetails.getEmployer().getEmail());
+            data.put("role", "STAFF");
+            return ApiResponse.success(data);
         }
         return ApiResponse.error(400, "Không nhận diện được người dùng");
     }

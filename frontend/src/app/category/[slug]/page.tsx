@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
-import { products } from '@/data/products';
-import { SlidersHorizontal, ChevronDown, X } from 'lucide-react';
+import { apiRequest } from '@/services/app';
+import { SlidersHorizontal, ChevronDown, X, Loader2 } from 'lucide-react';
 
 const SORT_OPTIONS = ["Tùy chọn", "Giá: Tăng dần", "Giá: Giảm dần"];
 const COLOR_FILTERS = [
@@ -21,27 +21,9 @@ export default function CategoryPage() {
   const params = useParams();
   const slug = params?.slug;
 
-  // 1. LẤY DỮ LIỆU BAN ĐẦU THEO URL
-  let categoryTitle = "";
-  let baseProducts = [];
-
-  if (slug === "nu") {
-    categoryTitle = "GIÀY THỂ THAO NỮ";
-    baseProducts = products.filter(p => p.category === "Giày Thể Thao Nữ");
-  } else if (slug === "nam") {
-    categoryTitle = "GIÀY THỂ THAO NAM";
-    baseProducts = products.filter(p => p.category === "Giày Thể Thao Nam");
-  } else if (slug === "cap") {
-    categoryTitle = "GIÀY CẶP";
-    baseProducts = products.filter(p => p.category === "Giày Cặp");
-  } else if (slug === "banchay") {
-    categoryTitle = "SẢN PHẨM BÁN CHẠY";
-    // Cắt 16 đôi đầu tiên để demo phân trang cho mục Bán chạy (2 trang)
-    baseProducts = products.slice(0, 16); 
-  } else {
-    categoryTitle = "TẤT CẢ SẢN PHẨM";
-    baseProducts = products;
-  }
+  const [products, setProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [categoryTitle, setCategoryTitle] = useState("");
 
   // 2. CÁC STATE QUẢN LÝ GIAO DIỆN
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -52,6 +34,53 @@ export default function CategoryPage() {
   
   // State quản lý số trang
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+
+  // 2. GỌI API LẤY DỮ LIỆU SẢN PHẨM THEO CATEGORY
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        let title = "TẤT CẢ SẢN PHẨM";
+        let categoryId = null;
+
+        if (slug === "nu") {
+          title = "GIÀY THỂ THAO NỮ";
+          categoryId = 1; // Giả sử ID 1 là giày nữ
+        } else if (slug === "nam") {
+          title = "GIÀY THỂ THAO NAM";
+          categoryId = 2; // Giả sử ID 2 là giày nam
+        } else if (slug === "cap") {
+          title = "GIÀY CẶP";
+        }
+
+        setCategoryTitle(title);
+        
+        const query = new URLSearchParams({
+          page_no: (currentPage - 1).toString(),
+          page_size: PRODUCTS_PER_PAGE.toString(),
+          ...(categoryId ? { category_id: categoryId.toString() } : {})
+        }).toString();
+
+        const response = await apiRequest(`/api/products?${query}`, 'GET');
+        const res = await response.json();
+        
+        if (res.code === 200 && res.result) {
+          const mapped = res.result.content.map((p: any) => ({
+            ...p,
+            category: p.category?.name || "Khác"
+          }));
+          setProducts(mapped);
+          setTotalProducts(res.result.total);
+        }
+      } catch (error) {
+        console.error("Error fetching category products:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [slug, currentPage]);
 
   // 3. CÁC HÀM XỬ LÝ (KÈM THEO VIỆC RESET VỀ TRANG 1)
   const toggleColor = (hex: string) => {
@@ -80,16 +109,8 @@ export default function CategoryPage() {
     setCurrentPage(1);
   };
 
-  // 4. LOGIC LỌC & SẮP XẾP DỮ LIỆU
-  let finalProducts = [...baseProducts];
-
-  if (selectedColors.length > 0) {
-    finalProducts = finalProducts.filter(product => {
-      if (!product.colors) return false;
-      // ĐÃ FIX LỖI TẠI ĐÂY: Khai báo rõ ràng (color: string)
-      return product.colors.some((color: string) => selectedColors.includes(color));
-    });
-  }
+  // 4. LỌC VÀ SẮP XẾP TẠI CLIENT (Dành cho bộ lọc phụ như màu sắc, giá)
+  let finalProducts = [...products];
 
   if (selectedPrice === "Dưới 200.000đ") {
     finalProducts = finalProducts.filter(product => product.price < 200000);
@@ -102,12 +123,9 @@ export default function CategoryPage() {
   if (selectedSort === "Giá: Tăng dần") finalProducts.sort((a, b) => a.price - b.price);
   else if (selectedSort === "Giá: Giảm dần") finalProducts.sort((a, b) => b.price - a.price);
   
-
-  // 5. THUẬT TOÁN PHÂN TRANG (CẮT MẢNG THEO TRANG HIỆN TẠI)
-  const totalPages = Math.ceil(finalProducts.length / PRODUCTS_PER_PAGE);
-  const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
-  const endIndex = startIndex + PRODUCTS_PER_PAGE;
-  const paginatedProducts = finalProducts.slice(startIndex, endIndex);
+  // 5. THUẬT TOÁN PHÂN TRANG (Backend đã lo phần cắt mảng theo trang)
+  const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
+  const paginatedProducts = finalProducts;
 
   return (
     <main className="min-h-screen bg-white font-sans relative">

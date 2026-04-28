@@ -3,11 +3,16 @@ const API_URL = "http://localhost:8080";
 
 export const apiRequest = async (endpoint: string, method: string = "GET", body: any = null) => {
     // Lấy token từ localStorage
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
+    let token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    
+    // Làm sạch token (loại bỏ dấu ngoặc kép nếu có)
+    if (token) {
+        token = token.replace(/^["'](.+)["']$/, '$1').trim();
+    }
+    
     const headers: HeadersInit = {
         "Content-Type": "application/json",
-        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        ...(token && token !== "fail" ? { "Authorization": `Bearer ${token}` } : {}),
     };
 
     try {

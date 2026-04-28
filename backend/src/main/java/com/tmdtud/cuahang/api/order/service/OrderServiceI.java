@@ -26,7 +26,7 @@ public interface OrderServiceI {
 
     public Orders updateStatus(UpdateOrderStatusRequest request);
 
-    public PageResponse<Orders> getAllByDateRange(String fromDate, String toDate, Pageable pageable);
+    public PageResponse<Orders> getAllByDateRange(String fromDate, String toDate, String status, Pageable pageable);
 
     public PageResponse<Orders> getMyOrders(Long customerId, Pageable pageable);
 }
