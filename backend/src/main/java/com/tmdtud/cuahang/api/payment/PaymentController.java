@@ -16,6 +16,8 @@ import com.tmdtud.cuahang.common.response.ApiResponse;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.tmdtud.cuahang.common.service.SseService;
+
 @RestController
 @RequestMapping("/api/payment")
 public class PaymentController {
@@ -23,11 +25,14 @@ public class PaymentController {
     @Autowired
     private OrderService orderService;
 
+    @Autowired
+    private SseService sseService;
+
     @GetMapping("/momo/create_payment")
-    public ApiResponse<Map<String, Object>> createMomoPayment(@RequestParam Long orderId) {
+    public com.tmdtud.cuahang.common.response.ApiResponse<Map<String, Object>> createMomoPayment(@RequestParam Long orderId) {
         Orders order = orderService.getById(orderId);
         if (order == null) {
-            return ApiResponse.error(404, "Đơn hàng không tồn tại");
+            return com.tmdtud.cuahang.common.response.ApiResponse.error(404, "Đơn hàng không tồn tại");
         }
 
         String qrUrl = MomoConfig.getQrUrl(order.getTotalPrice().longValue(), order.getId().toString());
@@ -39,14 +44,14 @@ public class PaymentController {
         data.put("amount", order.getTotalPrice());
         data.put("orderId", order.getId());
 
-        return ApiResponse.success(data);
+        return com.tmdtud.cuahang.common.response.ApiResponse.success(data);
     }
 
     @PostMapping("/momo/confirm")
-    public ApiResponse<String> confirmMomoPayment(@RequestParam Long orderId) {
+    public com.tmdtud.cuahang.common.response.ApiResponse<String> confirmMomoPayment(@RequestParam Long orderId) {
         Orders order = orderService.getById(orderId);
         if (order == null) {
-            return ApiResponse.error(404, "Đơn hàng không tồn tại");
+            return com.tmdtud.cuahang.common.response.ApiResponse.error(404, "Đơn hàng không tồn tại");
         }
 
         // Mô phỏng xác nhận thanh toán thành công
@@ -54,6 +59,8 @@ public class PaymentController {
         order.setStatus(OrderStatus.CONFIRMED);
         orderService.getOrderRepository().save(order);
 
-        return ApiResponse.success("Thanh toán MoMo thành công!");
+        sseService.sendToAll(java.util.Map.of("orderId", order.getId(), "status", order.getStatus().toString()));
+
+        return com.tmdtud.cuahang.common.response.ApiResponse.success("Thanh toán MoMo thành công!");
     }
 }

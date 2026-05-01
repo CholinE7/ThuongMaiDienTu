@@ -66,6 +66,21 @@ public class Orders {
     private Employers employer;
 
     @ManyToOne
-    @JoinColumn(name = "customer_id", nullable = false, foreignKey = @ForeignKey(name = "fk_Orders_Suppliers"))
+    @JoinColumn(name = "customer_id", nullable = true, foreignKey = @ForeignKey(name = "fk_Orders_Suppliers"))
     private Customers customer;
+
+    @Column(name = "full_name")
+    private String fullName;
+
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "street")
+    private String street;
+
+    @Column(name = "ward")
+    private String ward;
+
+    @Column(name = "city")
+    private String city;
 }

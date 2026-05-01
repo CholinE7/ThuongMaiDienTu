@@ -10,8 +10,7 @@ const slides = [
     id: 1,
     title: "SHOESTORE",
     subtitle: "Mang cá tính vào từng bước đi.",
-    image: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8c2hvZXN8ZW58MHx8MHx8fDA%3D",
-
+    image: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=2070&auto=format&fit=crop",
     link: "/products",
     color: "text-white"
   },
@@ -19,8 +18,7 @@ const slides = [
     id: 2,
     title: "CHẠY BỘ ĐỈNH CAO",
     subtitle: "Nâng tầm thành tích với công nghệ đệm khí tiên tiến.",
-    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070&auto=format&fit=crop",
-
+    image: "https://images.unsplash.com/photo-1539185441755-769473a23570?q=80&w=2070&auto=format&fit=crop",
     link: "/products/running",
     color: "text-white"
   },
@@ -28,8 +26,7 @@ const slides = [
     id: 3,
     title: "PHONG CÁCH ĐƯỜNG PHỐ",
     subtitle: "Thể hiện cá tính riêng biệt với thiết kế độc đáo.",
-    image: "https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070&auto=format&fit=crop",
-
+    image: "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?q=80&w=2070&auto=format&fit=crop",
     link: "/products/lifestyle",
     color: "text-white"
   }

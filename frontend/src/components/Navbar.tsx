@@ -8,6 +8,7 @@ import { getCartCount } from '@/utils/cartUtils';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   // --- STATE CHO TÌM KIẾM ---
   const [searchQuery, setSearchQuery] = useState("");
@@ -15,11 +16,13 @@ export default function Navbar() {
 
   // --- STATE LƯU THÔNG TIN ĐĂNG NHẬP ---
   const [userName, setUserName] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const [cartCount, setCartCount] = useState(0);
 
   // KHI NAVBAR LOAD LÊN, KIỂM TRA XEM CÓ TÊN NGƯỜI DÙNG TRONG LOCAL STORAGE KHÔNG
   useEffect(() => {
+    setIsMounted(true);
     const updateAuth = async () => {
       let storedName = localStorage.getItem("customerName");
       let token = localStorage.getItem("token");
@@ -29,7 +32,10 @@ export default function Navbar() {
         token = token.replace(/^["'](.+)["']$/, '$1').trim();
       }
 
-      if (!storedName && token && token !== "fail") {
+      const hasToken = !!(token && token !== "fail");
+      setIsLoggedIn(hasToken);
+
+      if (!storedName && hasToken) {
         // Nếu có token nhưng chưa có tên, thử lấy lại từ BE
         try {
           const res = await fetch("http://localhost:8080/api/auth/me", {
@@ -136,7 +142,7 @@ export default function Navbar() {
 
             {/* KIỂM TRA ĐĂNG NHẬP ĐỂ HIỂN THỊ TÊN HOẶC NÚT ĐĂNG NHẬP */}
             <div className="relative group cursor-pointer">
-              {(userName || (typeof window !== 'undefined' && localStorage.getItem("token"))) ? (
+              {isMounted && (userName || isLoggedIn) ? (
                 // --- ĐÃ ĐĂNG NHẬP ---
                 <div className="flex items-center gap-2 p-2 rounded-full text-gray-700 hover:bg-gray-100 transition">
                   <div className="bg-blue-100 text-blue-600 p-1.5 rounded-full">
@@ -156,7 +162,7 @@ export default function Navbar() {
               <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-y-1 transition-all duration-300 z-50">
                 <div className="absolute -top-4 left-0 w-full h-4 bg-transparent"></div>
                 <div className="py-2 flex flex-col">
-                  {(userName || (typeof window !== 'undefined' && localStorage.getItem("token"))) ? (
+                  {isMounted && (userName || isLoggedIn) ? (
                     // Menu khi đã đăng nhập
                     <>
                       <div className="px-4 py-2 border-b border-gray-100 md:hidden">

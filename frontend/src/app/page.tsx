@@ -161,21 +161,20 @@ export default async function Home() {
               <div>
                 <h3 className="font-bold text-gray-900 mb-6 text-lg">Về chúng tôi</h3>
                 <ul className="space-y-4 text-gray-500">
-                  <li className="hover:text-blue-600 cursor-pointer transition">Câu chuyện thương hiệu</li>
-                  <li className="hover:text-blue-600 cursor-pointer transition">Tuyển dụng</li>
-                  <li className="hover:text-blue-600 cursor-pointer transition">Hệ thống cửa hàng</li>
+                  <li><Link href="/about/brand-story" className="hover:text-blue-600 transition">Câu chuyện thương hiệu</Link></li>
+                  <li><Link href="/about/careers" className="hover:text-blue-600 transition">Tuyển dụng</Link></li>
+                  <li><Link href="/about/stores" className="hover:text-blue-600 transition">Hệ thống cửa hàng</Link></li>
                 </ul>
               </div>
 
               <div>
                 <h3 className="font-bold text-gray-900 mb-6 text-lg">Hỗ trợ</h3>
                 <ul className="space-y-4 text-gray-500">
-                  <li className="hover:text-blue-600 cursor-pointer transition">Hướng dẫn mua hàng</li>
-                  <li className="hover:text-blue-600 cursor-pointer transition">Chính sách đổi trả</li>
-                  <li className="hover:text-blue-600 cursor-pointer transition">Bảo mật thông tin</li>
+                  <li><Link href="/help/buying-guide" className="hover:text-blue-600 transition">Hướng dẫn mua hàng</Link></li>
+                  <li><Link href="/help/returns" className="hover:text-blue-600 transition">Chính sách đổi trả</Link></li>
+                  <li><Link href="/help/privacy" className="hover:text-blue-600 transition">Bảo mật thông tin</Link></li>
                 </ul>
               </div>
-
               <div>
                 <h3 className="font-bold text-gray-900 mb-6 text-lg">Liên hệ</h3>
                 <p className="text-gray-500 mb-2">Hotline: 1900 1234</p>

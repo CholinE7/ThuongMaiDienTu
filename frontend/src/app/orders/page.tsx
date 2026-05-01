@@ -11,32 +11,76 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await apiRequest('/api/orders/my-orders?page_size=50', 'GET');
-        const res = await response.json();
-        if (res.code === 200 && res.result) {
-          setOrders(res.result.content || []);
-        } else {
-          setError(res.message || "Không thể tải lịch sử đơn hàng.");
+  // --- HÀM LẤY DỮ LIỆU ĐƠN HÀNG ---
+  const fetchOrders = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      let url = "/api/orders/my-orders?page_size=50";
+      
+      // Nếu không có token, thử lấy đơn hàng Guest
+      if (!token) {
+        const guestIds = JSON.parse(localStorage.getItem("guest_order_ids") || "[]");
+        if (guestIds.length === 0) {
+          setOrders([]);
+          setIsLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error("Lỗi lấy lịch sử đơn hàng", err);
-        setError("Lỗi kết nối đến máy chủ. Vui lòng thử lại sau.");
-      } finally {
-        setIsLoading(false);
+        url = `/api/orders/guest?ids=${guestIds.join(",")}`;
       }
-    };
 
-    // Chỉ gọi khi có token
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetchOrders();
-    } else {
-      setError("Vui lòng đăng nhập để xem lịch sử mua hàng.");
+      const response = await apiRequest(url, 'GET');
+      const res = await response.json();
+      
+      if (res.code === 200 && res.result) {
+        // Guest API trả về List trực tiếp, My Orders trả về Page object
+        const data = Array.isArray(res.result) ? res.result : (res.result.content || []);
+        setOrders(data);
+        setError("");
+      } else {
+        setError(res.message || "Không thể tải lịch sử đơn hàng.");
+      }
+    } catch (err) {
+      console.error("Lỗi lấy lịch sử đơn hàng", err);
+      setError("Lỗi kết nối đến máy chủ. Vui lòng thử lại sau.");
+    } finally {
       setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+
+    // --- KẾT NỐI REAL-TIME SSE ---
+    const eventSource = new EventSource("http://localhost:8080/api/orders/stream");
+
+    eventSource.addEventListener("orderUpdate", (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Real-time update received:", data);
+        
+        // Cập nhật trạng thái trong danh sách hiện tại mà không cần reload
+        setOrders(prevOrders => prevOrders.map(item => {
+          if (item.order.id === data.orderId) {
+            return {
+              ...item,
+              order: { ...item.order, status: data.status }
+            };
+          }
+          return item;
+        }));
+      } catch (e) {
+        console.error("Error parsing SSE data", e);
+      }
+    });
+
+    eventSource.onerror = (err) => {
+      console.error("SSE connection error", err);
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close();
+    };
   }, []);
 
   const formatPrice = (p: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p);
@@ -62,12 +106,12 @@ export default function OrdersPage() {
     if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
 
     try {
-      // Backend Service có method delete(id) để hủy đơn
+      // Dùng ID employer giả định là 1 (hoặc null nếu backend hỗ trợ) để gọi API hủy
       const response = await apiRequest(`/api/orders/1/${orderId}`, 'DELETE');
       const res = await response.json();
       if (res.code === 200) {
         alert("Hủy đơn hàng thành công!");
-        window.location.reload();
+        fetchOrders(); // Tải lại danh sách
       } else {
         alert(res.message || "Lỗi khi hủy đơn hàng.");
       }

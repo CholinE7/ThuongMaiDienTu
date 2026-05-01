@@ -29,6 +29,10 @@ import com.tmdtud.cuahang.common.response.PageResponse;
 
 import lombok.RequiredArgsConstructor;
 
+import com.tmdtud.cuahang.common.service.SseService;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import java.util.Arrays;
+
 @RestController
 @RequestMapping("api/orders")
 @Validated
@@ -36,6 +40,30 @@ import lombok.RequiredArgsConstructor;
 public class OrderController extends BaseController {
 
     private final OrderService orderService;
+    private final SseService sseService;
+
+    @GetMapping("/stream")
+    public SseEmitter streamOrders() {
+        return sseService.createEmitter();
+    }
+
+    @GetMapping("/guest")
+    public ApiResponse<List<OrdHasDetailDTO>> getGuestOrders(@RequestParam String ids) {
+        // ids format: "1,2,3"
+        List<Long> orderIds = Arrays.stream(ids.split(","))
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
+        
+        List<OrdHasDetailDTO> dtos = orderIds.stream()
+                .map(id -> {
+                    Orders order = orderService.getById(id);
+                    return order != null ? orderService.toOrdHasDetailDTO(order) : null;
+                })
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+                
+        return ApiResponse.success(dtos);
+    }
 
     @GetMapping
     public ApiResponse<PageResponse<OrdHasDetailDTO>> getAll(

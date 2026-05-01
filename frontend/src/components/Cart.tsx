@@ -32,19 +32,70 @@ const Cart = () => {
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [customerAddress, setCustomerAddress] = useState('');
+  const [customerStreet, setCustomerStreet] = useState('');
+  const [customerWard, setCustomerWard] = useState('');
+  const [customerCity, setCustomerCity] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
+  // State cho MOMO QR Popup
+  const [showMomoModal, setShowMomoModal] = useState(false);
+  const [currentOrderId, setCurrentOrderId] = useState<number | null>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
 
   useEffect(() => {
     // Tự động điền thông tin nếu đã đăng nhập
-    const updateCustomerInfo = () => {
-      setCustomerName(localStorage.getItem('customerName') || '');
+    const updateCustomerInfo = async () => {
+      const storedName = localStorage.getItem('customerName');
+      const storedEmail = localStorage.getItem('customerEmail');
+      const token = localStorage.getItem('token');
+
+      if (token && !customerStreet) {
+        try {
+          const res = await apiRequest("/api/auth/me", "GET");
+          const data = await res.json();
+          if (data.code === 200 && data.result) {
+            setCustomerName(data.result.fullName || '');
+            setCustomerPhone(data.result.phone || '');
+            setCustomerStreet(data.result.street || '');
+            setCustomerWard(data.result.ward || '');
+            setCustomerCity(data.result.city || '');
+          }
+        } catch (e) {
+          console.error("Lỗi lấy thông tin user", e);
+        }
+      } else {
+        setCustomerName(storedName || '');
+      }
     };
     
     updateCustomerInfo();
     window.addEventListener("authUpdated", updateCustomerInfo);
     return () => window.removeEventListener("authUpdated", updateCustomerInfo);
   }, [showCheckoutModal]);
+
+  // Polling check trạng thái thanh toán MOMO
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (showMomoModal && currentOrderId) {
+      interval = setInterval(async () => {
+        try {
+          const response = await apiRequest(`/api/orders/${currentOrderId}`, 'GET');
+          const res = await response.json();
+          if (res.code === 200 && res.result && res.result.order.paymentStatus === 'PAID') {
+            clearInterval(interval);
+            alert("Thanh toán MOMO thành công!");
+            await clearCart();
+            setShowMomoModal(false);
+            setShowCheckoutModal(false);
+            window.location.href = "/orders";
+          }
+        } catch (e) {
+          console.error("Polling error", e);
+        }
+      }, 3000); // Check mỗi 3 giây
+    }
+    return () => clearInterval(interval);
+  }, [showMomoModal, currentOrderId]);
 
   const updateQuantity = async (id: number, delta: number) => {
     const item = items.find(i => i.id === id);
@@ -70,6 +121,79 @@ const Cart = () => {
   const total = subtotal + shippingFee;
   
   const formatPrice = (p: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p);
+
+  const handlePlaceOrder = async () => {
+    const customerId = localStorage.getItem("customerId");
+    // Không bắt buộc customerId vì cho phép Guest mua hàng
+    
+    if (!customerName || !customerPhone || !customerStreet || !customerCity) {
+      alert("Vui lòng điền đầy đủ thông tin giao hàng!");
+      return;
+    }
+
+    setIsPlacingOrder(true);
+    try {
+      const orderDetails = items.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        cost: item.price,
+        total: item.price * item.quantity
+      }));
+
+      const requestBody = {
+        customerId: customerId ? Number(customerId) : null,
+        fullName: customerName,
+        phone: customerPhone,
+        street: customerStreet,
+        ward: customerWard,
+        city: customerCity,
+        method: paymentMethod.toUpperCase(), // "COD" hoặc "MOMO"
+        totalPrice: total,
+        details: orderDetails
+      };
+
+      const response = await apiRequest('/api/orders', 'POST', requestBody);
+      const res = await response.json();
+      
+      if (res.code === 200) {
+        const orderId = res.result.order.id;
+        
+        // Nếu là Guest, lưu vào localStorage để theo dõi
+        if (!customerId) {
+          const guestOrders = JSON.parse(localStorage.getItem("guest_order_ids") || "[]");
+          guestOrders.push(orderId);
+          localStorage.setItem("guest_order_ids", JSON.stringify(guestOrders));
+        }
+
+        if (paymentMethod === 'momo') {
+          // Lấy QR Code
+          try {
+            const qrRes = await apiRequest(`/api/payment/momo/create_payment?orderId=${orderId}`, 'GET');
+            const qrData = await qrRes.json();
+            if (qrData.code === 200) {
+              setQrCodeUrl(qrData.result.qrUrl);
+              setCurrentOrderId(orderId);
+              setShowMomoModal(true);
+            }
+          } catch (e) {
+            alert("Không thể tạo mã QR MoMo, vui lòng thử lại!");
+          }
+        } else {
+          alert(`Đặt hàng thành công! Mã đơn hàng: #${orderId}`);
+          await clearCart();
+          setShowCheckoutModal(false);
+          window.location.href = "/orders";
+        }
+      } else {
+        alert("Lỗi khi đặt hàng: " + res.message);
+      }
+    } catch (error) {
+      console.error("Error placing order", error);
+      alert("Đã xảy ra lỗi, vui lòng thử lại sau!");
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8 font-sans bg-white min-h-screen relative">
@@ -221,13 +345,24 @@ const Cart = () => {
                   <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} type="tel" placeholder="Số điện thoại di động" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all font-medium text-gray-900" />
                 </div>
-                <div className="relative">
-                  <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} type="text" placeholder="Địa chỉ giao hàng chi tiết" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all font-medium text-gray-900" />
+                
+                {/* Tách địa chỉ chi tiết */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="relative">
+                    <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input value={customerStreet} onChange={e => setCustomerStreet(e.target.value)} type="text" placeholder="Số nhà, tên đường" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all font-medium text-gray-900" />
+                  </div>
+                  <div className="relative">
+                    <input value={customerWard} onChange={e => setCustomerWard(e.target.value)} type="text" placeholder="Phường / Xã" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900" />
+                  </div>
                 </div>
+                <div className="relative">
+                  <input value={customerCity} onChange={e => setCustomerCity(e.target.value)} type="text" placeholder="Tỉnh / Thành phố" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900" />
+                </div>
+
                 <div className="flex items-center gap-2 mt-2 ml-1">
                   <input type="checkbox" id="save-info" className="w-4 h-4 rounded text-blue-600 border-gray-300 cursor-pointer" />
-                  <label htmlFor="save-info" className="text-xs font-bold text-gray-500 cursor-pointer">Lưu lại thông tin này cho lần sau</label>
+                  <label htmlFor="save-info" className="text-xs font-bold text-gray-500 cursor-pointer">Lưu địa chỉ này làm mặc định</label>
                 </div>
               </div>
 
@@ -277,19 +412,6 @@ const Cart = () => {
                 <p className="text-xs text-gray-500 mb-4">Toàn bộ các giao dịch đều được bảo mật và mã hóa an toàn.</p>
                 
                 <div className="space-y-3">
-                  {/* Option: Payoo QR */}
-                  <div 
-                    onClick={() => setPaymentMethod('qr')}
-                    className={`border-2 rounded-2xl p-4 cursor-pointer transition-all flex items-center gap-4 ${paymentMethod === 'qr' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300 bg-white'}`}
-                  >
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'qr' ? 'border-blue-600' : 'border-gray-300'}`}>
-                      {paymentMethod === 'qr' && <div className="w-2.5 h-2.5 bg-blue-600 rounded-full" />}
-                    </div>
-                    <QrCode size={24} className={paymentMethod === 'qr' ? 'text-blue-600' : 'text-gray-500'} />
-                    <div className="flex-grow">
-                      <p className={`font-bold ${paymentMethod === 'qr' ? 'text-gray-900' : 'text-gray-600'}`}>Thanh toán QR Code</p>
-                    </div>
-                  </div>
                   {/* Option: Ví MoMo */}
                   <div 
                     onClick={() => setPaymentMethod('momo')}
@@ -300,48 +422,10 @@ const Cart = () => {
                     </div>
                     <Wallet size={24} className={paymentMethod === 'momo' ? 'text-pink-600' : 'text-gray-500'} />
                     <div className="flex-grow">
-                      <p className={`font-bold ${paymentMethod === 'momo' ? 'text-gray-900' : 'text-gray-600'}`}>Ví MoMo</p>
+                      <p className={`font-bold ${paymentMethod === 'momo' ? 'text-gray-900' : 'text-gray-600'}`}>Ví MoMo (Tự động xác nhận)</p>
                     </div>
                   </div>
-                  {/* Option: VNPAY */}
-                  <div 
-                    onClick={() => setPaymentMethod('vnpay')}
-                    className={`border-2 rounded-2xl p-4 cursor-pointer transition-all flex items-center gap-4 ${paymentMethod === 'vnpay' ? 'border-blue-500 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300 bg-white'}`}
-                  >
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'vnpay' ? 'border-blue-500' : 'border-gray-300'}`}>
-                      {paymentMethod === 'vnpay' && <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />}
-                    </div>
-                    <Landmark size={24} className={paymentMethod === 'vnpay' ? 'text-blue-500' : 'text-gray-500'} />
-                    <div className="flex-grow">
-                      <p className={`font-bold ${paymentMethod === 'vnpay' ? 'text-gray-900' : 'text-gray-600'}`}>VNPAY</p>
-                    </div>
-                  </div>
-                  {/* Option: PayPal */}
-                  <div 
-                    onClick={() => setPaymentMethod('paypal')}
-                    className={`border-2 rounded-2xl p-4 cursor-pointer transition-all flex items-center gap-4 ${paymentMethod === 'paypal' ? 'border-sky-500 bg-sky-50/50' : 'border-gray-200 hover:border-gray-300 bg-white'}`}
-                  >
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'paypal' ? 'border-sky-500' : 'border-gray-300'}`}>
-                      {paymentMethod === 'paypal' && <div className="w-2.5 h-2.5 bg-sky-500 rounded-full" />}
-                    </div>
-                    <CircleDollarSign size={24} className={paymentMethod === 'paypal' ? 'text-sky-500' : 'text-gray-500'} />
-                    <div className="flex-grow">
-                      <p className={`font-bold ${paymentMethod === 'paypal' ? 'text-gray-900' : 'text-gray-600'}`}>PayPal</p>
-                    </div>
-                  </div>
-                  {/* Option: Thẻ tín dụng */}
-                  <div 
-                    onClick={() => setPaymentMethod('card')}
-                    className={`border-2 rounded-2xl p-4 cursor-pointer transition-all flex items-center gap-4 ${paymentMethod === 'card' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300 bg-white'}`}
-                  >
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'card' ? 'border-blue-600' : 'border-gray-300'}`}>
-                      {paymentMethod === 'card' && <div className="w-2.5 h-2.5 bg-blue-600 rounded-full" />}
-                    </div>
-                    <CreditCard size={24} className={paymentMethod === 'card' ? 'text-blue-600' : 'text-gray-500'} />
-                    <div className="flex-grow">
-                      <p className={`font-bold ${paymentMethod === 'card' ? 'text-gray-900' : 'text-gray-600'}`}>Thẻ Credit/ATM Card</p>
-                    </div>
-                  </div>
+                  
                   {/* Option: COD */}
                   <div 
                     onClick={() => setPaymentMethod('cod')}
@@ -416,50 +500,7 @@ const Cart = () => {
               {/* Nút Xác nhận thanh toán cuối cùng */}
               <button 
                 disabled={isPlacingOrder}
-                onClick={async () => {
-                  const customerId = localStorage.getItem("customerId");
-                  if (!customerId) {
-                    alert("Vui lòng đăng nhập để đặt hàng!");
-                    return;
-                  }
-                  
-                  if (!customerName || !customerPhone || !customerAddress) {
-                    alert("Vui lòng điền đầy đủ thông tin giao hàng!");
-                    return;
-                  }
-
-                  setIsPlacingOrder(true);
-                  try {
-                    const orderDetails = items.map(item => ({
-                      productId: item.productId,
-                      quantity: item.quantity,
-                      cost: item.price,
-                      total: item.price * item.quantity
-                    }));
-
-                    const requestBody = {
-                      customerId: Number(customerId),
-                      method: paymentMethod,
-                      totalPrice: total,
-                      details: orderDetails
-                    };
-
-                    const response = await apiRequest('/api/orders', 'POST', requestBody);
-                    const res = await response.json();
-                    if (res.code === 200) {
-                      alert(`Đặt hàng thành công với phương thức thanh toán: ${paymentMethod}`);
-                      await clearCart();
-                      setShowCheckoutModal(false);
-                    } else {
-                      alert("Lỗi khi đặt hàng: " + res.message);
-                    }
-                  } catch (error) {
-                    console.error("Error placing order", error);
-                    alert("Đã xảy ra lỗi, vui lòng thử lại sau!");
-                  } finally {
-                    setIsPlacingOrder(false);
-                  }
-                }}
+                onClick={handlePlaceOrder}
                 className="w-full flex items-center justify-center gap-2 bg-black text-white py-5 rounded-2xl font-bold text-lg hover:bg-gray-800 disabled:bg-gray-600 transition-all uppercase tracking-wide shadow-xl active:scale-95"
               >
                 {isPlacingOrder ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
@@ -467,6 +508,41 @@ const Cart = () => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL QUÉT MÃ MOMO (MOMO QR POPUP) ================= */}
+      {showMomoModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center relative animate-in fade-in zoom-in duration-300">
+            <h2 className="text-xl font-bold text-gray-900 mb-2 uppercase tracking-wide">Thanh toán MoMo</h2>
+            <p className="text-sm text-gray-500 mb-6">Vui lòng quét mã QR dưới đây để hoàn tất</p>
+            
+            <div className="bg-pink-50 p-4 rounded-2xl mb-6 relative">
+              <img src={qrCodeUrl} alt="MoMo QR Code" className="w-full h-auto rounded-lg shadow-sm" />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-white/20">
+                <Loader2 className="w-12 h-12 text-pink-600 animate-spin" />
+              </div>
+            </div>
+
+            <div className="space-y-2 mb-8">
+              <p className="text-lg font-black text-pink-600 tracking-wider">{formatPrice(total)}</p>
+              <p className="text-xs font-bold text-gray-400 uppercase">Mã đơn hàng: #{currentOrderId}</p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-center gap-2 text-sm text-blue-600 font-bold animate-pulse">
+                <Loader2 size={16} className="animate-spin" />
+                Đang chờ bạn thanh toán...
+              </div>
+              <button 
+                onClick={() => setShowMomoModal(false)}
+                className="w-full py-3 text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Hủy và chọn phương thức khác
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -103,8 +103,7 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     const checkUser = async () => {
       const token = localStorage.getItem("token");
-      const empId = localStorage.getItem("employerId");
-      if (token && !empId) {
+      const empId = localStorage.getItem("employerId");      if (token && !empId) {
         try {
           const res = await apiRequest("/api/auth/me");
           const data = await res.json();
@@ -118,6 +117,43 @@ export default function AdminOrdersPage() {
     };
     checkUser();
     fetchOrders();
+
+    // --- KẾT NỐI REAL-TIME SSE ---
+    const eventSource = new EventSource("http://localhost:8080/api/orders/stream");
+
+    eventSource.addEventListener("orderUpdate", (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Admin received real-time update:", data);
+        
+        // Cập nhật trong danh sách
+        setOrders(prevOrders => prevOrders.map(ord => {
+          if (ord.id === data.orderId) {
+            return { ...ord, status: data.status };
+          }
+          return ord;
+        }));
+
+        // Cập nhật nếu đang mở Modal
+        setSelectedOrder(prev => {
+          if (prev && prev.id === data.orderId) {
+            return { ...prev, status: data.status };
+          }
+          return prev;
+        });
+      } catch (e) {
+        console.error("Error parsing SSE data", e);
+      }
+    });
+
+    eventSource.onerror = (err) => {
+      console.error("SSE connection error", err);
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close();
+    };
   }, [appliedFilters, currentPage]);
 
   // HÀM CẬP NHẬT TRẠNG THÁI (Trong Modal Chi tiết)
