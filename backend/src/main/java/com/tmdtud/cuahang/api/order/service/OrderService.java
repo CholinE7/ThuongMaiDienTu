@@ -107,9 +107,9 @@ public class OrderService implements OrderServiceI {
     public Orders delete(Long id) {
         Orders order = getById(id);
         if (order.getStatus().isTerminal())
-            return order;
+            throw new RuntimeException("Đơn hàng đã kết thúc, không thể hủy");
         if (!order.getStatus().isCancellable())
-            return order;
+            throw new RuntimeException("Chỉ có thể hủy đơn hàng ở trạng thái Chờ xác nhận hoặc Đã xác nhận");
 
         if (!order.getStatus().equals(OrderStatus.PENDING)) {
             List<OrdersDetails> ordersDetails = orderDetailService

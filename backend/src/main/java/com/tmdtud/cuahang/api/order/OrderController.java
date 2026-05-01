@@ -113,6 +113,11 @@ public class OrderController extends BaseController {
         return ApiResponse.success(orderService.toOrdHasDetailDTO(orderService.delete(id)));
     }
 
+    @PutMapping("/{id}/cancel")
+    public ApiResponse<OrdHasDetailDTO> cancelOrder(@PathVariable Long id) {
+        return ApiResponse.success(orderService.toOrdHasDetailDTO(orderService.delete(id)));
+    }
+
     @GetMapping("/{id}")
     public ApiResponse<OrdHasDetailDTO> getById(@PathVariable Long id) {
         Orders purchaseOrders = orderService.getById(id);

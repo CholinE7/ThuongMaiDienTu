@@ -67,7 +67,7 @@ function SearchContent() {
           Kết quả tìm kiếm
         </h1>
         <p className="text-gray-500 mt-2">
-          Tìm thấy {searchResults.length} sản phẩm cho <strong>"{query}"</strong>
+          Tìm thấy <strong>{totalProducts}</strong> sản phẩm cho <strong>"{query}"</strong>
         </p>
         <div className="w-16 h-0.5 bg-gray-300 mx-auto mt-4"></div>
       </div>

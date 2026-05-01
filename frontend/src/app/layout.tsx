@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 // 1. Import font Open Sans từ Google
 import { Open_Sans } from "next/font/google"; 
 import "./globals.css";
+import { Toaster } from "react-hot-toast";
 
 // 2. Cấu hình font
 const openSans = Open_Sans({
@@ -28,7 +29,24 @@ export default function RootLayout({
       {/* 3. Thêm biến font vào body và class font-sans */}
       <body className={`${openSans.variable} font-sans antialiased`}>
         {children}
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              borderRadius: '10px',
+              fontFamily: 'var(--font-open-sans)',
+              fontSize: '14px',
+            },
+            success: {
+              iconTheme: { primary: '#22c55e', secondary: '#fff' },
+            },
+            error: {
+              iconTheme: { primary: '#ef4444', secondary: '#fff' },
+            },
+          }}
+        />
       </body>
     </html>
   );
-}
+}

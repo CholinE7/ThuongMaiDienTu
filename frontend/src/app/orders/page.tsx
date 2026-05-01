@@ -5,31 +5,32 @@ import Link from 'next/link';
 import { apiRequest } from '@/services/app';
 import Navbar from '@/components/Navbar';
 import { ChevronRight, Package, AlertCircle, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await apiRequest('/api/orders/my-orders?page_size=50', 'GET');
-        const res = await response.json();
-        if (res.code === 200 && res.result) {
-          setOrders(res.result.content || []);
-        } else {
-          setError(res.message || "Không thể tải lịch sử đơn hàng.");
-        }
-      } catch (err) {
-        console.error("Lỗi lấy lịch sử đơn hàng", err);
-        setError("Lỗi kết nối đến máy chủ. Vui lòng thử lại sau.");
-      } finally {
-        setIsLoading(false);
+  // Tách fetchOrders ra ngoài để có thể gọi lại sau khi hủy đơn mà không reload cả trang
+  const fetchOrders = async () => {
+    try {
+      const response = await apiRequest('/api/orders/my-orders?page_size=50', 'GET');
+      const res = await response.json();
+      if (res.code === 200 && res.result) {
+        setOrders(res.result.content || []);
+      } else {
+        setError(res.message || "Không thể tải lịch sử đơn hàng.");
       }
-    };
+    } catch (err) {
+      console.error("Lỗi lấy lịch sử đơn hàng", err);
+      setError("Lỗi kết nối đến máy chủ. Vui lòng thử lại sau.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    // Chỉ gọi khi có token
+  useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       fetchOrders();
@@ -39,7 +40,8 @@ export default function OrdersPage() {
     }
   }, []);
 
-  const formatPrice = (p: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p);
+  const formatPrice = (p: number) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -61,19 +63,20 @@ export default function OrdersPage() {
   const handleCancelOrder = async (orderId: number) => {
     if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
 
+    // FIX: Dùng endpoint hủy đơn riêng /api/orders/{id}/cancel
+    const toastId = toast.loading("Đang hủy đơn hàng...");
     try {
-      // Backend Service có method delete(id) để hủy đơn
-      const response = await apiRequest(`/api/orders/1/${orderId}`, 'DELETE');
+      const response = await apiRequest(`/api/orders/${orderId}/cancel`, 'PUT');
       const res = await response.json();
       if (res.code === 200) {
-        alert("Hủy đơn hàng thành công!");
-        window.location.reload();
+        toast.success("Hủy đơn hàng thành công!", { id: toastId });
+        fetchOrders(); // Reload list mà không cần refresh toàn trang
       } else {
-        alert(res.message || "Lỗi khi hủy đơn hàng.");
+        toast.error(res.message || "Lỗi khi hủy đơn hàng.", { id: toastId });
       }
     } catch (err) {
       console.error("Lỗi hủy đơn hàng", err);
-      alert("Lỗi kết nối máy chủ.");
+      toast.error("Lỗi kết nối máy chủ.", { id: toastId });
     }
   };
 
@@ -94,7 +97,6 @@ export default function OrdersPage() {
           <p className="text-gray-500 text-sm">Theo dõi trạng thái các đơn hàng bạn đã đặt mua</p>
         </div>
 
-        {/* Danh sách đơn hàng */}
         {isLoading ? (
           <div className="bg-white p-12 rounded shadow-sm border border-gray-100 flex flex-col items-center justify-center min-h-[400px]">
             <Loader2 className="w-8 h-8 text-gray-900 animate-spin mb-4" />
@@ -109,7 +111,7 @@ export default function OrdersPage() {
                 Đăng nhập ngay
               </Link>
             ) : (
-              <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-gray-100 text-gray-900 text-sm font-medium rounded uppercase tracking-widest hover:bg-gray-200 transition">
+              <button onClick={() => { setIsLoading(true); fetchOrders(); }} className="mt-4 px-6 py-2 bg-gray-100 text-gray-900 text-sm font-medium rounded uppercase tracking-widest hover:bg-gray-200 transition">
                 Thử lại
               </button>
             )}
@@ -118,7 +120,9 @@ export default function OrdersPage() {
           <div className="bg-white p-16 rounded shadow-sm border border-gray-100 flex flex-col items-center justify-center min-h-[400px]">
             <Package className="w-16 h-16 text-gray-300 mb-6" />
             <h2 className="text-xl font-medium text-gray-900 mb-2">Bạn chưa có đơn hàng nào</h2>
-            <p className="text-gray-500 mb-8 text-center max-w-md">Hãy khám phá các sản phẩm mới nhất của chúng tôi và đặt ngay cho mình đôi giày ưng ý nhất.</p>
+            <p className="text-gray-500 mb-8 text-center max-w-md">
+              Hãy khám phá các sản phẩm mới nhất của chúng tôi và đặt ngay cho mình đôi giày ưng ý nhất.
+            </p>
             <Link href="/" className="px-8 py-3 bg-black text-white text-sm font-medium rounded-full uppercase tracking-widest hover:bg-gray-800 transition shadow-lg shadow-gray-200">
               Tiếp tục mua sắm
             </Link>
@@ -138,19 +142,16 @@ export default function OrdersPage() {
                       <span className="text-xs text-gray-500 uppercase tracking-widest">Phương thức: </span>
                       <span className="font-medium text-gray-900">{order.method}</span>
                     </div>
-                    <div>
-                      {getStatusBadge(order.status)}
-                    </div>
+                    <div>{getStatusBadge(order.status)}</div>
                   </div>
 
                   <div className="p-6">
-                    {/* Danh sách sản phẩm trong đơn */}
                     <div className="space-y-4 mb-6">
                       {details && details.map((detail: any, index: number) => (
                         <div key={index} className="flex items-center gap-4 border-b border-gray-100 pb-4 last:border-0 last:pb-0">
                           <div className="w-20 h-20 bg-gray-100 flex-shrink-0">
                             {detail.product?.imageUrl ? (
-                              <img src={detail.product.imageUrl} alt={detail.product?.name || "Product"} className="w-full h-full object-cover" />
+                              <img src={detail.product.imageUrl} alt={detail.product?.name || "Product"} className="w-full h-full object-cover" loading="lazy" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400">
                                 <Package size={24} />
@@ -159,18 +160,13 @@ export default function OrdersPage() {
                           </div>
                           <div className="flex-1">
                             <h3 className="text-sm font-medium text-gray-900 mb-1">{detail.product?.name || "Sản phẩm"}</h3>
-                            <div className="text-sm text-gray-900">
-                              Số lượng: x{detail.quantity}
-                            </div>
+                            <div className="text-sm text-gray-500">Số lượng: x{detail.quantity}</div>
                           </div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {formatPrice(detail.cost)}
-                          </div>
+                          <div className="text-sm font-medium text-gray-900">{formatPrice(detail.cost)}</div>
                         </div>
                       ))}
                     </div>
 
-                    {/* Tổng tiền và Nút Hủy */}
                     <div className="flex justify-between items-center border-t border-gray-100 pt-4">
                       <div>
                         {order.status === "PENDING" && (
@@ -197,4 +193,3 @@ export default function OrdersPage() {
     </main>
   );
 }
-

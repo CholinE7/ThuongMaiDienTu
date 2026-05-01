@@ -41,34 +41,46 @@ export default function CategoryPage() {
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        let title = "TẤT CẢ SẢN PHẨM";
-        let categoryId = null;
+        // Bước 1: Lấy danh sách categories từ API để map slug → id động
+        // (tránh hard-code id cứng, dễ bị sai khi DB thay đổi thứ tự)
+        const catResponse = await apiRequest('/api/categories', 'GET');
+        const catRes = await catResponse.json();
+        const categories: { id: number; name: string }[] = catRes.result?.content || catRes.result || [];
 
-        if (slug === "nu") {
-          title = "GIÀY THỂ THAO NỮ";
-          categoryId = 1; // Giả sử ID 1 là giày nữ
-        } else if (slug === "nam") {
-          title = "GIÀY THỂ THAO NAM";
-          categoryId = 2; // Giả sử ID 2 là giày nam
-        } else if (slug === "cap") {
-          title = "GIÀY CẶP";
+        // Map slug → tên category để tìm ID
+        const SLUG_TO_NAME: Record<string, string> = {
+          "nu": "Giày Thể Thao Nữ",
+          "nam": "Giày Thể Thao Nam",
+          "cap": "Giày Cặp",
+        };
+
+        let title = "TẤT CẢ SẢN PHẨM";
+        let categoryId: number | null = null;
+
+        if (slug && SLUG_TO_NAME[slug as string]) {
+          const targetName = SLUG_TO_NAME[slug as string];
+          title = targetName.toUpperCase();
+          const found = categories.find(
+            (c) => c.name.toLowerCase() === targetName.toLowerCase()
+          );
+          if (found) categoryId = found.id;
         }
 
         setCategoryTitle(title);
-        
+
         const query = new URLSearchParams({
           page_no: (currentPage - 1).toString(),
           page_size: PRODUCTS_PER_PAGE.toString(),
-          ...(categoryId ? { category_id: categoryId.toString() } : {})
+          ...(categoryId ? { category_id: categoryId.toString() } : {}),
         }).toString();
 
         const response = await apiRequest(`/api/products?${query}`, 'GET');
         const res = await response.json();
-        
+
         if (res.code === 200 && res.result) {
           const mapped = res.result.content.map((p: any) => ({
             ...p,
-            category: p.category?.name || "Khác"
+            category: p.category?.name || "Khác",
           }));
           setProducts(mapped);
           setTotalProducts(res.result.total);

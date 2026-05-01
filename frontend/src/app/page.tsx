@@ -29,11 +29,18 @@ async function getProducts() {
 export default async function Home() {
   const products = await getProducts();
 
-  const shoesNu = products.filter((product: any) => product.category === "Giày Thể Thao Nữ").slice(0,4);
-  const shoesNam = products.filter((product: any) => product.category === "Giày Thể Thao Nam").slice(0,4);
-  
-  // Lấy 4 sản phẩm đầu tiên làm sản phẩm bán chạy
-  const bestSellers = products.slice(0, 4); 
+  const shoesNu = products.filter((product: any) => product.category === "Giày Thể Thao Nữ").slice(0, 4);
+  const shoesNam = products.filter((product: any) => product.category === "Giày Thể Thao Nam").slice(0, 4);
+
+  // Sản phẩm bán chạy: sort theo rating giảm dần, lấy top 4
+  const bestSellers = [...products]
+    .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
+    .slice(0, 4);
+
+  // Sản phẩm khuyến mãi: có discount_percentage > 0
+  const discountedProducts = products
+    .filter((p: any) => p.discountPercentage > 0)
+    .slice(0, 4);
 
   return (
     <main className="min-h-screen bg-white font-sans">
@@ -92,6 +99,39 @@ export default async function Home() {
             </Link>
         </div>
       </section>
+
+      {/* --- SECTION KHUYẾN MÃI (chỉ hiển thị nếu có SP giảm giá) --- */}
+      {discountedProducts.length > 0 && (
+        <section className="py-12 mx-4 md:mx-auto md:container bg-gradient-to-br from-red-50 to-orange-50 rounded-3xl my-6 px-6">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
+              🔥 Flash Sale
+            </div>
+            <h2 className="text-2xl md:text-3xl font-medium text-gray-800 uppercase tracking-widest">
+              Khuyến Mãi Hôm Nay
+            </h2>
+            <div className="w-16 h-0.5 bg-red-400 mx-auto mt-4"></div>
+            <p className="text-gray-500 text-sm mt-3">Ưu đãi có hạn — Nhanh tay kẻo hết!</p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
+            {discountedProducts.map((product: any) => (
+              <div key={`promo-${product.id}`} className="relative">
+                <div className="absolute top-2 left-2 z-10 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md shadow">
+                  -{product.discountPercentage}%
+                </div>
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link href="/search?q=" className="inline-block border border-red-600 text-red-600 px-10 py-3 font-medium hover:bg-red-600 hover:text-white transition uppercase text-sm tracking-wide rounded">
+              Xem tất cả khuyến mãi
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* --- DANH MỤC: GIÀY CAO GÓT NỮ --- */}
       <section className="pt-10 pb-10 container mx-auto px-4">

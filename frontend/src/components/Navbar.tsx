@@ -15,6 +15,7 @@ export default function Navbar() {
 
   // --- STATE LƯU THÔNG TIN ĐĂNG NHẬP ---
   const [userName, setUserName] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false); // Để fix lỗi Hydration
 
   const [cartCount, setCartCount] = useState(0);
 
@@ -59,6 +60,8 @@ export default function Navbar() {
       setCartCount(count);
     };
     fetchCartCount();
+
+    setIsMounted(true); // Đánh dấu đã mount xong trên client
 
     // Lắng nghe sự kiện cập nhật giỏ hàng và đăng nhập
     const handleCartUpdate = () => {
@@ -136,18 +139,19 @@ export default function Navbar() {
 
             {/* KIỂM TRA ĐĂNG NHẬP ĐỂ HIỂN THỊ TÊN HOẶC NÚT ĐĂNG NHẬP */}
             <div className="relative group cursor-pointer">
-              {(userName || (typeof window !== 'undefined' && localStorage.getItem("token"))) ? (
+              {/* Chỉ render phần phụ thuộc vào localStorage/state sau khi đã mounted */}
+              {isMounted && userName ? (
                 // --- ĐÃ ĐĂNG NHẬP ---
                 <div className="flex items-center gap-2 p-2 rounded-full text-gray-700 hover:bg-gray-100 transition">
                   <div className="bg-blue-100 text-blue-600 p-1.5 rounded-full">
                     <User size={18} />
                   </div>
                   <span className="font-bold text-sm hidden md:block max-w-[120px] truncate">
-                    {userName || "Tài khoản"}
+                    {userName}
                   </span>
                 </div>
               ) : (
-                // --- CHƯA ĐĂNG NHẬP ---
+                // --- CHƯA ĐĂNG NHẬP (Hoặc trạng thái mặc định lúc SSR) ---
                 <div className="p-2 rounded-full text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition">
                   <User size={24} />
                 </div>
@@ -156,11 +160,11 @@ export default function Navbar() {
               <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-y-1 transition-all duration-300 z-50">
                 <div className="absolute -top-4 left-0 w-full h-4 bg-transparent"></div>
                 <div className="py-2 flex flex-col">
-                  {(userName || (typeof window !== 'undefined' && localStorage.getItem("token"))) ? (
+                  {isMounted && userName ? (
                     // Menu khi đã đăng nhập
                     <>
                       <div className="px-4 py-2 border-b border-gray-100 md:hidden">
-                        <span className="text-sm font-bold text-blue-600">Xin chào, {userName || "bạn"}</span>
+                        <span className="text-sm font-bold text-blue-600">Xin chào, {userName}</span>
                       </div>
                       <Link href="/profile" className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2"><User size={16} /> Tài khoản của tôi</Link>
                       <Link href="/orders" className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2"><FileText size={16} /> Lịch sử mua hàng</Link>
@@ -217,9 +221,9 @@ export default function Navbar() {
           <Link href="/category/cap" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Giày Cặp</Link>
 
           <div className="flex flex-col gap-2 pt-2">
-            {(userName || (typeof window !== 'undefined' && localStorage.getItem("token"))) ? (
+            {isMounted && userName ? (
               <>
-                <div className="py-2 text-center text-sm text-gray-500">Đang đăng nhập với: <span className="font-bold text-blue-600">{userName || "Tài khoản"}</span></div>
+                <div className="py-2 text-center text-sm text-gray-500">Đang đăng nhập với: <span className="font-bold text-blue-600">{userName}</span></div>
                 <Link href="/profile" className="w-full text-center bg-gray-100 text-gray-800 py-2.5 rounded-lg font-semibold">Tài khoản của tôi</Link>
                 <Link href="/orders" className="w-full text-center bg-gray-100 text-gray-800 py-2.5 rounded-lg font-semibold">Lịch sử đơn hàng</Link>
                 <button onClick={handleLogout} className="w-full text-center bg-red-50 text-red-600 py-2.5 rounded-lg font-bold">Đăng xuất</button>

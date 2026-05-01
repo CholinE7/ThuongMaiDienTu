@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.Authentication;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.tmdtud.cuahang.api.auth.service.AuthService;
 import com.tmdtud.cuahang.api.customer.model.Customers;
@@ -19,6 +21,8 @@ import com.tmdtud.cuahang.common.response.ApiResponse;
 @RestController
 @Validated
 public class AuthController {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private AuthService service;
@@ -36,10 +40,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Users user) {
         try {
-            System.out.println("Login attempt - User: " + user.getUsername() + " | Pass: " + user.getPassword());
-            
+            log.info("Login attempt for user: {}", user.getUsername());
+
             String token = service.verify(user);
-            
+
             return ResponseEntity.ok(java.util.Map.of("token", token));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());

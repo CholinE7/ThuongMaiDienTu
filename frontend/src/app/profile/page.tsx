@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Edit, CheckCircle2, Loader2, Lock, Eye, EyeOff, MapPin } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
   // 1. STATE QUẢN LÝ DỮ LIỆU
@@ -81,11 +82,11 @@ export default function ProfilePage() {
   // 1. Kiểm tra logic mật khẩu phía Client trước
   if (passwords.newPassword !== "") {
     if (passwords.newPassword !== passwords.confirmPassword) {
-      alert("Mật khẩu xác nhận không khớp!");
+      toast.error("Mật khẩu xác nhận không khớp!");
       return;
     }
     if (passwords.newPassword.length < 6) {
-      alert("Mật khẩu mới phải có ít nhất 6 ký tự!");
+      toast.error("Mật khẩu mới phải có ít nhất 6 ký tự!");
       return;
     }
   }
@@ -122,20 +123,17 @@ export default function ProfilePage() {
 
     if (response.ok) {
       setUserInfo(editForm);
-      // Reset lại các ô nhập mật khẩu sau khi đổi thành công
       setPasswords({ newPassword: "", confirmPassword: "" });
-      
       localStorage.setItem("customerName", editForm.fullName);
       window.dispatchEvent(new Event("authUpdated"));
       setIsEditing(false);
-      setToast("Cập nhật thông tin thành công!");
-      setTimeout(() => setToast(""), 3000);
+      toast.success("Cập nhật thông tin thành công!");
     } else {
       const errorMsg = await response.text();
-      alert("Lỗi: " + errorMsg);
+      toast.error("Lỗi: " + errorMsg);
     }
   } catch (error) {
-    alert("Lỗi kết nối máy chủ!");
+    toast.error("Lỗi kết nối máy chủ!");
   } finally {
     setIsSaving(false);
   }

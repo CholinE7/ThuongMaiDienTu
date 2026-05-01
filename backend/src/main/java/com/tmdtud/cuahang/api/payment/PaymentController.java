@@ -23,6 +23,9 @@ public class PaymentController {
     @Autowired
     private OrderService orderService;
 
+    @Autowired
+    private MomoConfig momoConfig;
+
     @GetMapping("/momo/create_payment")
     public ApiResponse<Map<String, Object>> createMomoPayment(@RequestParam Long orderId) {
         Orders order = orderService.getById(orderId);
@@ -30,12 +33,12 @@ public class PaymentController {
             return ApiResponse.error(404, "Đơn hàng không tồn tại");
         }
 
-        String qrUrl = MomoConfig.getQrUrl(order.getTotalPrice().longValue(), order.getId().toString());
-        
+        String qrUrl = momoConfig.getQrUrl(order.getTotalPrice().longValue(), order.getId().toString());
+
         Map<String, Object> data = new HashMap<>();
         data.put("qrUrl", qrUrl);
-        data.put("phone", MomoConfig.MOMO_PHONE);
-        data.put("accountName", MomoConfig.MOMO_ACCOUNT_NAME);
+        data.put("phone", momoConfig.momoPhone);
+        data.put("accountName", momoConfig.momoAccountName);
         data.put("amount", order.getTotalPrice());
         data.put("orderId", order.getId());
 

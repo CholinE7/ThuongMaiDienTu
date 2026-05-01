@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { getCart, updateQuantity as updateCartQuantity, removeFromCart, clearCart, CartItem } from '@/utils/cartUtils';
 import { apiRequest } from '@/services/app';
+import toast from 'react-hot-toast';
 
 const Cart = () => {
   // Dữ liệu mẫu khởi tạo
@@ -36,12 +37,30 @@ const Cart = () => {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
-    // Tự động điền thông tin nếu đã đăng nhập
-    const updateCustomerInfo = () => {
-      setCustomerName(localStorage.getItem('customerName') || '');
+    // Auto-fill thông tin khi modal thanh toán được mở
+    const updateCustomerInfo = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const response = await apiRequest('/api/auth/me', 'GET');
+        const res = await response.json();
+        if (res.code === 200 && res.result) {
+          const u = res.result;
+          setCustomerName(u.fullName || '');
+          setCustomerPhone(u.phone || '');
+          // Ghép địa chỉ mặc định từ 3 trường street, ward, city
+          const addr = [u.street, u.ward, u.city].filter(Boolean).join(', ');
+          setCustomerAddress(addr);
+        }
+      } catch (e) {
+        console.error('Không thể tải thông tin khách hàng', e);
+      }
     };
-    
-    updateCustomerInfo();
+
+    if (showCheckoutModal) {
+      updateCustomerInfo();
+    }
+
     window.addEventListener("authUpdated", updateCustomerInfo);
     return () => window.removeEventListener("authUpdated", updateCustomerInfo);
   }, [showCheckoutModal]);
@@ -419,16 +438,17 @@ const Cart = () => {
                 onClick={async () => {
                   const customerId = localStorage.getItem("customerId");
                   if (!customerId) {
-                    alert("Vui lòng đăng nhập để đặt hàng!");
+                    toast.error("Vui lòng đăng nhập để đặt hàng!");
                     return;
                   }
-                  
+
                   if (!customerName || !customerPhone || !customerAddress) {
-                    alert("Vui lòng điền đầy đủ thông tin giao hàng!");
+                    toast.error("Vui lòng điền đầy đủ thông tin giao hàng!");
                     return;
                   }
 
                   setIsPlacingOrder(true);
+                  const toastId = toast.loading("Đang xử lý đơn hàng...");
                   try {
                     const orderDetails = items.map(item => ({
                       productId: item.productId,
@@ -447,15 +467,15 @@ const Cart = () => {
                     const response = await apiRequest('/api/orders', 'POST', requestBody);
                     const res = await response.json();
                     if (res.code === 200) {
-                      alert(`Đặt hàng thành công với phương thức thanh toán: ${paymentMethod}`);
+                      toast.success(`Đặt hàng thành công! Phương thức: ${paymentMethod.toUpperCase()}`, { id: toastId, duration: 4000 });
                       await clearCart();
                       setShowCheckoutModal(false);
                     } else {
-                      alert("Lỗi khi đặt hàng: " + res.message);
+                      toast.error("Lỗi khi đặt hàng: " + res.message, { id: toastId });
                     }
                   } catch (error) {
                     console.error("Error placing order", error);
-                    alert("Đã xảy ra lỗi, vui lòng thử lại sau!");
+                    toast.error("Đã xảy ra lỗi, vui lòng thử lại sau!", { id: toastId });
                   } finally {
                     setIsPlacingOrder(false);
                   }

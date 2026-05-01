@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, ShieldCheck, ChevronLeft, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -58,14 +59,14 @@ export default function RegisterPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:8080/api/customers/register/customers", {
+      const res = await fetch("http://localhost:8080/register/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registerData),
       });
 
       if (res.ok) {
-        alert("Chúc mừng! Bạn đã đăng ký thành công.");
+        toast.success("Chúc mừng! Bạn đã đăng ký thành công.");
         router.push("/login");
       } else {
         const errorMessageFromServer = await res.text();

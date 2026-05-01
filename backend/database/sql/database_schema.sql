@@ -138,3 +138,23 @@ CREATE TABLE purchase_orders_details (
     CONSTRAINT fk_po_details_orders FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id),
     CONSTRAINT fk_po_details_products FOREIGN KEY (product_id) REFERENCES products(id)
 );
+
+-- 11. Cart Items
+CREATE TABLE cart_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    customer_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 1,
+    size VARCHAR(50),
+    color VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_cart_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cart_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- 12. Indexes for Performance
+CREATE INDEX idx_products_name ON products(name);
+CREATE INDEX idx_products_category ON products(category_id);
+CREATE INDEX idx_orders_customer ON orders(customer_id);
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_cart_customer ON cart_items(customer_id);

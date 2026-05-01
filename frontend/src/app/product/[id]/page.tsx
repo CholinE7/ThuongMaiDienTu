@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { apiRequest } from '@/services/app';
 import { addToCart } from '@/utils/cartUtils';
 import Navbar from '@/components/Navbar';
+import toast from 'react-hot-toast';
 import { 
   Heart, 
   ChevronLeft, 
@@ -32,9 +33,9 @@ const isLightColor = (colorName: string) => {
 };
 
 
-const router = useRouter();
 
 export default function ProductDetailPage() {
+  const router = useRouter();
   // --- LẤY ID THỰC TẾ TỪ URL ---
   const params = useParams();
   const productId = params?.id as string;
@@ -228,15 +229,16 @@ export default function ProductDetailPage() {
               onClick={async () => {
                 const token = localStorage.getItem("token");
                 if (!token) {
-                  alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+                  toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng!");
                   router.push("/login");
                   return;
                 }
+                const toastId = toast.loading("Đang thêm vào giỏ hàng...");
                 const success = await addToCart(product, 1, String(selectedSize), selectedColor);
                 if (success) {
-                  alert("Đã thêm vào giỏ hàng!");
+                  toast.success("Đã thêm vào giỏ hàng!", { id: toastId });
                 } else {
-                  alert("Lỗi khi thêm vào giỏ hàng. Vui lòng thử lại!");
+                  toast.error("Lỗi khi thêm vào giỏ hàng. Vui lòng thử lại!", { id: toastId });
                 }
               }}
               className="w-full bg-black text-white py-4 rounded-full font-medium text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors mb-10 active:scale-95 shadow-lg shadow-gray-200">
