@@ -41,15 +41,18 @@ public class Orders {
     private String method;
 
     @CreationTimestamp
-    @Column(updatable = false)
-    private Timestamp created_at;
+    @Column(name = "created_at", updatable = false)
+    private Timestamp createdAt;
 
     @UpdateTimestamp
-    @Column
-    private Timestamp updated_at;
+    @Column(name = "updated_at")
+    private Timestamp updatedAt;
 
     @Column
     private BigDecimal totalPrice;
+
+    @Column
+    private String paymentStatus;
 
     @Column
     @Enumerated(EnumType.STRING)

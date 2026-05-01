@@ -19,11 +19,13 @@ import lombok.NoArgsConstructor;
 public class OrderDTO{
     private Long id;
 
-    private Timestamp created_at;
+    private Timestamp createdAt;
 
-    private Timestamp updated_at;
+    private Timestamp updatedAt;
 
     private BigDecimal totalPrice;
+
+    private String paymentStatus;
 
     private int deleted;
 

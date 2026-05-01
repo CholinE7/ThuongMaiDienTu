@@ -1,7 +1,15 @@
 package com.tmdtud.cuahang.common.config;
 
 public class MomoConfig {
-    // Thông tin tài khoản nhận tiền của bạn
+    // === CẤU HÌNH MOMO SANDBOX (OFFICIAL API) ===
+    public static final String PARTNER_CODE = "MOMOBKUN20180529";
+    public static final String ACCESS_KEY = "klm056883M97063";
+    public static final String SECRET_KEY = "at67qH6v09S5v0fU0796uS6s6E2070f1";
+    public static final String ENDPOINT = "https://test-payment.momo.vn/v2/gateway/api/create";
+    public static final String REDIRECT_URL = "http://localhost:3000/payment/momo";
+    public static final String NOTIFY_URL = "http://localhost:8080/api/payment/momo/confirm";
+
+    // === THÔNG TIN TÀI KHOẢN CÁ NHÂN (VIETQR - DÙNG CHO QUÉT MÃ NHANH) ===
     public static String MOMO_PHONE = "0769505807";
     public static String MOMO_ACCOUNT_NAME = "Hồ Quốc Đạt";
     

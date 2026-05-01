@@ -41,7 +41,7 @@ INSERT INTO suppliers (id, name) VALUES
 INSERT INTO products (id, name, description, price, quantity, image_url, brand_id, category_id, deleted) VALUES 
 (1, 'Nike Air Max 270', 'Giày chạy bộ cực êm với đế khí thế hệ mới', 3500000, 50, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800', 1, 1, 0),
 (2, 'Adidas Ultraboost 22', 'Hoàn trả năng lượng tối ưu cho mỗi bước chạy', 4200000, 30, 'https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?q=80&w=800', 2, 3, 0),
-(3, 'Puma Suede Classic', 'Mẫu giày da lộn huyền thoại của Puma', 1800000, 45, 'https://images.puma.com/image/upload/f_auto,q_auto,b_rgb:fafafa,w_2000,h_2000/global/352634/03/sv01/fnd/PNA/fmt/png/Suede-Classic-XXI-Men''s-Sneakers', 3, 4, 0),
+(3, 'Puma Suede Classic', 'Mẫu giày da lộn huyền thoại của Puma', 1800000, 45, 'https://images.unsplash.com/photo-1741627872564-7d4b1cbd91ac?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 3, 4, 0),
 (4, 'Converse Chuck Taylor 70', 'Giày vải canvas phong cách vintage', 1500000, 100, 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=800', 4, 4, 0);
 
 -- 5. SEED CHO BẢNG CUSTOMERS

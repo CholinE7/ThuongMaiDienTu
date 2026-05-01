@@ -18,8 +18,8 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
 
     @Query("""
             SELECT o from Orders o WHERE o.deleted = 0
-            AND (:fromDate is null OR o.created_at >= :fromDate)
-            AND (:toDate is null OR o.created_at <= :toDate)
+            AND (:fromDate is null OR o.createdAt >= :fromDate)
+            AND (:toDate is null OR o.createdAt <= :toDate)
             AND (:status is null OR o.status = :status)
             """)
     Page<Orders> findAllByDateRange(
@@ -33,8 +33,8 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
 
     @Query("""
             SELECT COUNT(o) FROM Orders o WHERE o.deleted = 0
-            AND (:fromDate is null OR o.created_at >= :fromDate)
-            AND (:toDate is null OR o.created_at <= :toDate)
+            AND (:fromDate is null OR o.createdAt >= :fromDate)
+            AND (:toDate is null OR o.createdAt <= :toDate)
             AND (:status is null OR o.status = :status)
             """)
     long countOrders(
@@ -44,8 +44,8 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
 
     @Query("""
             SELECT COALESCE(SUM(o.totalPrice), 0) FROM Orders o WHERE o.deleted = 0
-            AND (:fromDate is null OR o.created_at >= :fromDate)
-            AND (:toDate is null OR o.created_at <= :toDate)
+            AND (:fromDate is null OR o.createdAt >= :fromDate)
+            AND (:toDate is null OR o.createdAt <= :toDate)
             AND (:status is null OR o.status = :status)
             """)
     java.math.BigDecimal sumRevenue(

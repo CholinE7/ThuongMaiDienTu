@@ -78,7 +78,7 @@ export default function AdminOrdersPage() {
             phone: ord.customer?.phone || "N/A",
             email: ord.customer?.email || "N/A",
             address: `${ord.customer?.street || ""}, ${ord.customer?.ward || ""}, ${ord.customer?.city || ""}`.replace(/^, , /, ""),
-            orderDate: ord.created_at ? ord.created_at.split('T')[0] : "",
+            orderDate: ord.createdAt ? ord.createdAt.split('T')[0] : "",
             totalAmount: ord.totalPrice,
             paymentMethod: ord.method || "COD",
             status: ord.status, // PENDING, CONFIRMED, etc.
