@@ -5,12 +5,13 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
 
 import com.tmdtud.cuahang.api.product.mapper.ProductMapper;
 import com.tmdtud.cuahang.api.purchase_orders_detail.dto.PurchaseOrderDetailDTO;
 import com.tmdtud.cuahang.api.purchase_orders_detail.model.PurchaseOrdersDetails;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = { ProductMapper.class })
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = { ProductMapper.class }, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PurchaseOrderDetailMapper {
     @Mapping(source = "product", target = "product")
     PurchaseOrderDetailDTO toDTO(PurchaseOrdersDetails purchaseOrdersDetails);
