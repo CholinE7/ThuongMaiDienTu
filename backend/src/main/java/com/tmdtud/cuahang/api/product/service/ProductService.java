@@ -64,15 +64,16 @@ public class ProductService implements ProductServiceI {
                 .quantity(request.getQuantity())
                 .price(request.getPrice())
                 .brand(brand)
-                .category(category).build();
+                .category(category)
+                .colors(request.getColors())
+                .build();
 
         return productRepo.save(product);
     }
 
     @Override
     public boolean delete(Long id) {
-        Products products = getById(id);
-
+        productRepo.deleteById(id);
         return true;
     }
 
@@ -94,7 +95,9 @@ public class ProductService implements ProductServiceI {
                 .price(request.getPrice())
                 .brand(brand)
                 .id(request.getId())
-                .category(category).build();
+                .category(category)
+                .colors(request.getColors())
+                .build();
         return productRepo.save(product);
     }
 

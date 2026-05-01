@@ -59,9 +59,6 @@ export default function AdminSidebar() {
     { name: 'Quản lý người dùng', href: '/admin/users', icon: Users },
     { name: 'Quản lý đơn hàng', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Quản lý sản phẩm', href: '/admin/products', icon: Package },
-    // { name: 'Quản lý nhập hàng', href: '/admin/imports', icon: Archive },
-    // { name: 'Quản lý giá bán', href: '/admin/prices', icon: DollarSign },
-    // { name: 'Quản lý tồn kho', href: '/admin/inventory', icon: ClipboardList },
   ];
 
   return (

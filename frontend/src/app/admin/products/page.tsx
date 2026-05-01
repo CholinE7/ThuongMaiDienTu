@@ -21,7 +21,17 @@ export default function AdminProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [currentProduct, setCurrentProduct] = useState({ 
-    id: 0, name: "", brand: "", image: "", importPrice: 0, sellPrice: 0, category: "Giày Thể Thao Nam", status: "visible", description: ""
+    id: 0, 
+    name: "", 
+    brand: "", 
+    brand_id: 1, // Default IDs
+    category_id: 1, // Default IDs
+    image: "", 
+    sellPrice: 0, 
+    category: "Giày Thể Thao Nam", 
+    status: "visible", 
+    description: "",
+    colors: "" // Changed to string for easier editing
   });
 
   // TOAST THÔNG BÁO
@@ -51,12 +61,14 @@ export default function AdminProductsPage() {
           id: p.id,
           name: p.name,
           brand: p.brand?.name || "N/A",
+          brand_id: p.brand?.id || 1,
+          category_id: p.category?.id || 1,
           image: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=300",
-          importPrice: p.price * 0.7, // Giả định giá nhập vì backend chưa có
           sellPrice: p.price,
           category: p.category?.name || "Khác",
           status: p.deleted === 0 ? "visible" : "hidden",
-          description: p.description
+          description: p.description,
+          colors: p.colors || [] // Keep as array for table display
         })));
         setTotalProducts(result.result.total);
       }
@@ -94,7 +106,10 @@ export default function AdminProductsPage() {
         description: currentProduct.description,
         imageUrl: currentProduct.image,
         quantity: 100, // Mặc định số lượng
-        deleted: currentProduct.status === "visible" ? 0 : 1
+        deleted: currentProduct.status === "visible" ? 0 : 1,
+        colors: currentProduct.colors ? [currentProduct.colors] : [],
+        brand_id: currentProduct.brand_id,
+        category_id: currentProduct.category_id
       };
 
       const response = await fetch(url, {
@@ -121,11 +136,12 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDelete = async (id: number, name: string) => {
-    if (window.confirm(`Bạn có chắc muốn xóa sản phẩm "${name}" không?`)) {
+  const handleDelete = async (id: number, name: string, colors: string[]) => {
+    const colorStr = colors.length > 0 ? ` (Màu: ${colors.join(", ")})` : "";
+    if (window.confirm(`Bạn có chắc muốn xóa sản phẩm "${name}"${colorStr} không?`)) {
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:8080/api/products/1/${id}`, { 
+        const response = await fetch(`http://localhost:8080/api/products/${id}`, { 
           method: 'DELETE',
           headers: { 
             'Authorization': `Bearer ${localStorage.getItem("token")}`
@@ -145,13 +161,16 @@ export default function AdminProductsPage() {
 
   const handleOpenAdd = () => {
     setModalMode("add");
-    setCurrentProduct({ id: 0, name: "", brand: "", image: "", importPrice: 0, sellPrice: 0, category: "Giày Thể Thao Nam", status: "visible", description: "" });
+    setCurrentProduct({ id: 0, name: "", brand: "", brand_id: 1, category_id: 1, image: "", sellPrice: 0, category: "Giày Thể Thao Nam", status: "visible", description: "", colors: "Trắng" });
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (prod: any) => {
     setModalMode("edit");
-    setCurrentProduct(prod);
+    setCurrentProduct({
+      ...prod,
+      colors: prod.colors && prod.colors.length > 0 ? prod.colors[0] : "Trắng"
+    });
     setIsModalOpen(true);
   };
 
@@ -204,11 +223,13 @@ export default function AdminProductsPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-5">
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giá nhập (VNĐ) <span className="text-red-500">*</span></label><input required type="number" value={currentProduct.importPrice || ""} onChange={(e) => setCurrentProduct({...currentProduct, importPrice: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giá bán (VNĐ) <span className="text-red-500">*</span></label><input required type="number" value={currentProduct.sellPrice || ""} onChange={(e) => setCurrentProduct({...currentProduct, sellPrice: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
+                      <div className="col-span-2"><label className="block text-sm font-semibold text-gray-800 mb-2">Giá bán (VNĐ) <span className="text-red-500">*</span></label><input required type="number" value={currentProduct.sellPrice || ""} onChange={(e) => setCurrentProduct({...currentProduct, sellPrice: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
                     </div>
 
-                    <div><label className="block text-sm font-semibold text-gray-800 mb-2">Trạng thái <span className="text-red-500">*</span></label><select required value={currentProduct.status} onChange={(e) => setCurrentProduct({...currentProduct, status: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white"><option value="visible">Hiển thị</option><option value="hidden">Ẩn</option></select></div>
+                    <div className="grid grid-cols-2 gap-5">
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Trạng thái <span className="text-red-500">*</span></label><select required value={currentProduct.status} onChange={(e) => setCurrentProduct({...currentProduct, status: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white"><option value="visible">Hiển thị</option><option value="hidden">Ẩn</option></select></div>
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Màu sắc <span className="text-red-500">*</span></label><select required value={currentProduct.colors} onChange={(e) => setCurrentProduct({...currentProduct, colors: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white"><option value="Trắng">Trắng</option><option value="Đen">Đen</option><option value="Xám">Xám</option><option value="Đỏ">Đỏ</option><option value="Xanh dương">Xanh dương</option><option value="Xanh lá">Xanh lá</option><option value="Vàng">Vàng</option><option value="Hồng">Hồng</option><option value="Cam">Cam</option><option value="Nâu">Nâu</option><option value="Kem">Kem</option><option value="Be">Be</option></select></div>
+                    </div>
                     
                     <div><label className="block text-sm font-semibold text-gray-800 mb-2">Mô tả sản phẩm</label><textarea rows={4} value={currentProduct.description} onChange={(e) => setCurrentProduct({...currentProduct, description: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none resize-none" /></div>
                   </div>
@@ -303,8 +324,8 @@ export default function AdminProductsPage() {
                 <th className="px-4 py-4 whitespace-nowrap text-left w-[30%]">TÊN SẢN PHẨM</th>
                 <th className="px-4 py-4 whitespace-nowrap">HÌNH ẢNH</th>
                 <th className="px-4 py-4 whitespace-nowrap">GIÁ BÁN</th>
-                <th className="px-4 py-4 whitespace-nowrap">GIÁ NHẬP</th>
                 <th className="px-4 py-4 whitespace-nowrap">DANH MỤC</th>
+                <th className="px-4 py-4 whitespace-nowrap">MÀU SẮC</th>
                 <th className="px-4 py-4 whitespace-nowrap">TRẠNG THÁI</th>
                 <th className="px-4 py-4 whitespace-nowrap">THAO TÁC</th>
               </tr>
@@ -326,8 +347,18 @@ export default function AdminProductsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-4 font-bold text-red-500">{formatPrice(prod.sellPrice)}</td>
-                    <td className="px-4 py-4 font-semibold text-gray-600">{formatPrice(prod.importPrice)}</td>
                     <td className="px-4 py-4"><span className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs font-bold border border-gray-200">{prod.category}</span></td>
+                    <td className="px-4 py-4">
+                      <div className="flex flex-wrap justify-center gap-1 max-w-[150px]">
+                        {prod.colors && prod.colors.length > 0 ? (
+                          prod.colors.map((c: string, i: number) => (
+                            <span key={i} className="px-2 py-0.5 rounded text-[10px] font-bold border border-gray-300 bg-gray-50">{c}</span>
+                          ))
+                        ) : (
+                          <span className="text-gray-400 text-xs">N/A</span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-4">
                       {prod.status === "visible" ? (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-green-700 border border-green-200 bg-green-50 text-xs font-bold"><CheckCircle2 size={14}/> Hiển thị</span>
@@ -338,7 +369,7 @@ export default function AdminProductsPage() {
                     <td className="px-4 py-4">
                       <div className="flex justify-center items-center gap-2">
                         <button onClick={() => handleOpenEdit(prod)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded shadow-sm transition font-semibold flex items-center gap-1.5"><Edit size={16}/> Sửa</button>
-                        <button onClick={() => handleDelete(prod.id, prod.name)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded shadow-sm transition font-semibold flex items-center gap-1.5"><Trash2 size={16}/> Xóa</button>
+                        <button onClick={() => handleDelete(prod.id, prod.name, prod.colors)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded shadow-sm transition font-semibold flex items-center gap-1.5"><Trash2 size={16}/> Xóa</button>
                       </div>
                     </td>
                   </tr>

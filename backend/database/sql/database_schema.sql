@@ -1,16 +1,14 @@
 -- Database Schema for MySQL (XAMPP)
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS orders_details;
-DROP TABLE IF EXISTS purchase_orders_details;
 DROP TABLE IF EXISTS product_colors;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS orders;
-DROP TABLE IF EXISTS purchase_orders;
 DROP TABLE IF EXISTS brands;
 DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS suppliers;
 DROP TABLE IF EXISTS customers;
 DROP TABLE IF EXISTS employers;
+DROP TABLE IF EXISTS cart_items;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- 1. Categories
@@ -29,13 +27,7 @@ CREATE TABLE brands (
     CONSTRAINT fk_brands_categories FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
--- 3. Suppliers
-CREATE TABLE suppliers (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL
-);
-
--- 4. Products
+-- 3. Products
 CREATE TABLE products (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL,
@@ -52,7 +44,14 @@ CREATE TABLE products (
     CONSTRAINT fk_products_brands FOREIGN KEY (brand_id) REFERENCES brands(id)
 );
 
--- 5. Customers (Thêm street, ward, city)
+-- 4. Product Colors
+CREATE TABLE product_colors (
+    product_id BIGINT NOT NULL,
+    color VARCHAR(255) NOT NULL,
+    CONSTRAINT fk_product_colors_products FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- 5. Customers
 CREATE TABLE customers (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
@@ -68,7 +67,7 @@ CREATE TABLE customers (
     status INTEGER DEFAULT 1
 );
 
--- 6. Employers (Thêm street, ward, city)
+-- 6. Employers
 CREATE TABLE employers (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
@@ -113,33 +112,14 @@ CREATE TABLE orders_details (
     CONSTRAINT fk_orders_details_products FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
--- 9. Purchase Orders
-CREATE TABLE purchase_orders (
+-- 9. Cart Items
+CREATE TABLE cart_items (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    method VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    total_price DECIMAL(19, 2),
-    status VARCHAR(255),
-    deleted INTEGER DEFAULT 0,
-    employer_id BIGINT NOT NULL,
-    supplier_id BIGINT NOT NULL,
-    CONSTRAINT fk_purchase_orders_employers FOREIGN KEY (employer_id) REFERENCES employers(id),
-    CONSTRAINT fk_purchase_orders_suppliers FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
-);
-
--- 10. Purchase Orders Details
-CREATE TABLE purchase_orders_details (
-    purchase_order_id BIGINT NOT NULL,
-    product_id BIGINT NOT NULL,
     quantity INTEGER NOT NULL,
-    cost DECIMAL(19, 2) NOT NULL,
-    total DECIMAL(19, 2) NOT NULL,
-    PRIMARY KEY (purchase_order_id, product_id),
-    CONSTRAINT fk_po_details_orders FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id),
-    CONSTRAINT fk_po_details_products FOREIGN KEY (product_id) REFERENCES products(id)
-);
-id),
-    CONSTRAINT fk_po_details_orders FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id),
-    CONSTRAINT fk_po_details_products FOREIGN KEY (product_id) REFERENCES products(id)
+    size VARCHAR(50),
+    color VARCHAR(50),
+    customer_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    CONSTRAINT fk_cart_items_customers FOREIGN KEY (customer_id) REFERENCES customers(id),
+    CONSTRAINT fk_cart_items_products FOREIGN KEY (product_id) REFERENCES products(id)
 );
