@@ -2,11 +2,13 @@ package com.tmdtud.cuahang.api.purchase_order.model;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.tmdtud.cuahang.api.employer.model.Employers;
+import com.tmdtud.cuahang.api.purchase_orders_detail.model.PurchaseOrdersDetails;
 import com.tmdtud.cuahang.api.supplier.model.Suppliers;
 
 import jakarta.persistence.Column;
@@ -19,6 +21,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -65,4 +68,7 @@ public class PurchaseOrders {
     @ManyToOne
     @JoinColumn(name = "supplier_id", nullable = false, foreignKey = @ForeignKey(name = "fk_PurchaseOrders_Suppliers"))
     private Suppliers supplier;
+
+    @OneToMany(mappedBy = "purchaseOrder")
+    private List<PurchaseOrdersDetails> details;
 }

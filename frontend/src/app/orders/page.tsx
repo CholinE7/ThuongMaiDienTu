@@ -44,17 +44,36 @@ export default function OrdersPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING':
-        return <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase tracking-wider">Chờ xác nhận</span>;
-      case 'APPROVED':
+        return <span className="bg-orange-100 text-orange-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase tracking-wider">Chờ xác nhận</span>;
+      case 'CONFIRMED':
         return <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase tracking-wider">Đã xác nhận</span>;
-      case 'SHIPPED':
-        return <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase tracking-wider">Đang giao</span>;
+      case 'SHIPPING':
+        return <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase tracking-wider">Đang giao</span>;
       case 'DELIVERED':
         return <span className="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase tracking-wider">Thành công</span>;
       case 'CANCELLED':
         return <span className="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase tracking-wider">Đã hủy</span>;
       default:
         return <span className="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase tracking-wider">{status}</span>;
+    }
+  };
+
+  const handleCancelOrder = async (orderId: number) => {
+    if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
+
+    try {
+      // Backend Service có method delete(id) để hủy đơn
+      const response = await apiRequest(`/api/orders/1/${orderId}`, 'DELETE');
+      const res = await response.json();
+      if (res.code === 200) {
+        alert("Hủy đơn hàng thành công!");
+        window.location.reload();
+      } else {
+        alert(res.message || "Lỗi khi hủy đơn hàng.");
+      }
+    } catch (err) {
+      console.error("Lỗi hủy đơn hàng", err);
+      alert("Lỗi kết nối máy chủ.");
     }
   };
 
@@ -75,6 +94,7 @@ export default function OrdersPage() {
           <p className="text-gray-500 text-sm">Theo dõi trạng thái các đơn hàng bạn đã đặt mua</p>
         </div>
 
+        {/* Danh sách đơn hàng */}
         {isLoading ? (
           <div className="bg-white p-12 rounded shadow-sm border border-gray-100 flex flex-col items-center justify-center min-h-[400px]">
             <Loader2 className="w-8 h-8 text-gray-900 animate-spin mb-4" />
@@ -132,9 +152,9 @@ export default function OrdersPage() {
                             {detail.product?.imageUrl ? (
                               <img src={detail.product.imageUrl} alt={detail.product?.name || "Product"} className="w-full h-full object-cover" />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                    <Package size={24} />
-                                </div>
+                              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                <Package size={24} />
+                              </div>
                             )}
                           </div>
                           <div className="flex-1">
@@ -150,10 +170,22 @@ export default function OrdersPage() {
                       ))}
                     </div>
 
-                    {/* Tổng tiền */}
-                    <div className="flex justify-end items-center border-t border-gray-100 pt-4">
-                      <span className="text-sm text-gray-500 uppercase tracking-widest mr-4">Tổng tiền:</span>
-                      <span className="text-xl font-bold text-[#FA5C52]">{formatPrice(order.totalPrice)}</span>
+                    {/* Tổng tiền và Nút Hủy */}
+                    <div className="flex justify-between items-center border-t border-gray-100 pt-4">
+                      <div>
+                        {order.status === "PENDING" && (
+                          <button
+                            onClick={() => handleCancelOrder(order.id)}
+                            className="text-xs font-bold text-red-500 uppercase tracking-widest hover:underline"
+                          >
+                            Hủy đơn hàng
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-sm text-gray-500 uppercase tracking-widest mr-4">Tổng tiền:</span>
+                        <span className="text-xl font-bold text-[#FA5C52]">{formatPrice(order.totalPrice)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -165,3 +197,4 @@ export default function OrdersPage() {
     </main>
   );
 }
+

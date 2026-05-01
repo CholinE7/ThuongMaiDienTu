@@ -47,5 +47,9 @@ public class UserDTO {
 
     private Integer status;
 
-    private String address;
+    private String city;
+
+    private String ward;
+
+    private String street;
 }

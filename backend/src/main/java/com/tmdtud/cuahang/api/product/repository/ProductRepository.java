@@ -20,6 +20,18 @@ public interface ProductRepository extends JpaRepository<Products, Long> {
     Optional<Products> findById(Long id);
 
     @EntityGraph(attributePaths = { "category", "brand" })
+    org.springframework.data.domain.Page<Products> findAll(org.springframework.data.domain.Pageable pageable);
+
+    @EntityGraph(attributePaths = { "category", "brand" })
+    org.springframework.data.domain.Page<Products> findByNameContainingIgnoreCase(String name, org.springframework.data.domain.Pageable pageable);
+
+    @EntityGraph(attributePaths = { "category", "brand" })
+    org.springframework.data.domain.Page<Products> findByCategoryId(Long categoryId, org.springframework.data.domain.Pageable pageable);
+
+    @EntityGraph(attributePaths = { "category", "brand" })
+    org.springframework.data.domain.Page<Products> findByNameContainingIgnoreCaseAndCategoryId(String name, Long categoryId, org.springframework.data.domain.Pageable pageable);
+
+    @EntityGraph(attributePaths = { "category", "brand" })
     List<Products> findAll();
 
     @Modifying

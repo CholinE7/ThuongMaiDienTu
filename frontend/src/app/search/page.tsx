@@ -4,8 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
-import { products } from '@/data/products';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { apiRequest } from "@/services/app";
 
 // Số lượng sản phẩm hiển thị trên 1 trang
 const ITEMS_PER_PAGE = 8;
@@ -13,27 +12,51 @@ const ITEMS_PER_PAGE = 8;
 function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || ""; 
-  const queryLower = query.toLowerCase();
 
   // State lưu trang hiện tại
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const PRODUCTS_PER_PAGE = 8;
+  const [totalProducts, setTotalProducts] = useState(0);
 
   // Reset về trang 1 mỗi khi người dùng đổi từ khóa tìm kiếm mới
   useEffect(() => {
     setCurrentPage(1);
   }, [query]);
 
-  // 1. Lọc sản phẩm (Đạt yêu cầu 3)
-  const searchResults = products.filter(product => 
-    product.name.toLowerCase().includes(queryLower) ||
-    product.category.toLowerCase().includes(queryLower)
-  );
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      setIsLoading(true);
+      try {
+        const queryParams = new URLSearchParams({
+          name: query,
+          page_no: (currentPage - 1).toString(),
+          page_size: PRODUCTS_PER_PAGE.toString()
+        }).toString();
 
-  // 2. Logic Phân trang (Đạt yêu cầu 4)
-  const totalPages = Math.ceil(searchResults.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  // Cắt ra danh sách sản phẩm chỉ riêng cho trang hiện tại
-  const paginatedResults = searchResults.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+        const response = await apiRequest(`/api/products?${queryParams}`, 'GET');
+        const res = await response.json();
+        
+        if (res.code === 200 && res.result) {
+          setSearchResults(res.result.content.map((p: any) => ({
+            ...p,
+            category: p.category?.name || "Khác"
+          })));
+          setTotalProducts(res.result.total);
+        }
+      } catch (error) {
+        console.error("Error searching products:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (query) fetchSearchResults();
+  }, [query, currentPage]);
+
+  const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
+  const paginatedResults = searchResults; // Dữ liệu từ API đã là trang hiện tại
 
   return (
     <div className="pt-24 pb-20 container mx-auto px-4">

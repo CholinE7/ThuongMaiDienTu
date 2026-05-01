@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -16,6 +17,41 @@ import {
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const [userName, setUserName] = useState<string>("Admin");
+
+  useEffect(() => {
+    const updateAuth = async () => {
+      let name = localStorage.getItem("customerName");
+      let token = localStorage.getItem("token");
+      
+      // Làm sạch token
+      if (token) {
+        token = token.replace(/^["'](.+)["']$/, '$1').trim();
+      }
+
+      if (!name && token) {
+        try {
+          const res = await fetch("http://localhost:8080/api/auth/me", {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.code === 200) {
+              name = data.result.fullName;
+              localStorage.setItem("customerName", name || "");
+              localStorage.setItem("customerEmail", data.result.email || "");
+            }
+          }
+        } catch (err) {
+          console.error("Admin auto fetch failed", err);
+        }
+      }
+      if (name) setUserName(name);
+    };
+    updateAuth();
+    window.addEventListener("authUpdated", updateAuth);
+    return () => window.removeEventListener("authUpdated", updateAuth);
+  }, []);
 
   // Danh sách menu dựa theo hình ảnh (đã bỏ Quản lý danh mục)
   const menuItems = [
@@ -69,7 +105,7 @@ export default function AdminSidebar() {
               <User size={18} />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-white">Admin</span>
+              <span className="text-sm font-semibold text-white">{userName}</span>
               <span className="text-xs text-gray-400">Online</span>
             </div>
           </div>

@@ -31,16 +31,35 @@ export default function AdminProductsPage() {
     setToastMsg(msg); setToastType(type); setTimeout(() => setToastMsg(""), 3000);
   };
 
+  const [totalProducts, setTotalProducts] = useState(0);
+
   // ==========================================
   // HÀM GỌI API LẤY DỮ LIỆU
   // ==========================================
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
-      const query = new URLSearchParams({ name: appliedFilters.name, category: appliedFilters.category }).toString();
-      const response = await fetch(`/api/products?${query}`);
+      const query = new URLSearchParams({ 
+        name: appliedFilters.name, 
+        page_no: (currentPage - 1).toString(),
+        page_size: PRODUCTS_PER_PAGE.toString()
+      }).toString();
+      const response = await fetch(`http://localhost:8080/api/products?${query}`);
       const result = await response.json();
-      if (result.success) setProducts(result.data);
+      if (result.code === 200 && result.result) {
+        setProducts(result.result.content.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          brand: p.brand?.name || "N/A",
+          image: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=300",
+          importPrice: p.price * 0.7, // Giả định giá nhập vì backend chưa có
+          sellPrice: p.price,
+          category: p.category?.name || "Khác",
+          status: p.deleted === 0 ? "visible" : "hidden",
+          description: p.description
+        })));
+        setTotalProducts(result.result.total);
+      }
     } catch (error) {
       showToast("Lỗi kết nối máy chủ!", "error");
     } finally {
@@ -50,11 +69,11 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-    setCurrentPage(1);
-  }, [appliedFilters]);
+  }, [appliedFilters, currentPage]);
 
   // HÀNH ĐỘNG TÌM KIẾM
   const handleSearchClick = () => {
+    setCurrentPage(1);
     setAppliedFilters({ name: searchName, category: filterCategory });
   };
 
@@ -65,38 +84,56 @@ export default function AdminProductsPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const url = '/api/products';
+      const url = 'http://localhost:8080/api/products';
       const method = modalMode === "add" ? 'POST' : 'PUT';
       
-      // Nếu chưa có ảnh, gán tạm 1 ảnh giày mặc định
       const payload = { 
-        ...currentProduct, 
-        image: currentProduct.image || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=300"
+        id: currentProduct.id || null,
+        name: currentProduct.name,
+        price: currentProduct.sellPrice,
+        description: currentProduct.description,
+        imageUrl: currentProduct.image,
+        quantity: 100, // Mặc định số lượng
+        deleted: currentProduct.status === "visible" ? 0 : 1
       };
 
       const response = await fetch(url, {
-        method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        method, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem("token")}`
+        }, 
+        body: JSON.stringify(payload)
       });
       const result = await response.json();
       
-      if (result.success) {
-        showToast(result.message, "success");
+      if (result.code === 200) {
+        showToast(modalMode === "add" ? "Thêm thành công" : "Cập nhật thành công", "success");
         fetchProducts(); // Tải lại bảng
+      } else {
+        showToast(result.message || "Lỗi khi lưu", "error");
       }
     } catch (error) {
       showToast("Lỗi hệ thống!", "error");
+    } finally {
+      setIsLoading(false);
+      setIsModalOpen(false);
     }
-    setIsModalOpen(false);
   };
 
   const handleDelete = async (id: number, name: string) => {
     if (window.confirm(`Bạn có chắc muốn xóa sản phẩm "${name}" không?`)) {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/products?id=${id}`, { method: 'DELETE' });
+        const response = await fetch(`http://localhost:8080/api/products/1/${id}`, { 
+          method: 'DELETE',
+          headers: { 
+            'Authorization': `Bearer ${localStorage.getItem("token")}`
+          }
+        });
         const result = await response.json();
-        if (result.success) {
-          showToast(result.message, "success");
+        if (result.code === 200) {
+          showToast("Xóa thành công", "success");
           fetchProducts();
         }
       } catch (error) {
@@ -119,9 +156,9 @@ export default function AdminProductsPage() {
   };
 
   // PHÂN TRANG
-  const totalPages = Math.ceil(products.length / PRODUCTS_PER_PAGE);
+  const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
+  const paginatedProducts = products; // Dữ liệu từ API đã là trang hiện tại
   const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
-  const paginatedProducts = products.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
 
   // FORMAT TIỀN TỆ
   const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN').format(price) + " đ";

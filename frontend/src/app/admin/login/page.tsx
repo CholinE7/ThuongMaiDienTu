@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
+  ShieldAlert
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -39,9 +40,10 @@ export default function LoginPage() {
         body: JSON.stringify({ username: email, password }),
       });
 
-      const token = await response.text();
+      const data = await response.json();
+      const token = data.token;
 
-      if (response.ok && token !== "fail") {
+      if (response.ok && token && token !== "fail") {
         // --- ĐOẠN KIỂM TRA ROLE BỔ SUNG ---
         // Thử gọi 1 API chỉ dành cho Admin để kiểm tra xem Token này có quyền STAFF/ADMIN không
         const checkRole = await fetch(
@@ -59,6 +61,26 @@ export default function LoginPage() {
         // ----------------------------------
 
         localStorage.setItem("token", token);
+        
+        // Lấy thêm thông tin nhân viên
+        try {
+          const meRes = await fetch("http://localhost:8080/api/auth/me", {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (meRes.ok) {
+            const meData = await meRes.json();
+            if (meData.code === 200) {
+              localStorage.setItem("employerId", meData.result.id.toString());
+              localStorage.setItem("customerName", meData.result.fullName);
+              localStorage.setItem("customerEmail", meData.result.email);
+              // Phát sự kiện cập nhật UI
+              window.dispatchEvent(new Event("authUpdated"));
+            }
+          }
+        } catch (err) {
+          console.error("Lỗi lấy thông tin admin", err);
+        }
+
         showToast("Xác thực thành công! Đang vào hệ thống...", "success");
 
         setTimeout(() => {
@@ -175,5 +197,4 @@ export default function LoginPage() {
   );
 }
 
-// Thêm icon ShieldAlert cho đẹp
-import { ShieldAlert } from "lucide-react";
+

@@ -37,9 +37,10 @@ const LoginPage = () => {
         body: JSON.stringify({ username: email, password }),
       });
 
-      const token = await res.text();
+      const data = await res.json();
+      const token = data.token;
 
-      if (res.ok && token !== "fail") {
+      if (res.ok && token && token !== "fail") {
         // Lưu chìa khóa JWT vào túi của trình duyệt
         localStorage.setItem("token", token);
 
@@ -54,6 +55,9 @@ const LoginPage = () => {
               localStorage.setItem("customerName", meData.result.fullName);
               localStorage.setItem("customerEmail", meData.result.email);
               localStorage.setItem("customerId", meData.result.id.toString());
+              
+              // Phát sự kiện để Navbar cập nhật ngay lập tức
+              window.dispatchEvent(new Event("authUpdated"));
             }
           }
         } catch (e) {
