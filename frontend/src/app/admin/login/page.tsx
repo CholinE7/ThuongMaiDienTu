@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
+  ShieldAlert
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -196,5 +197,4 @@ export default function LoginPage() {
   );
 }
 
-// Thêm icon ShieldAlert cho đẹp
-import { ShieldAlert } from "lucide-react";
+

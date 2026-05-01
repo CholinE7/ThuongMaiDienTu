@@ -17,7 +17,7 @@ import {
   ArrowLeft,
   Save,
 } from "lucide-react";
-import Image from "next/image";
+import { apiRequest } from "@/services/app";
 
 const ORDERS_PER_PAGE = 5;
 
@@ -55,9 +55,13 @@ export default function AdminOrdersPage() {
     setIsLoading(true);
     try {
       const query = new URLSearchParams({
-        fromDate: appliedFilters.fromDate,
-        toDate: appliedFilters.toDate,
-        status: appliedFilters.status, // Sử dụng giá trị từ appliedFilters
+        page_no: (currentPage - 1).toString(),
+        page_size: ORDERS_PER_PAGE.toString(),
+        sortBy: "id",
+        sortDir: "desc",
+        ...(appliedFilters.fromDate ? { fromDate: appliedFilters.fromDate } : {}),
+        ...(appliedFilters.toDate ? { toDate: appliedFilters.toDate } : {}),
+        ...(appliedFilters.status && appliedFilters.status !== "all" ? { status: appliedFilters.status } : {}),
       }).toString();
 
       const response = await apiRequest(`/api/orders?${query}`);
@@ -120,7 +124,7 @@ export default function AdminOrdersPage() {
   const handleUpdateStatus = async () => {
     if (!statusUpdateValue || !selectedOrder) return;
 
-    if (statusUpdateValue === "cancelled") {
+    if (statusUpdateValue === "CANCELLED") {
       if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?"))
         return;
     }
@@ -132,13 +136,10 @@ export default function AdminOrdersPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/orders", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: selectedOrder.id,
-          status: statusUpdateValue,
-        }),
+      const response = await apiRequest("/api/orders/status", "PUT", {
+        orderId: selectedOrder.id,
+        orderStatusNext: statusUpdateValue,
+        employerId: Number(empId),
       });
       const result = await response.json();
       if (result.code === 200) {
@@ -189,39 +190,31 @@ export default function AdminOrdersPage() {
       : "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold tracking-wide";
 
     switch (status) {
-      case "unpaid":
+      case "PENDING":
         return (
           <span
             className={`${baseClass} border-orange-400 text-orange-600 bg-orange-50`}
           >
-            <Clock size={forModal ? 16 : 14} /> Chưa thanh toán
+            <Clock size={forModal ? 16 : 14} /> Chờ xác nhận
           </span>
         );
-      case "paid":
+      case "CONFIRMED":
         return (
           <span
             className={`${baseClass} border-blue-400 text-blue-600 bg-blue-50`}
           >
-            <CheckCircle2 size={forModal ? 16 : 14} /> Đã thanh toán
+            <CheckCircle2 size={forModal ? 16 : 14} /> Đã xác nhận
           </span>
         );
-      case "processing":
+      case "SHIPPING":
         return (
           <span
             className={`${baseClass} border-yellow-400 text-yellow-600 bg-yellow-50`}
           >
-            <Package size={forModal ? 16 : 14} /> Đang xử lý
-          </span>
-        );
-      case "delivering":
-        return (
-          <span
-            className={`${baseClass} border-indigo-400 text-indigo-600 bg-indigo-50`}
-          >
             <Truck size={forModal ? 16 : 14} /> Đang giao
           </span>
         );
-      case "delivered":
+      case "DELIVERED":
         return (
           <span
             className={`${baseClass} border-green-500 text-green-600 bg-green-50`}
@@ -229,7 +222,7 @@ export default function AdminOrdersPage() {
             <CheckCircle2 size={forModal ? 16 : 14} /> Đã giao
           </span>
         );
-      case "cancelled":
+      case "CANCELLED":
         return (
           <span
             className={`${baseClass} border-red-500 text-red-600 bg-red-50`}
@@ -238,16 +231,17 @@ export default function AdminOrdersPage() {
           </span>
         );
       default:
-        return null;
+        return (
+          <span className={`${baseClass} border-gray-400 text-gray-600 bg-gray-50`}>
+            {status}
+          </span>
+        );
     }
   };
 
-  const totalPages = Math.ceil(orders.length / ORDERS_PER_PAGE);
+  const totalPages = Math.ceil(totalOrders / ORDERS_PER_PAGE);
   const startIndex = (currentPage - 1) * ORDERS_PER_PAGE;
-  const paginatedOrders = orders.slice(
-    startIndex,
-    startIndex + ORDERS_PER_PAGE,
-  );
+  const paginatedOrders = orders; // Dữ liệu từ API đã là trang hiện tại
 
   return (
     <div className="relative min-h-[80vh] font-sans pb-10 bg-gray-50">
@@ -364,12 +358,11 @@ export default function AdminOrdersPage() {
                     onChange={(e) => setStatusUpdateValue(e.target.value)}
                     className="border rounded-lg px-4 py-2 bg-white"
                   >
-                    <option value="unpaid">Chưa thanh toán</option>
-                    <option value="paid">Đã thanh toán</option>
-                    <option value="processing">Đang xử lý</option>
-                    <option value="delivering">Đang giao</option>
-                    <option value="delivered">Đã giao</option>
-                    <option value="cancelled">Đã hủy</option>
+                    <option value="PENDING">Chờ xác nhận</option>
+                    <option value="CONFIRMED">Đã xác nhận</option>
+                    <option value="SHIPPING">Đang giao</option>
+                    <option value="DELIVERED">Đã giao</option>
+                    <option value="CANCELLED">Đã hủy</option>
                   </select>
                   <button
                     onClick={handleUpdateStatus}
