@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.tmdtud.cuahang.api.employer.service.EmployerService;
 import com.tmdtud.cuahang.api.purchase_order.dto.PurOrdHasDetailDTO;
+import com.tmdtud.cuahang.api.purchase_order.dto.PurchaseOrderDTO;
 import com.tmdtud.cuahang.api.purchase_order.mapper.PurchaseOrderAggregateMapper;
 import com.tmdtud.cuahang.api.purchase_order.mapper.PurchaseOrderMapper;
 import com.tmdtud.cuahang.api.purchase_order.model.PurchaseOrderStatus;
@@ -42,9 +43,6 @@ public class PurchaseOrderService implements PurchaseOrderServiceI {
 
     @Autowired
     private PurchaseOrderMapper purchaseOrderMapper;
-
-    @Autowired
-    private PurchaseOrderAggregateMapper purchaseOrderAggregateMapper;
 
     @Autowired
     @Lazy
@@ -88,9 +86,10 @@ public class PurchaseOrderService implements PurchaseOrderServiceI {
     @Override
     public Boolean delete(Long id) {
         PurchaseOrders purchaseOrders = getById(id);
-        purchaseOrders.setDeleted(1);
-        purchaseOrders.setStatus(PurchaseOrderStatus.CANCLED);
-        purchaseOrderRepository.save(purchaseOrders);
+        if(purchaseOrders.getStatus().isTerminal()){
+            
+            purchaseOrderRepository.deleteById(id);
+        }
         return true;
     }
 
@@ -114,10 +113,9 @@ public class PurchaseOrderService implements PurchaseOrderServiceI {
     }
 
     @Override
-    public PurOrdHasDetailDTO toPurOrdHasDetailDTO(PurchaseOrders purchaseOrders) {
-        return purchaseOrderAggregateMapper
-                .toPurOrdHasDetailDTO(purchaseOrders,
-                        purchaseOrderDetailService.getByPurOrderId(purchaseOrders.getId()));
+    public PurchaseOrders updatePurchaseOrderDetail(PurchaseOrders purchase) {
+        purchase.setDetails(purchaseOrderDetailService.getByPurOrderId(purchase.getId()));
+        return purchase;
     }
 
     @Override
@@ -144,6 +142,11 @@ public class PurchaseOrderService implements PurchaseOrderServiceI {
         productService.updateAll(products);
 
         return true;
+    }
+
+    @Override
+    public PurchaseOrderDTO toDTO(PurchaseOrders purchase){
+        return purchaseOrderMapper.toDTO(purchase);
     }
 
 }

@@ -35,26 +35,26 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> request
-                        // Public endpoints
-                        .requestMatchers("/login", "/api/customers/register/customers", "/api/auth/me").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/products/**", "/api/categories/**", "/api/brands/**").permitAll()
+                        // // Public endpoints
+                        // .requestMatchers("/login", "/api/customers/register/customers", "/api/auth/me").permitAll()
+                        // .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/products/**", "/api/categories/**", "/api/brands/**").permitAll()
                         
-                        // Customer specific endpoints (Must be before general admin endpoints)
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/orders/my-orders/**").hasRole("CUSTOMER")
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/orders").hasRole("CUSTOMER")
-                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/orders/**").hasAnyRole("CUSTOMER", "STAFF")
+                        // // Customer specific endpoints (Must be before general admin endpoints)
+                        // .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/orders/my-orders/**").hasRole("CUSTOMER")
+                        // .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/orders").hasRole("CUSTOMER")
+                        // .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/orders/**").hasAnyRole("CUSTOMER", "STAFF")
                         
-                        // Admin/Staff endpoints
-                        .requestMatchers("/api/employers/**", "/api/purchase_orders/**", "/api/supplier/**", "/api/order_detail/**", "/api/purchase_orders_detail/**").hasRole("STAFF")
-                        .requestMatchers("/api/orders/**").hasRole("STAFF")
-                        .requestMatchers("/api/customers/profile/**").hasAnyRole("CUSTOMER", "STAFF")
-                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/customers/**").hasAnyRole("CUSTOMER", "STAFF")
-                        .requestMatchers("/api/customers/**").hasRole("STAFF")
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/products/**", "/api/categories/**", "/api/brands/**").hasRole("STAFF")
-                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/products/**", "/api/categories/**", "/api/brands/**").hasRole("STAFF")
-                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/products/**", "/api/categories/**", "/api/brands/**").hasRole("STAFF")
+                        // // Admin/Staff endpoints
+                        // .requestMatchers("/api/employers/**", "/api/purchase_orders/**", "/api/supplier/**", "/api/order_detail/**", "/api/purchase_orders_detail/**").hasRole("STAFF")
+                        // .requestMatchers("/api/orders/**").hasRole("STAFF")
+                        // .requestMatchers("/api/customers/profile/**").hasAnyRole("CUSTOMER", "STAFF")
+                        // .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/customers/**").hasAnyRole("CUSTOMER", "STAFF")
+                        // .requestMatchers("/api/customers/**").hasRole("STAFF")
+                        // .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/products/**", "/api/categories/**", "/api/brands/**").hasRole("STAFF")
+                        // .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/products/**", "/api/categories/**", "/api/brands/**").hasRole("STAFF")
+                        // .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/products/**", "/api/categories/**", "/api/brands/**").hasRole("STAFF")
                         
-                        .anyRequest().authenticated())
+                        .anyRequest().permitAll())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

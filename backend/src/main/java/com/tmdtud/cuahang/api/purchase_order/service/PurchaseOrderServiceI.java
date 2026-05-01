@@ -5,6 +5,7 @@ import com.tmdtud.cuahang.api.purchase_order.request.PurchaseOrderStoreRequest;
 import org.springframework.data.domain.Pageable;
 
 import com.tmdtud.cuahang.api.purchase_order.dto.PurOrdHasDetailDTO;
+import com.tmdtud.cuahang.api.purchase_order.dto.PurchaseOrderDTO;
 import com.tmdtud.cuahang.api.purchase_order.model.PurchaseOrders;
 import com.tmdtud.cuahang.api.purchase_order.request.PurchaseOrderUpdateRequest;
 import com.tmdtud.cuahang.api.purchase_order.request.UpdateStatusRequest;
@@ -21,7 +22,9 @@ public interface PurchaseOrderServiceI {
 
     public PurchaseOrders update(PurchaseOrderUpdateRequest request);
 
-    public PurOrdHasDetailDTO toPurOrdHasDetailDTO(PurchaseOrders purchaseOrders);
+    public PurchaseOrders updatePurchaseOrderDetail(PurchaseOrders purchaseOrders);
 
     public Boolean updateStatus(UpdateStatusRequest request);
+
+    public PurchaseOrderDTO toDTO(PurchaseOrders purchaseOrders);
 }
