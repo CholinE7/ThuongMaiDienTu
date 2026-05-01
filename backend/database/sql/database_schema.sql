@@ -2,6 +2,7 @@
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS orders_details;
 DROP TABLE IF EXISTS purchase_orders_details;
+DROP TABLE IF EXISTS product_colors;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS purchase_orders;
@@ -135,6 +136,10 @@ CREATE TABLE purchase_orders_details (
     cost DECIMAL(19, 2) NOT NULL,
     total DECIMAL(19, 2) NOT NULL,
     PRIMARY KEY (purchase_order_id, product_id),
+    CONSTRAINT fk_po_details_orders FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id),
+    CONSTRAINT fk_po_details_products FOREIGN KEY (product_id) REFERENCES products(id)
+);
+id),
     CONSTRAINT fk_po_details_orders FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id),
     CONSTRAINT fk_po_details_products FOREIGN KEY (product_id) REFERENCES products(id)
 );

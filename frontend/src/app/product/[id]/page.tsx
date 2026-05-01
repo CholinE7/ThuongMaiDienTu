@@ -19,9 +19,9 @@ import {
 const COLOR_HEX_MAP: Record<string, string> = {
   "Đen": "#171717",
   "Trắng": "#FFFFFF",
-  "Đỏ": "#991B1B",    // Đỏ mận/Đỏ đô sang trọng
-  "Nâu": "#78350F",    // Nâu da bò
-  "Be": "#D4B996",     // Đã chỉnh lại màu Be (Nude/Beige) đậm và thực tế hơn, không bị chìm vào nền
+  "Đỏ": "#991B1B",
+  "Nâu": "#78350F",
+  "Be": "#D4B996",
   "Xám": "#6B7280",
   "Kem": "#FEFCE8"
 };
@@ -67,7 +67,7 @@ export default function ProductDetailPage() {
             category: apiProduct.category?.name || 'Giày',
             description: apiProduct.description || 'Chưa có mô tả',
             sizes: [39, 40, 41, 42, 43], // Mock sizes vì backend chưa có sizes
-            colors: ["Đen", "Trắng"], // Mock colors vì backend chưa có colors
+            colors: apiProduct.colors || [],
             images: [
               apiProduct.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop"
             ]

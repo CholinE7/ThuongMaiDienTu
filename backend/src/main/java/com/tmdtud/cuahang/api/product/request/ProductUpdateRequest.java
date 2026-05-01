@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -42,4 +43,6 @@ public class ProductUpdateRequest {
 
     @NotNull(message = "deleted not null")
     private int deleted;
+
+    private List<String> colors;
 }

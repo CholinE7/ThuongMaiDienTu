@@ -9,8 +9,13 @@ import { SlidersHorizontal, ChevronDown, X, Loader2 } from 'lucide-react';
 
 const SORT_OPTIONS = ["Tùy chọn", "Giá: Tăng dần", "Giá: Giảm dần"];
 const COLOR_FILTERS = [
-  { name: "Màu Đen", hex: "#000000" }, { name: "Màu Trắng", hex: "#FFFFFF" },
-  { name: "Màu Be", hex: "#F5DEB3" }, { name: "Màu Nâu", hex: "#A0522D" }, { name: "Màu Xám", hex: "#555555" }
+  { name: "Đen", hex: "#171717" },
+  { name: "Trắng", hex: "#FFFFFF" },
+  { name: "Đỏ", hex: "#991B1B" },
+  { name: "Nâu", hex: "#78350F" },
+  { name: "Be", hex: "#D4B996" },
+  { name: "Xám", hex: "#6B7280" },
+  { name: "Kem", hex: "#FEFCE8" }
 ];
 const PRICE_FILTERS = ["Dưới 200.000đ", "200.000đ - 300.000đ", "Trên 300.000đ"];
 
@@ -83,11 +88,11 @@ export default function CategoryPage() {
   }, [slug, currentPage]);
 
   // 3. CÁC HÀM XỬ LÝ (KÈM THEO VIỆC RESET VỀ TRANG 1)
-  const toggleColor = (hex: string) => {
-    if (selectedColors.includes(hex)) {
-      setSelectedColors(selectedColors.filter(c => c !== hex));
+  const toggleColor = (colorName: string) => {
+    if (selectedColors.includes(colorName)) {
+      setSelectedColors(selectedColors.filter(c => c !== colorName));
     } else {
-      setSelectedColors([...selectedColors, hex]);
+      setSelectedColors([...selectedColors, colorName]);
     }
     setCurrentPage(1); // Reset trang
   };
@@ -112,6 +117,14 @@ export default function CategoryPage() {
   // 4. LỌC VÀ SẮP XẾP TẠI CLIENT (Dành cho bộ lọc phụ như màu sắc, giá)
   let finalProducts = [...products];
 
+  // Lọc theo màu sắc
+  if (selectedColors.length > 0) {
+    finalProducts = finalProducts.filter(product => 
+      product.colors && product.colors.some((c: string) => selectedColors.includes(c))
+    );
+  }
+
+  // Lọc theo khoảng giá
   if (selectedPrice === "Dưới 200.000đ") {
     finalProducts = finalProducts.filter(product => product.price < 200000);
   } else if (selectedPrice === "200.000đ - 300.000đ") {
@@ -144,8 +157,8 @@ export default function CategoryPage() {
             <div className="space-y-3">
               {COLOR_FILTERS.map((color) => (
                 <label key={color.hex} className="flex items-center gap-3 cursor-pointer group">
-                  <input type="checkbox" className="w-4 h-4 accent-black cursor-pointer" checked={selectedColors.includes(color.hex)} onChange={() => toggleColor(color.hex)}/>
-                  <span className={`text-sm ${selectedColors.includes(color.hex) ? "font-bold text-black" : "text-gray-600 group-hover:text-black transition"}`}>{color.name}</span>
+                  <input type="checkbox" className="w-4 h-4 accent-black cursor-pointer" checked={selectedColors.includes(color.name)} onChange={() => toggleColor(color.name)}/>
+                  <span className={`text-sm ${selectedColors.includes(color.name) ? "font-bold text-black" : "text-gray-600 group-hover:text-black transition"}`}>{color.name}</span>
                 </label>
               ))}
             </div>

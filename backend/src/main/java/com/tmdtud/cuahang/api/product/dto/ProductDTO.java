@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -40,4 +41,6 @@ public class ProductDTO{
     private Categories category;
 
     private String imageUrl;
+
+    private List<String> colors;
 }
