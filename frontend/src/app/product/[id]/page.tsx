@@ -32,6 +32,7 @@ const isLightColor = (colorName: string) => {
 };
 
 
+const router = useRouter();
 
 export default function ProductDetailPage() {
   // --- LẤY ID THỰC TẾ TỪ URL ---

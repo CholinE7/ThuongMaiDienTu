@@ -81,7 +81,7 @@ export default async function Home() {
         
         {/* Lưới sản phẩm */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
-          {bestSellers.map((product) => (
+          {bestSellers.map((product: any) => (
             <ProductCard key={`bs-${product.id}`} product={product} />
           ))}
         </div>
@@ -103,7 +103,7 @@ export default async function Home() {
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
-          {shoesNu.map((product) => (
+          {shoesNu.map((product: any) => (
             <ProductCard key={`nu-${product.id}`} product={product} />
           ))}
         </div>
@@ -125,7 +125,7 @@ export default async function Home() {
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
-          {shoesNam.map((product) => (
+          {shoesNam.map((product: any) => (
             <ProductCard key={`nam-${product.id}`} product={product} />
           ))}
         </div>

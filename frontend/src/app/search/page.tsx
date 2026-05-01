@@ -5,6 +5,7 @@ import { Suspense, useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
 import { apiRequest } from "@/services/app";
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';  // ← Thêm dòng này
 
 // Số lượng sản phẩm hiển thị trên 1 trang
 const ITEMS_PER_PAGE = 8;
