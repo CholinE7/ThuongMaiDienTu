@@ -173,15 +173,18 @@ public class OrderService implements OrderServiceI {
 
     @Override
     @Transactional
-    public Orders updateStatus(UpdateOrderStatusRequest request) {
+    public Orders updateStatus(UpdateOrderStatusRequest request) throws Exception{
         Employers employer = employerService.getById(request.getEmployerId());
         Orders order = getById(request.getOrderId());
 
-        if (order.getDeleted() == 1)
-            return order;
-
-        if (order.getStatus().isTerminal() || !order.getStatus().canAdvanceTo(request.getOrderStatusNext())) {
-            return order;
+        if(order.getStatus().equals(OrderStatus.CANCELLED)){
+            throw new Exception("Đơn hàng đã bị hủy trước đó");
+        }
+        if(order.getStatus().equals(OrderStatus.DELIVERED)){
+            throw new Exception("Đơn hàng đã được giao, không thể hủy");
+        }
+        if (!order.getStatus().canAdvanceTo(request.getOrderStatusNext())) {
+            throw new Exception("Không thể cập nhật trạng thái");
         }
 
         order.setEmployer(employer);
