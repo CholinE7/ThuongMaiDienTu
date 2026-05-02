@@ -35,39 +35,39 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> request
-                        // ===== PUBLIC ENDPOINTS =====
-                        .requestMatchers("/login", "/register/customers", "/register/employers").permitAll()
-                        .requestMatchers("/api/auth/me").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                "/api/products/**", "/api/categories/**", "/api/brands/**").permitAll()
+                        // // ===== PUBLIC ENDPOINTS =====
+                        // .requestMatchers("/login", "/register/customers", "/register/employers").permitAll()
+                        // .requestMatchers("/api/auth/me").permitAll()
+                        // .requestMatchers(org.springframework.http.HttpMethod.GET,
+                        //         "/api/products/**", "/api/categories/**", "/api/brands/**").permitAll()
 
-                        // ===== CUSTOMER ONLY =====
-                        .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/orders/my-orders/**").hasRole("CUSTOMER")
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/orders").hasRole("CUSTOMER")
+                        // // ===== CUSTOMER ONLY =====
+                        // .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
+                        // .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/orders/my-orders/**").hasRole("CUSTOMER")
+                        // .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/orders").hasRole("CUSTOMER")
 
-                        // ===== STAFF ONLY =====
-                        .requestMatchers("/api/employers/**").hasRole("STAFF")
-                        .requestMatchers("/api/purchase_orders/**").hasRole("STAFF")
-                        .requestMatchers("/api/supplier/**").hasRole("STAFF")
-                        .requestMatchers("/api/dashboard/**").hasRole("STAFF")
-                        .requestMatchers(org.springframework.http.HttpMethod.POST,
-                                "/api/products/**", "/api/categories/**", "/api/brands/**").hasRole("STAFF")
-                        .requestMatchers(org.springframework.http.HttpMethod.PUT,
-                                "/api/products/**", "/api/categories/**", "/api/brands/**").hasRole("STAFF")
-                        .requestMatchers(org.springframework.http.HttpMethod.DELETE,
-                                "/api/products/**", "/api/categories/**", "/api/brands/**").hasRole("STAFF")
+                        // // ===== STAFF ONLY =====
+                        // .requestMatchers("/api/employers/**").hasRole("STAFF")
+                        // .requestMatchers("/api/purchase_orders/**").hasRole("STAFF")
+                        // .requestMatchers("/api/supplier/**").hasRole("STAFF")
+                        // .requestMatchers("/api/dashboard/**").hasRole("STAFF")
+                        // .requestMatchers(org.springframework.http.HttpMethod.POST,
+                        //         "/api/products/**", "/api/categories/**", "/api/brands/**").hasRole("STAFF")
+                        // .requestMatchers(org.springframework.http.HttpMethod.PUT,
+                        //         "/api/products/**", "/api/categories/**", "/api/brands/**").hasRole("STAFF")
+                        // .requestMatchers(org.springframework.http.HttpMethod.DELETE,
+                        //         "/api/products/**", "/api/categories/**", "/api/brands/**").hasRole("STAFF")
 
-                        // ===== CUSTOMER OR STAFF =====
-                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/customers/**").hasAnyRole("CUSTOMER", "STAFF")
-                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/orders/**").hasAnyRole("CUSTOMER", "STAFF")
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/orders/**").hasAnyRole("CUSTOMER", "STAFF")
-                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/orders/**").hasAnyRole("CUSTOMER", "STAFF")
+                        // // ===== CUSTOMER OR STAFF =====
+                        // .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/customers/**").hasAnyRole("CUSTOMER", "STAFF")
+                        // .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/orders/**").hasAnyRole("CUSTOMER", "STAFF")
+                        // .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/orders/**").hasAnyRole("CUSTOMER", "STAFF")
+                        // .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/orders/**").hasAnyRole("CUSTOMER", "STAFF")
 
-                        // ===== STAFF FOR CUSTOMERS MANAGEMENT =====
-                        .requestMatchers("/api/customers/**").hasRole("STAFF")
+                        // // ===== STAFF FOR CUSTOMERS MANAGEMENT =====
+                        // .requestMatchers("/api/customers/**").hasRole("STAFF")
 
-                        .anyRequest().authenticated())
+                        .anyRequest().permitAll())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

@@ -135,7 +135,7 @@ export default function AdminOrdersPage() {
         }));
 
         // Cập nhật nếu đang mở Modal
-        setSelectedOrder(prev => {
+        setSelectedOrder((prev: any) => {
           if (prev && prev.id === data.orderId) {
             return { ...prev, status: data.status };
           }

@@ -32,6 +32,7 @@ public class AuthService {
 
     public Customers registerCustomer(Customers customer) {
         customer.setPassword(encoder.encode(customer.getPassword()));
+        customer.setStatus(1);
         customerRepo.save(customer);
         return customer;
     }

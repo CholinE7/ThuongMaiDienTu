@@ -27,7 +27,10 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [toast, setToast] = useState("");
+
+  const [successMessage, setSuccessMessage] = useState("");  // ← THÊM STATE NÀY
+
+  // const [toast, setToast] = useState("");
 
   // 2. FETCH DỮ LIỆU TỪ DATABASE
   useEffect(() => {
@@ -127,7 +130,12 @@ export default function ProfilePage() {
       localStorage.setItem("customerName", editForm.fullName);
       window.dispatchEvent(new Event("authUpdated"));
       setIsEditing(false);
+      
+      // Hiển thị message và tự động ẩn sau 3 giây
+      setSuccessMessage("Cập nhật thông tin thành công!");
       toast.success("Cập nhật thông tin thành công!");
+
+      setTimeout(() => setSuccessMessage(""), 3000);
     } else {
       const errorMsg = await response.text();
       toast.error("Lỗi: " + errorMsg);
@@ -151,10 +159,10 @@ export default function ProfilePage() {
     <main className="min-h-screen bg-[#F4F6F9] pt-24 pb-12 font-sans relative">
       <Navbar />
       
-      {toast && (
+      {successMessage && (  // ← THAY ĐỔI ĐÂY
         <div className="fixed top-24 right-6 bg-white border-l-4 border-green-500 shadow-xl px-6 py-4 rounded-lg flex items-center gap-3 z-50 animate-in slide-in-from-right-8">
           <CheckCircle2 className="text-green-500" size={24} />
-          <span className="font-medium text-gray-800">{toast}</span>
+          <span className="font-medium text-gray-800">{successMessage}</span>
         </div>
       )}
 
