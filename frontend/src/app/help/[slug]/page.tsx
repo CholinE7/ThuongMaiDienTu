@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import { ChevronRight, HelpCircle, RefreshCcw, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
-const HELP_CONTENT: Record<string, any> = {
+const HELP_CONTENT: Record<string, { title: string; icon: React.ReactNode; content: React.ReactNode }> = {
   "buying-guide": {
     title: "Hướng dẫn mua hàng",
     icon: <HelpCircle className="w-12 h-12 text-blue-600" />,
@@ -23,7 +23,7 @@ const HELP_CONTENT: Record<string, any> = {
           <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">2</div>
           <div>
             <h3 className="font-bold text-gray-900 text-lg">Chọn Size và Màu sắc</h3>
-            <p className="text-gray-600">Tại trang chi tiết, chọn đúng kích cỡ và màu sắc sau đó bấm "Thêm vào giỏ hàng".</p>
+            <p className="text-gray-600">Tại trang chi tiết, chọn đúng kích cỡ và màu sắc sau đó bấm &quot;Thêm vào giỏ hàng&quot;.</p>
           </div>
         </div>
         <div className="flex gap-4">

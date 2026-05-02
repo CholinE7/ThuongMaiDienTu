@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const newProduct = { id: newId, ...body };
     mockProductsDatabase = [newProduct, ...mockProductsDatabase];
     return NextResponse.json({ success: true, message: "Thêm sản phẩm thành công!" });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: "Lỗi dữ liệu" }, { status: 400 });
   }
 }
@@ -53,7 +53,7 @@ export async function PUT(request: Request) {
     const body = await request.json();
     mockProductsDatabase = mockProductsDatabase.map(p => p.id === body.id ? body : p);
     return NextResponse.json({ success: true, message: "Cập nhật sản phẩm thành công!" });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: "Lỗi dữ liệu" }, { status: 400 });
   }
 }
@@ -65,7 +65,7 @@ export async function DELETE(request: Request) {
     const id = Number(searchParams.get('id'));
     mockProductsDatabase = mockProductsDatabase.filter(p => p.id !== id);
     return NextResponse.json({ success: true, message: "Đã xóa sản phẩm!" });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: "Lỗi khi xóa" }, { status: 400 });
   }
 }

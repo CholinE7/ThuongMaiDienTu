@@ -1,14 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { 
   Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, 
-  X, MapPin, Phone, User, Ticket, QrCode, CreditCard, Banknote,
-  Wallet, Landmark, CircleDollarSign, Loader2
+  X, MapPin, Phone, User, QrCode, Banknote,
+  Wallet, Loader2
 } from 'lucide-react';
 import { getCart, updateQuantity as updateCartQuantity, removeFromCart, clearCart, CartItem } from '@/utils/cartUtils';
 import { apiRequest } from '@/services/app';
-import toast from 'react-hot-toast';
 
 const Cart = () => {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -31,31 +32,36 @@ const Cart = () => {
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [customerAddress, setCustomerAddress] = useState('');
+  const [customerStreet, setCustomerStreet] = useState('');
+  const [customerWard, setCustomerWard] = useState('');
+  const [customerCity, setCustomerCity] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   const [showMomoModal, setShowMomoModal] = useState(false);
   const [currentOrderId, setCurrentOrderId] = useState<number | null>(null);
   const [momoPayUrl, setMomoPayUrl] = useState('');
+  const [isUserInfoLoaded, setIsUserInfoLoaded] = useState(false);
 
   useEffect(() => {
     const updateCustomerInfo = async () => {
-      const storedName = localStorage.getItem('customerName');
-      const token = localStorage.getItem('token');
+      try {
+        const token = sessionStorage.getItem('token');
 
-      if (token && !customerStreet) {
-        try {
-          const res = await apiRequest("/api/auth/me", "GET");
-          const data = await res.json();
-          if (data.code === 200 && data.result) {
-            setCustomerName(data.result.fullName || '');
-            setCustomerPhone(data.result.phone || '');
-            setCustomerStreet(data.result.street || '');
-            setCustomerWard(data.result.ward || '');
-            setCustomerCity(data.result.city || '');
+        if (token && !isUserInfoLoaded) {
+          try {
+            const res = await apiRequest("/api/auth/me", "GET");
+            const data = await res.json();
+            if (data.code === 200 && data.result) {
+              setCustomerName(data.result.fullName || '');
+              setCustomerPhone(data.result.phone || '');
+              setCustomerStreet(data.result.street || '');
+              setCustomerWard(data.result.ward || '');
+              setCustomerCity(data.result.city || '');
+              setIsUserInfoLoaded(true);
+            }
+          } catch (e) {
+            console.error("Lỗi lấy thông tin user", e);
           }
-        } catch (e) {
-          console.error("Lỗi lấy thông tin user", e);
         }
       } catch (e) {
         console.error('Không thể tải thông tin khách hàng', e);
@@ -66,9 +72,14 @@ const Cart = () => {
       updateCustomerInfo();
     }
 
-    window.addEventListener("authUpdated", updateCustomerInfo);
-    return () => window.removeEventListener("authUpdated", updateCustomerInfo);
-  }, [showCheckoutModal]);
+    const handleAuthUpdate = () => {
+      setIsUserInfoLoaded(false);
+      updateCustomerInfo();
+    };
+
+    window.addEventListener("authUpdated", handleAuthUpdate);
+    return () => window.removeEventListener("authUpdated", handleAuthUpdate);
+  }, [showCheckoutModal, isUserInfoLoaded]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -123,7 +134,9 @@ const Cart = () => {
         productId: item.productId,
         quantity: item.quantity,
         cost: item.price,
-        total: item.price * item.quantity
+        total: item.price * item.quantity,
+        color: item.color,
+        size: item.size
       }));
 
       const requestBody = {
@@ -140,9 +153,12 @@ const Cart = () => {
 
       const response = await apiRequest('/api/orders', 'POST', requestBody);
       const res = await response.json();
+      console.log("Order Response:", res);
       
       if (res.code === 200) {
         const orderId = res.result.order.id;
+        console.log("Order created successfully, ID:", orderId);
+
         if (!customerId) {
           const guestOrders = JSON.parse(localStorage.getItem("guest_order_ids") || "[]");
           guestOrders.push(orderId);
@@ -150,16 +166,22 @@ const Cart = () => {
         }
 
         if (paymentMethod === 'momo') {
+          console.log("Processing MoMo payment for order:", orderId);
           try {
             const qrRes = await apiRequest(`/api/payment/momo/create_payment?orderId=${orderId}`, 'GET');
             const qrData = await qrRes.json();
-            if (qrData.code === 200) {
+            console.log("MoMo API Response:", qrData);
+
+            if (qrData.code === 200 && qrData.result?.qrUrl) {
               setCurrentOrderId(orderId);
               setMomoPayUrl(qrData.result.qrUrl);
               window.open(qrData.result.qrUrl, '_blank');
               setShowMomoModal(true);
+            } else {
+              alert("Lỗi từ MoMo: " + (qrData.message || "Không có URL thanh toán"));
             }
           } catch (e) {
+            console.error("MoMo payment error:", e);
             alert("Không thể tạo liên kết thanh toán MoMo, vui lòng thử lại!");
           }
         } else {
@@ -169,7 +191,7 @@ const Cart = () => {
           window.location.href = "/orders";
         }
       } else {
-        alert("Lỗi khi đặt hàng: " + res.message);
+        alert("Lỗi khi đặt hàng: " + (res.message || "Unknown error"));
       }
     } catch (error) {
       console.error("Error placing order", error);
@@ -182,10 +204,10 @@ const Cart = () => {
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8 font-sans bg-white min-h-screen relative">
       <div className="mb-6">
-        <a href="/" className="inline-flex items-center text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors group">
+        <Link href="/" className="inline-flex items-center text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors group">
           <ArrowLeft className="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" />
           Tiếp tục mua sắm
-        </a>
+        </Link>
       </div>
 
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 border-b border-gray-100 pb-6">
@@ -209,7 +231,12 @@ const Cart = () => {
             items.map((item) => (
               <div key={item.id} className="group flex flex-col sm:flex-row items-center bg-gray-50 p-6 rounded-3xl border border-transparent hover:border-blue-100 hover:bg-white hover:shadow-2xl transition-all duration-300">
                 <div className="relative w-32 h-32 flex-shrink-0 overflow-hidden rounded-2xl bg-white border border-gray-50">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-110" />
+                  <Image 
+                    src={item.image} 
+                    alt={item.name} 
+                    fill 
+                    className="object-contain p-2 transition-transform duration-500 group-hover:scale-110" 
+                  />
                 </div>
                 <div className="sm:ml-8 flex-grow text-center sm:text-left mt-4 sm:mt-0">
                   <p className="text-[10px] font-bold text-blue-500 uppercase tracking-[0.15em] mb-1">{item.category}</p>
@@ -254,9 +281,9 @@ const Cart = () => {
               </div>
               <h3 className="text-2xl font-bold text-gray-800 mb-2 uppercase tracking-wide">Giỏ hàng đang trống</h3>
               <p className="text-gray-400 mb-10 font-medium">Có vẻ như bạn chưa chọn được đôi giày nào ưng ý.</p>
-              <a href="/" className="inline-block bg-blue-600 text-white px-12 py-4 rounded-2xl font-bold uppercase tracking-wide hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-95">
+              <Link href="/" className="inline-block bg-blue-600 text-white px-12 py-4 rounded-2xl font-bold uppercase tracking-wide hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-95">
                 Khám phá ngay
-              </a>
+              </Link>
             </div>
           )}
         </div>
@@ -307,18 +334,29 @@ const Cart = () => {
                   <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} type="tel" placeholder="Số điện thoại di động" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all font-medium text-gray-900" />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="relative">
-                    <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input value={customerStreet} onChange={e => setCustomerStreet(e.target.value)} type="text" placeholder="Số nhà, tên đường" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all font-medium text-gray-900" />
+                
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="relative flex-grow">
+                      <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input value={customerStreet} onChange={e => setCustomerStreet(e.target.value)} type="text" placeholder="Số nhà, tên đường" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all font-medium text-gray-900" />
+                    </div>
+                    <span className="hidden sm:block text-[10px] font-bold text-gray-400 uppercase tracking-widest min-w-[100px] text-right">Số nhà, đường</span>
                   </div>
-                  <div className="relative">
-                    <input value={customerWard} onChange={e => setCustomerWard(e.target.value)} type="text" placeholder="Phường / Xã" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900" />
+                  
+                  <div className="flex items-center gap-4">
+                    <div className="relative flex-grow pl-12 sm:pl-0">
+                      <input value={customerWard} onChange={e => setCustomerWard(e.target.value)} type="text" placeholder="Phường / Xã" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900" />
+                    </div>
+                    <span className="hidden sm:block text-[10px] font-bold text-gray-400 uppercase tracking-widest min-w-[100px] text-right">Phường / Xã</span>
                   </div>
-                </div>
-                <div className="relative">
-                  <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} type="text" placeholder="Địa chỉ giao hàng chi tiết" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all font-medium text-gray-900" />
+
+                  <div className="flex items-center gap-4">
+                    <div className="relative flex-grow pl-12 sm:pl-0">
+                      <input value={customerCity} onChange={e => setCustomerCity(e.target.value)} type="text" placeholder="Thành phố / Tỉnh" className="w-full bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 outline-none transition-all font-medium text-gray-900" />
+                    </div>
+                    <span className="hidden sm:block text-[10px] font-bold text-gray-400 uppercase tracking-widest min-w-[100px] text-right">Thành phố / Tỉnh</span>
+                  </div>
                 </div>
               </div>
               <div className="mb-10">
@@ -362,7 +400,15 @@ const Cart = () => {
                 <div className="space-y-4 mb-8 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
                   {items.map(item => (
                     <div key={item.id} className="flex gap-4 items-center bg-white p-3 rounded-2xl border border-gray-100">
-                      <div className="relative w-16 h-16 bg-gray-50 rounded-xl flex-shrink-0"><img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" /><span className="absolute -top-2 -right-2 bg-gray-900 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">{item.quantity}</span></div>
+                      <div className="relative w-16 h-16 bg-gray-50 rounded-xl flex-shrink-0">
+                        <Image 
+                          src={item.image} 
+                          alt={item.name} 
+                          fill 
+                          className="w-full h-full object-contain p-1" 
+                        />
+                        <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">{item.quantity}</span>
+                      </div>
                       <div className="flex-grow"><p className="text-xs font-bold text-gray-900 line-clamp-1 uppercase tracking-wide">{item.name}</p><p className="text-xs text-gray-500 mt-1">{formatPrice(item.price)}</p></div>
                     </div>
                   ))}

@@ -53,6 +53,31 @@ public interface ProductRepository extends JpaRepository<Products, Long> {
         @Param("color") String color,
         org.springframework.data.domain.Pageable pageable);
 
+    @EntityGraph(attributePaths = { "category", "brand", "variants" })
+    @Query("SELECT p FROM Products p JOIN OrdersDetails od ON p.id = od.product.id " +
+           "GROUP BY p.id " +
+           "ORDER BY SUM(od.quantity) DESC")
+    org.springframework.data.domain.Page<Products> findBestSellers(org.springframework.data.domain.Pageable pageable);
+
+    @EntityGraph(attributePaths = { "category", "brand", "variants" })
+    @Query("SELECT p FROM Products p JOIN OrdersDetails od ON p.id = od.product.id LEFT JOIN p.variants v WHERE " +
+           "(:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
+           "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
+           "(:brandId IS NULL OR p.brand.id = :brandId) AND " +
+           "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
+           "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
+           "(:color IS NULL OR LOWER(v.color) LIKE LOWER(CONCAT('%', :color, '%'))) " +
+           "GROUP BY p.id " +
+           "ORDER BY SUM(od.quantity) DESC")
+    org.springframework.data.domain.Page<Products> findBestSellersWithFilters(
+        @Param("name") String name, 
+        @Param("categoryId") Long categoryId, 
+        @Param("brandId") Long brandId, 
+        @Param("minPrice") BigDecimal minPrice, 
+        @Param("maxPrice") BigDecimal maxPrice, 
+        @Param("color") String color,
+        org.springframework.data.domain.Pageable pageable);
+
     @Modifying
     @Query(value = "UPDATE products SET category_id = NULL, brand_id = NULL WHERE category_id = ?1", nativeQuery = true)
     int setDefaultCategoryAndBrandByCategory(Long categoryId);

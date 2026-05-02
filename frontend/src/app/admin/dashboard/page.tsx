@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, RefreshCcw, Loader2, ShoppingBag, CheckCircle, Clock, XCircle, DollarSign, CreditCard, AlertCircle, TrendingDown } from "lucide-react";
 import { apiRequest } from "@/services/app";
 
@@ -23,7 +23,7 @@ export default function AdminDashboardPage() {
   // ==========================================
   // HÀM GỌI API ĐỂ LẤY THỐNG KÊ
   // ==========================================
-  const fetchDashboardStats = async () => {
+  const fetchDashboardStats = useCallback(async () => {
     setIsLoading(true);
     try {
       const query = new URLSearchParams();
@@ -41,11 +41,11 @@ export default function AdminDashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [appliedFilters.fromDate, appliedFilters.toDate]);
 
   useEffect(() => {
     fetchDashboardStats();
-  }, [appliedFilters]);
+  }, [fetchDashboardStats]);
 
   // HÀNH ĐỘNG BẤM TÌM KIẾM
   const handleSearchClick = () => setAppliedFilters({ fromDate, toDate });

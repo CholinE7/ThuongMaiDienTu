@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Search,
   RefreshCcw,
@@ -13,16 +13,35 @@ import {
   X,
   Loader2,
   Truck,
-  Package,
-  ArrowLeft,
-  Save,
 } from "lucide-react";
 import { apiRequest } from "@/services/app";
 
 const ORDERS_PER_PAGE = 5;
 
+interface OrderItem {
+  name: string;
+  quantity: number;
+  price: number;
+  total: number;
+}
+
+interface Order {
+  id: number;
+  orderCode: string;
+  customerName: string;
+  totalProducts: number;
+  phone: string;
+  email: string;
+  address: string;
+  orderDate: string;
+  totalAmount: number;
+  paymentMethod: string;
+  status: string;
+  items: OrderItem[];
+}
+
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [fromDate, setFromDate] = useState("");
@@ -39,7 +58,7 @@ export default function AdminOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const [toastMsg, setToastMsg] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
@@ -50,7 +69,7 @@ export default function AdminOrdersPage() {
     setTimeout(() => setToastMsg(""), 3000);
   };
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setIsLoading(true);
     try {
       const query = new URLSearchParams({
@@ -67,7 +86,17 @@ export default function AdminOrdersPage() {
       const result = await response.json();
 
       if (result && result.code === 200) {
-        const mappedOrders = result.result.content.map((item: any) => {
+        const mappedOrders = result.result.content.map((item: { 
+          order: { 
+            id: number, 
+            customer?: { fullName: string, phone: string, email: string, street: string, ward: string, city: string }, 
+            createdAt: string, 
+            totalPrice: number, 
+            method: string, 
+            status: string 
+          }, 
+          details?: { product?: { name: string }, quantity: number, cost: number, total: number }[] 
+        }) => {
           const ord = item.order;
           return {
             id: ord.id,
@@ -81,7 +110,7 @@ export default function AdminOrdersPage() {
             totalAmount: ord.totalPrice,
             paymentMethod: ord.method || "COD",
             status: ord.status, // PENDING, CONFIRMED, etc.
-            items: item.details?.map((dt: any) => ({
+            items: item.details?.map((dt) => ({
               name: dt.product?.name || "Sản phẩm",
               quantity: dt.quantity,
               price: dt.cost,
@@ -92,12 +121,12 @@ export default function AdminOrdersPage() {
         setOrders(mappedOrders);
         setTotalOrders(result.result.total);
       }
-    } catch (error) {
+    } catch {
       showToast("Lỗi kết nối máy chủ!", "error");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [appliedFilters, currentPage]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -110,14 +139,14 @@ export default function AdminOrdersPage() {
           if (data && data.code === 200 && data.result?.id) {
             sessionStorage.setItem("employerId", data.result.id.toString());
           }
-        } catch (e) {
-          console.error("Lỗi lấy thông tin nhân viên:", e);
+        } catch {
+          // ignore
         }
       }
     };
     checkUser();
     fetchOrders();
-  }, [appliedFilters, currentPage]);
+  }, [fetchOrders]);
 
   // HÀM CẬP NHẬT TRẠNG THÁI (Tiến sang trạng thái tiếp theo)
   const handleAdvanceStatus = async (nextStatus: string) => {
@@ -149,7 +178,7 @@ export default function AdminOrdersPage() {
       } else {
         showToast(result?.message || "Lỗi khi cập nhật", "error");
       }
-    } catch (error) {
+    } catch {
       showToast("Lỗi khi cập nhật trạng thái!", "error");
     } finally {
       setIsLoading(false);
@@ -182,7 +211,7 @@ export default function AdminOrdersPage() {
     setAppliedFilters({ fromDate: "", toDate: "", status: "all" });
   };
 
-  const handleOpenDetails = (order: any) => {
+  const handleOpenDetails = (order: Order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
   };
@@ -340,7 +369,7 @@ export default function AdminOrdersPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {selectedOrder.items?.map((item: any, idx: number) => (
+                    {selectedOrder.items?.map((item: OrderItem, idx: number) => (
                       <tr key={idx} className="hover:bg-gray-50">
                         <td className="px-4 py-4">{idx + 1}</td>
                         <td className="px-4 py-4 text-left font-medium">

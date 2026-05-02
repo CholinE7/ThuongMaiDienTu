@@ -1,7 +1,7 @@
 // src/services/api.ts
 const API_URL = "http://localhost:8080";
 
-export const apiRequest = async (endpoint: string, method: string = "GET", body: any = null) => {
+export const apiRequest = async (endpoint: string, method: string = "GET", body: unknown = null) => {
     // Lấy token từ sessionStorage
     let token = typeof window !== "undefined" ? sessionStorage.getItem("token") : null;
     
@@ -47,7 +47,7 @@ export const apiRequest = async (endpoint: string, method: string = "GET", body:
                 json: () => Promise.resolve(data),
                 text: () => Promise.resolve(text)
             };
-        } catch (e) {
+        } catch {
             console.error("JSON Parse Error:", text);
             return { 
                 ok: response.ok, 
@@ -56,7 +56,7 @@ export const apiRequest = async (endpoint: string, method: string = "GET", body:
                 text: () => Promise.resolve(text)
             };
         }
-    } catch (error: any) {
+    } catch (error) {
         console.error("API Network Error:", error);
         // Trả về một đối tượng giả lập Response để tránh crash ứng dụng
         return { 

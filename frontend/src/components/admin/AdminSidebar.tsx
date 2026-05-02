@@ -8,9 +8,6 @@ import {
   Users, 
   ShoppingCart, 
   Package, 
-  Archive, 
-  DollarSign, 
-  ClipboardList,
   LogOut,
   User
 } from 'lucide-react';

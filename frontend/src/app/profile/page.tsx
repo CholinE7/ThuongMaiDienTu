@@ -103,9 +103,9 @@ export default function ProfilePage() {
       token = token.replace(/^["'](.+)["']$/, '$1').trim();
     }
     
-    // 2. Chuẩn bị Payload gửi lên
+    // 2. Chuẩn be Payload gửi lên
     // Quan trọng: Gửi kèm 'password' nếu người dùng có nhập vào ô đổi mật khẩu
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       ...editForm,
       username: editForm.email,
       status: userInfo.status,
@@ -140,7 +140,7 @@ export default function ProfilePage() {
       const errorMsg = await response.text();
       toast.error("Lỗi: " + errorMsg);
     }
-  } catch (error) {
+  } catch {
     toast.error("Lỗi kết nối máy chủ!");
   } finally {
     setIsSaving(false);

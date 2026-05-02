@@ -1,7 +1,7 @@
 -- Database Schema for MySQL (XAMPP)
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS orders_details;
-DROP TABLE IF EXISTS product_colors;
+DROP TABLE IF EXISTS product_variants;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS brands;
@@ -44,11 +44,14 @@ CREATE TABLE products (
     CONSTRAINT fk_products_brands FOREIGN KEY (brand_id) REFERENCES brands(id)
 );
 
--- 4. Product Colors
-CREATE TABLE product_colors (
+-- 4. Product Variants
+CREATE TABLE product_variants (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     product_id BIGINT NOT NULL,
     color VARCHAR(255) NOT NULL,
-    CONSTRAINT fk_product_colors_products FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    size VARCHAR(50) NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 0,
+    CONSTRAINT fk_product_variants_products FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 );
 
 -- 5. Customers

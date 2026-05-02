@@ -1,9 +1,9 @@
 "use client";
 
-import { Filter } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface FilterSidebarProps {
-  brands: any[];
+  brands: { id: number | string; name: string }[];
   selectedBrand: string;
   setSelectedBrand: (val: string) => void;
   minPrice: string;
@@ -12,20 +12,11 @@ interface FilterSidebarProps {
   setMaxPrice: (val: string) => void;
   selectedColor: string;
   setSelectedColor: (val: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
   onClear: () => void;
+  onClose?: () => void;
 }
 
-const COLORS = [
-  { name: "Đen", value: "Đen" },
-  { name: "Trắng", value: "Trắng" },
-  { name: "Đỏ", value: "Đỏ" },
-  { name: "Xanh", value: "Xanh" },
-  { name: "Xám", value: "Xám" },
-  { name: "Vàng", value: "Vàng" },
-];
-
-export default function FilterSidebar({
+const FilterSidebar = ({
   brands,
   selectedBrand,
   setSelectedBrand,
@@ -35,163 +26,121 @@ export default function FilterSidebar({
   setMaxPrice,
   selectedColor,
   setSelectedColor,
-  onSubmit,
   onClear,
-}: FilterSidebarProps) {
+  onClose
+}: FilterSidebarProps) => {
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-24">
-      <div className="flex items-center gap-2 mb-6">
-        <Filter size={20} className="text-blue-600" />
-        <h2 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Bộ Lọc Của Bạn</h2>
+    <div className="flex flex-col h-full">
+      <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-6">
+        <h2 className="text-xl font-bold uppercase tracking-widest text-gray-900">Bộ lọc</h2>
+        {onClose && (
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <X size={20} />
+          </button>
+        )}
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-6">
+      <form className="space-y-10 flex-grow">
         {/* Lọc theo Thương hiệu */}
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Thương hiệu</label>
-          <select
-            value={selectedBrand}
-            onChange={(e) => setSelectedBrand(e.target.value)}
-            className="w-full bg-gray-50 border border-gray-200 text-gray-700 py-3 px-4 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
-          >
-            <option value="">Tất cả thương hiệu</option>
+          <h3 className="text-xs font-bold text-gray-900 uppercase tracking-[0.2em] mb-5">Thương hiệu</h3>
+          <div className="flex flex-wrap gap-2">
             {brands.map((brand) => (
-              <option key={brand.id} value={brand.id}>{brand.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Lọc theo Màu sắc */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Màu sắc</label>
-          <div className="grid grid-cols-2 gap-2">
-            {COLORS.map((color) => (
               <button
-                key={color.value}
+                key={brand.id}
                 type="button"
-                onClick={() => setSelectedColor(selectedColor === color.value ? "" : color.value)}
-                className={`py-2 px-3 text-xs rounded-lg border transition-all ${
-                  selectedColor === color.value
-                    ? "bg-blue-600 text-white border-blue-600 font-bold"
-                    : "bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300"
+                onClick={() => setSelectedBrand(selectedBrand === String(brand.id) ? "" : String(brand.id))}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                  selectedBrand === String(brand.id)
+                    ? "bg-gray-900 text-white border-gray-900 shadow-md"
+                    : "bg-white text-gray-500 border-gray-200 hover:border-gray-900"
                 }`}
               >
-                {color.name}
+                {brand.name}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Lọc theo Khoảng giá */}
+        {/* Lọc theo Màu sắc */}
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-4 uppercase tracking-wide">Khoảng giá (VNĐ)</label>
-
-          <div className="mb-6 px-1">
-            {/* Range Slider Container */}
-            <div className="relative h-2 w-full bg-gray-200 rounded-full mt-2 mb-6">
-              {/* Active Track */}
-              <div
-                className="absolute h-2 bg-blue-600 rounded-full"
-                style={{
-                  left: `${((Number(minPrice || 0)) / 10000000) * 100}%`,
-                  right: `${100 - ((Number(maxPrice || 10000000)) / 10000000) * 100}%`
-                }}
-              ></div>
-
-              {/* Min Input */}
-              <input
-                type="range"
-                min="0"
-                max="10000000"
-                step="50000"
-                value={minPrice || 0}
-                onChange={(e) => {
-                  const value = Math.min(Number(e.target.value), Number(maxPrice || 10000000));
-                  setMinPrice(value.toString());
-                }}
-                className="absolute w-full -top-1 h-4 appearance-none bg-transparent pointer-events-none custom-range"
-                style={{ zIndex: 3 }}
-              />
-
-              {/* Max Input */}
-              <input
-                type="range"
-                min="0"
-                max="10000000"
-                step="50000"
-                value={maxPrice || 10000000}
-                onChange={(e) => {
-                  const value = Math.max(Number(e.target.value), Number(minPrice || 0));
-                  setMaxPrice(value.toString());
-                }}
-                className="absolute w-full -top-1 h-4 appearance-none bg-transparent pointer-events-none custom-range"
-                style={{ zIndex: 4 }}
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">Từ</span>
-                <input
-                  type="number"
-                  value={minPrice}
-                  onChange={(e) => setMinPrice(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-700 py-2.5 pl-8 pr-3 rounded-xl focus:outline-none focus:border-blue-500 transition-colors text-sm font-medium"
-                />
-              </div>
-              <span className="text-gray-400 font-bold">-</span>
-              <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">Đến</span>
-                <input
-                  type="number"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-700 py-2.5 pl-10 pr-3 rounded-xl focus:outline-none focus:border-blue-500 transition-colors text-sm font-medium"
-                />
-              </div>
-            </div>
-
-            <style dangerouslySetInnerHTML={{
-              __html: `
-              .custom-range::-webkit-slider-thumb {
-                pointer-events: auto;
-                appearance: none;
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                background: white;
-                border: 3px solid #2563eb;
-                cursor: pointer;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-              }
-              .custom-range::-moz-range-thumb {
-                pointer-events: auto;
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                background: white;
-                border: 3px solid #2563eb;
-                cursor: pointer;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-              }
-            `}} />
+          <h3 className="text-xs font-bold text-gray-900 uppercase tracking-[0.2em] mb-5">Màu sắc</h3>
+          <div className="flex flex-wrap gap-3">
+            {["Trắng", "Đen", "Đỏ", "Xanh", "Vàng", "Xám", "Kem", "Nâu", "Be"].map((color) => {
+               const COLOR_HEX_MAP: Record<string, string> = {
+                "Đen": "#171717",
+                "Trắng": "#FFFFFF",
+                "Đỏ": "#991B1B",
+                "Nâu": "#78350F",
+                "Be": "#D4B996",
+                "Xám": "#6B7280",
+                "Kem": "#FEFCE8",
+                "Xanh": "#1E40AF",
+                "Vàng": "#EAB308"
+              };
+              const isSelected = selectedColor === color;
+              const hexValue = COLOR_HEX_MAP[color] || "#000000";
+              
+              return (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => setSelectedColor(isSelected ? "" : color)}
+                  className={`w-8 h-8 rounded-full border-2 transition-all relative group ${
+                    isSelected ? "border-blue-600 scale-110 shadow-md" : "border-transparent hover:border-gray-300"
+                  }`}
+                  style={{ backgroundColor: hexValue }}
+                  title={color}
+                >
+                  {isSelected && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className={`w-1.5 h-1.5 rounded-full ${color === 'Trắng' || color === 'Kem' ? 'bg-gray-900' : 'bg-white'}`} />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-md shadow-blue-200"
-        >
-          Áp dụng lọc
-        </button>
+        {/* Lọc theo Giá */}
+        <div>
+          <h3 className="text-xs font-bold text-gray-900 uppercase tracking-[0.2em] mb-5">Khoảng giá (VNĐ)</h3>
+          <div className="space-y-4">
+            <div className="relative">
+              <input
+                type="number"
+                placeholder="Từ"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-blue-500 focus:bg-white transition-all text-sm font-medium"
+              />
+            </div>
+            <div className="relative">
+              <input
+                type="number"
+                placeholder="Đến"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 outline-none focus:border-blue-500 focus:bg-white transition-all text-sm font-medium"
+              />
+            </div>
+          </div>
+        </div>
+      </form>
+
+      {/* Footer Buttons */}
+      <div className="mt-12 space-y-3 border-t border-gray-100 pt-8">
         <button
           type="button"
           onClick={onClear}
-          className="w-full bg-gray-100 text-gray-600 py-3 rounded-xl font-bold uppercase tracking-widest hover:bg-gray-200 transition-colors mt-2"
+          className="w-full bg-gray-100 text-gray-600 py-4 rounded-2xl font-bold uppercase tracking-[0.2em] text-[10px] hover:bg-gray-200 transition-all active:scale-95"
         >
-          Xóa lọc
+          Xóa tất cả bộ lọc
         </button>
-      </form>
+      </div>
     </div>
   );
-}
+};
+
+export default FilterSidebar;

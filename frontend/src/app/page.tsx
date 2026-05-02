@@ -4,6 +4,8 @@ import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 import { Truck, ShieldCheck, RefreshCw } from 'lucide-react';
 
+export const dynamic = "force-dynamic";
+
 // Hàm lấy dữ liệu sản phẩm từ API
 async function getProducts() {
   try {
@@ -14,32 +16,72 @@ async function getProducts() {
     const data = await res.json();
     
     // Map dữ liệu từ API về định dạng Frontend cần
-    return (data.result?.content || []).map((p: any) => ({
-      ...p,
-      category: p.category?.name || "Khác", // Backend trả về object category
-      imageUrl: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400",
-      image: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400"
-    }));
+    return (data.result?.content || []).map((p: { 
+      category?: { name: string }, 
+      imageUrl?: string, 
+      id: number,
+      name: string,
+      price: number,
+      discountPercentage?: number,
+      variants?: { color: string }[]
+    }) => {
+      const uniqueColors = Array.from(new Set((p.variants || []).map(v => v.color)));
+      return {
+        ...p,
+        category: p.category?.name || "Khác", // Backend trả về object category
+        imageUrl: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400",
+        image: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400",
+        colors: uniqueColors.length > 0 ? uniqueColors : ["Trắng", "Đen"] // Fallback
+      };
+    });
   } catch (error) {
     console.error("Lỗi lấy sản phẩm trang chủ:", error);
     return [];
   }
 }
 
+// Hàm lấy sản phẩm bán chạy
+async function getBestSellers() {
+  try {
+    const res = await fetch('http://localhost:8080/api/products/best-sellers?page_size=4', { 
+      cache: 'no-store' 
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.result?.content || []).map((p: { 
+      category?: { name: string }, 
+      imageUrl?: string, 
+      variants?: { color: string }[] 
+    }) => {
+      const uniqueColors = Array.from(new Set((p.variants || []).map(v => v.color)));
+      return {
+        ...p,
+        category: p.category?.name || "Khác",
+        imageUrl: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400",
+        colors: uniqueColors.length > 0 ? uniqueColors : ["Trắng", "Đen"]
+      };
+    });
+  } catch (error) {
+    console.error("Lỗi lấy sản phẩm bán chạy:", error);
+    return [];
+  }
+}
+
 export default async function Home() {
   const products = await getProducts();
+  let bestSellers = await getBestSellers();
 
-  const shoesNu = products.filter((product: any) => product.category?.toLowerCase() === "womens-shoes").slice(0, 4);
-  const shoesNam = products.filter((product: any) => product.category?.toLowerCase() === "mens-shoes").slice(0, 4);
+  // Nếu chưa có doanh số (database mới), lấy 4 sản phẩm đầu tiên làm mặc định
+  if (bestSellers.length === 0) {
+    bestSellers = products.slice(0, 4);
+  }
 
-  // Sản phẩm bán chạy: sort theo rating giảm dần, lấy top 4
-  const bestSellers = [...products]
-    .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
-    .slice(0, 4);
+  const shoesNu = products.filter((product: { category: string }) => product.category?.toLowerCase() === "womens-shoes").slice(0, 4);
+  const shoesNam = products.filter((product: { category: string }) => product.category?.toLowerCase() === "mens-shoes").slice(0, 4);
 
   // Sản phẩm khuyến mãi: có discount_percentage > 0
   const discountedProducts = products
-    .filter((p: any) => p.discountPercentage > 0)
+    .filter((p: { discountPercentage?: number }) => (p.discountPercentage || 0) > 0)
     .slice(0, 4);
 
   return (
@@ -88,7 +130,7 @@ export default async function Home() {
         
         {/* Lưới sản phẩm */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
-          {bestSellers.map((product: any) => (
+          {bestSellers.map((product: { id: number, name: string, price: number, category: string, imageUrl?: string }) => (
             <ProductCard key={`bs-${product.id}`} product={product} />
           ))}
         </div>
@@ -115,7 +157,7 @@ export default async function Home() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
-            {discountedProducts.map((product: any) => (
+            {discountedProducts.map((product: { id: number, name: string, price: number, category: string, imageUrl?: string, discountPercentage?: number }) => (
               <div key={`promo-${product.id}`} className="relative">
                 <div className="absolute top-2 left-2 z-10 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md shadow">
                   -{product.discountPercentage}%
@@ -143,7 +185,7 @@ export default async function Home() {
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
-          {shoesNu.map((product: any) => (
+          {shoesNu.map((product: { id: number, name: string, price: number, category: string, imageUrl?: string }) => (
             <ProductCard key={`nu-${product.id}`} product={product} />
           ))}
         </div>
@@ -165,7 +207,7 @@ export default async function Home() {
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
-          {shoesNam.map((product: any) => (
+          {shoesNam.map((product: { id: number, name: string, price: number, category: string, imageUrl?: string }) => (
             <ProductCard key={`nam-${product.id}`} product={product} />
           ))}
         </div>

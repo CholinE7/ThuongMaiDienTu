@@ -2,17 +2,53 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { apiRequest } from '@/services/app';
 import Navbar from '@/components/Navbar';
 import { ChevronRight, Package, AlertCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+interface OrderData {
+  order: { 
+    id: number, 
+    totalPrice: number, 
+    method: string, 
+    status: string, 
+    paymentStatus?: string,
+    createdAt: string 
+  };
+  details?: { 
+    product: { name: string, imageUrl: string }, 
+    quantity: number, 
+    cost: number, 
+    total: number,
+    color?: string,
+    size?: string
+  }[];
+}
+
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<OrderData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Tách fetchOrders ra ngoài để có thể gọi lại sau khi hủy đơn mà không reload cả trang
+  const handleRepay = async (orderId: number) => {
+    const toastId = toast.loading("Đang khởi tạo thanh toán...");
+    try {
+      const response = await apiRequest(`/api/payment/momo/create_payment?orderId=${orderId}`, 'GET');
+      const res = await response.json();
+      if (res && res.code === 200 && res.result?.qrUrl) {
+        toast.success("Đang chuyển hướng đến MoMo...", { id: toastId });
+        window.location.href = res.result.qrUrl;
+      } else {
+        toast.error(res?.message || "Lỗi khi tạo liên kết thanh toán.", { id: toastId });
+      }
+    } catch (err) {
+      console.error("Lỗi thanh toán lại", err);
+      toast.error("Lỗi kết nối máy chủ.", { id: toastId });
+    }
+  };
+
   const fetchOrders = async () => {
     try {
       const response = await apiRequest('/api/orders/my-orders?page_size=50', 'GET');
@@ -22,8 +58,7 @@ export default function OrdersPage() {
       } else {
         setError(res?.message || "Không thể tải lịch sử đơn hàng.");
       }
-    } catch (err) {
-      console.error("Lỗi lấy lịch sử đơn hàng", err);
+    } catch {
       setError("Lỗi kết nối đến máy chủ. Vui lòng thử lại sau.");
     } finally {
       setIsLoading(false);
@@ -63,14 +98,13 @@ export default function OrdersPage() {
   const handleCancelOrder = async (orderId: number) => {
     if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
 
-    // FIX: Dùng endpoint hủy đơn riêng /api/orders/{id}/cancel
     const toastId = toast.loading("Đang hủy đơn hàng...");
     try {
       const response = await apiRequest(`/api/orders/${orderId}/cancel`, 'PUT');
       const res = await response.json();
       if (res && res.code === 200) {
         toast.success("Hủy đơn hàng thành công!", { id: toastId });
-        fetchOrders(); // Reload list mà không cần refresh toàn trang
+        fetchOrders();
       } else {
         toast.error(res?.message || "Lỗi khi hủy đơn hàng.", { id: toastId });
       }
@@ -85,7 +119,6 @@ export default function OrdersPage() {
       <Navbar />
 
       <div className="pt-24 pb-20 container mx-auto px-4 max-w-5xl">
-        {/* Breadcrumb */}
         <div className="text-sm font-medium mb-8 flex items-center gap-2">
           <Link href="/" className="text-gray-500 hover:text-black transition">Trang chủ</Link>
           <ChevronRight size={14} className="text-gray-400" />
@@ -147,11 +180,16 @@ export default function OrdersPage() {
 
                   <div className="p-6">
                     <div className="space-y-4 mb-6">
-                      {details && details.map((detail: any, index: number) => (
+                      {details && details.map((detail, index) => (
                         <div key={index} className="flex items-center gap-4 border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-                          <div className="w-20 h-20 bg-gray-100 flex-shrink-0">
+                          <div className="w-20 h-20 bg-gray-100 flex-shrink-0 relative overflow-hidden rounded-md border border-gray-100">
                             {detail.product?.imageUrl ? (
-                              <img src={detail.product.imageUrl} alt={detail.product?.name || "Product"} className="w-full h-full object-cover" loading="lazy" />
+                              <Image 
+                                src={detail.product.imageUrl} 
+                                alt={detail.product?.name || "Product"} 
+                                fill 
+                                className="object-cover" 
+                              />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400">
                                 <Package size={24} />
@@ -159,8 +197,20 @@ export default function OrdersPage() {
                             )}
                           </div>
                           <div className="flex-1">
-                            <h3 className="text-sm font-medium text-gray-900 mb-1">{detail.product?.name || "Sản phẩm"}</h3>
-                            <div className="text-sm text-gray-500">Số lượng: x{detail.quantity}</div>
+                            <h3 className="text-sm font-bold text-gray-900 mb-1">{detail.product?.name || "Sản phẩm"}</h3>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                              <span>Số lượng: x{detail.quantity}</span>
+                              {detail.color && (
+                                <span className="flex items-center gap-1">
+                                  Màu: <span className="font-medium text-gray-700">{detail.color}</span>
+                                </span>
+                              )}
+                              {detail.size && (
+                                <span className="flex items-center gap-1">
+                                  Size: <span className="font-medium text-gray-700">{detail.size}</span>
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className="text-sm font-medium text-gray-900">{formatPrice(detail.cost)}</div>
                         </div>
@@ -168,13 +218,21 @@ export default function OrdersPage() {
                     </div>
 
                     <div className="flex justify-between items-center border-t border-gray-100 pt-4">
-                      <div>
+                      <div className="flex gap-4 items-center">
                         {order.status === "PENDING" && (
                           <button
                             onClick={() => handleCancelOrder(order.id)}
                             className="text-xs font-bold text-red-500 uppercase tracking-widest hover:underline"
                           >
                             Hủy đơn hàng
+                          </button>
+                        )}
+                        {order.method === "MOMO" && order.status === "PENDING" && order.paymentStatus !== "PAID" && (
+                          <button
+                            onClick={() => handleRepay(order.id)}
+                            className="bg-pink-500 text-white px-4 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest hover:bg-pink-600 transition"
+                          >
+                            Thanh toán lại
                           </button>
                         )}
                       </div>

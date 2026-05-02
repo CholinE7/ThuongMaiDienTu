@@ -19,4 +19,8 @@ public class OrderDetailDTO{
     private BigDecimal cost;
 
     private BigDecimal total;
+
+    private String color;
+
+    private String size;
 }

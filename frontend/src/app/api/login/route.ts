@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       message: "Email hoặc mật khẩu không chính xác!" 
     }, { status: 401 });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: "Lỗi hệ thống" }, { status: 400 });
   }
 }

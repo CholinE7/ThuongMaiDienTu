@@ -1,15 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { CheckCircle2, Loader2, Smartphone, ShieldCheck, ArrowLeft, Copy, Check } from "lucide-react";
+import Image from "next/image";
+import { Loader2, Smartphone, ShieldCheck, ArrowLeft, Copy, Check } from "lucide-react";
 
-export default function MomoPaymentPage() {
+interface PaymentData {
+  qrUrl: string;
+  phone: string;
+  accountName: string;
+  amount: number;
+  orderId: string;
+}
+
+function MomoPaymentContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderId = searchParams.get("orderId");
   
-  const [paymentData, setPaymentData] = useState<any>(null);
+  const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -41,7 +50,7 @@ export default function MomoPaymentPage() {
         alert("Xác nhận thanh toán thành công!");
         router.push("/profile");
       }
-    } catch (error) {
+    } catch {
       alert("Lỗi khi xác nhận!");
     } finally {
       setIsConfirming(false);
@@ -68,7 +77,13 @@ export default function MomoPaymentPage() {
         {/* CỘT TRÁI: QR CODE */}
         <div className="w-full md:w-1/2 p-8 sm:p-12 bg-pink-50/30 flex flex-col items-center justify-center border-r border-gray-100">
           <div className="bg-white p-6 rounded-[2rem] shadow-xl border-4 border-pink-500 relative">
-            <img src={paymentData?.qrUrl} alt="MoMo QR" className="w-64 h-64 object-contain" />
+            <Image 
+              src={paymentData?.qrUrl || ""} 
+              alt="MoMo QR" 
+              width={256} 
+              height={256} 
+              className="object-contain" 
+            />
             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-pink-500 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
               Quét mã để thanh toán
             </div>
@@ -97,7 +112,14 @@ export default function MomoPaymentPage() {
         <div className="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-between relative">
           <div>
             <div className="flex items-center justify-between mb-8">
-              <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="MoMo" className="h-10 object-contain" />
+              <div className="relative h-10 w-24">
+                <Image 
+                  src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" 
+                  alt="MoMo" 
+                  fill 
+                  className="object-contain object-left" 
+                />
+              </div>
               <div className="flex items-center gap-1 text-green-600 bg-green-50 px-3 py-1 rounded-full">
                 <ShieldCheck size={14} />
                 <span className="text-[10px] font-bold uppercase tracking-wider">Bảo mật</span>
@@ -113,7 +135,7 @@ export default function MomoPaymentPage() {
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Số điện thoại MoMo</p>
                 <div className="flex justify-between items-center">
                   <p className="text-lg font-black text-gray-900">{paymentData?.phone}</p>
-                  <button onClick={() => copyToClipboard(paymentData?.phone)} className="text-pink-600 hover:scale-110 transition">
+                  <button onClick={() => copyToClipboard(paymentData?.phone || "")} className="text-pink-600 hover:scale-110 transition">
                     {isCopied ? <Check size={20} /> : <Copy size={20} />}
                   </button>
                 </div>
@@ -127,7 +149,7 @@ export default function MomoPaymentPage() {
               <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Số tiền cần thanh toán</p>
                 <p className="text-2xl font-black text-pink-600">
-                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paymentData?.amount)}
+                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paymentData?.amount || 0)}
                 </p>
               </div>
 
@@ -158,5 +180,18 @@ export default function MomoPaymentPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function MomoPaymentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 font-sans">
+        <Loader2 className="w-12 h-12 text-pink-600 animate-spin mb-4" />
+        <p className="font-bold text-gray-600">Đang tải...</p>
+      </div>
+    }>
+      <MomoPaymentContent />
+    </Suspense>
   );
 }

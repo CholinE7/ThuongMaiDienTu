@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowRight, ShieldCheck, ChevronLeft, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
@@ -72,7 +73,7 @@ export default function RegisterPage() {
         const errorMessageFromServer = await res.text();
         setErrorMsg(errorMessageFromServer || "Đăng ký thất bại.");
       }
-    } catch (error) {
+    } catch {
       setErrorMsg("Lỗi kết nối tới Server.");
     } finally {
       setIsLoading(false);
@@ -83,12 +84,12 @@ export default function RegisterPage() {
     <main className="min-h-screen bg-gray-50 flex flex-col font-sans pb-12">
       <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-100 z-50">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <a href="/" className="text-xl font-black text-blue-600 tracking-tighter italic">
+          <Link href="/" className="text-xl font-black text-blue-600 tracking-tighter italic">
             SHOE<span className="text-black">STORE</span>
-          </a>
-          <a href="/login" className="text-sm font-bold text-gray-500 hover:text-blue-600 flex items-center gap-1 transition-colors">
+          </Link>
+          <Link href="/login" className="text-sm font-bold text-gray-500 hover:text-blue-600 flex items-center gap-1 transition-colors">
             <ChevronLeft size={16} /> Quay lại Đăng nhập
-          </a>
+          </Link>
         </div>
       </nav>
       

@@ -81,11 +81,21 @@ public class OrderService implements OrderServiceI {
     @Override
     @Transactional
     public Orders add(OrderStoreRequest request) {
-        CustomerDTO customerDTO = customerService.getById(request.getCustomerId());
-        Customers customer = customerMapper.toEntity(customerDTO);
+        Customers customer = null;
+        if (request.getCustomerId() != null) {
+            CustomerDTO customerDTO = customerService.getById(request.getCustomerId());
+            if (customerDTO != null) {
+                customer = customerMapper.toEntity(customerDTO);
+            }
+        }
 
         Orders order = Orders.builder()
                 .customer(customer)
+                .fullName(request.getFullName())
+                .phone(request.getPhone())
+                .street(request.getStreet())
+                .ward(request.getWard())
+                .city(request.getCity())
                 .method(request.getMethod())
                 .status(OrderStatus.PENDING)
                 .deleted(0)
@@ -97,8 +107,8 @@ public class OrderService implements OrderServiceI {
         }
 
         Orders newOrder = orderRepository.save(order);
-        orderDetailService.addAll(request.getDetails(), newOrder.getId()); // tạo chi tiết đơn
-                                                                           // nhập
+        orderDetailService.addAll(request.getDetails(), newOrder.getId()); 
+        
         return newOrder;
     }
 

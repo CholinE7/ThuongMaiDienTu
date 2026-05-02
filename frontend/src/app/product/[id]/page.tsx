@@ -1,20 +1,26 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { apiRequest } from '@/services/app';
+import { Product } from "@/types";
 import { addToCart } from '@/utils/cartUtils';
 import Navbar from '@/components/Navbar';
 import toast from 'react-hot-toast';
 import { 
   Heart, 
-  ChevronLeft, 
   Plus,
   Minus,
-  ShoppingCart,
-  Search,
   Loader2 
 } from 'lucide-react';
+
+interface Variant {
+  id: number;
+  color: string;
+  size: string;
+  quantity: number;
+}
 
 // Bảng mã màu Hex code để hiển thị màu sắc chuẩn xác
 const COLOR_HEX_MAP: Record<string, string> = {
@@ -22,17 +28,17 @@ const COLOR_HEX_MAP: Record<string, string> = {
   "Trắng": "#FFFFFF",
   "Đỏ": "#991B1B",    // Đỏ mận/Đỏ đô sang trọng
   "Nâu": "#78350F",    // Nâu da bò
-  "Be": "#D4B996",     // Đã chỉnh lại màu Be (Nude/Beige) đậm và thực tế hơn, không bị chìm vào nền
+  "Be": "#D4B996",     // Đã chỉnh lại màu Be (Nude/Beige) đậm và thực tế hơn
   "Xám": "#6B7280",
-  "Kem": "#FEFCE8"
+  "Kem": "#FEFCE8",
+  "Xanh": "#1E40AF",
+  "Vàng": "#EAB308"
 };
 
 // Hàm kiểm tra màu sáng/tối để đổi màu chữ tự động cho dễ đọc
 const isLightColor = (colorName: string) => {
   return ["Trắng", "Be", "Kem"].includes(colorName);
 };
-
-
 
 export default function ProductDetailPage() {
   const router = useRouter();
@@ -42,10 +48,10 @@ export default function ProductDetailPage() {
 
 
   // --- STATE ---
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedSize, setSelectedSize] = useState<number | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState<string | null>('description');
 
@@ -67,17 +73,17 @@ export default function ProductDetailPage() {
           const apiProduct = res.result;
           
           // Chuyển đổi dữ liệu API sang định dạng hiển thị
-          const variants = apiProduct.variants || [];
+          const variants: Variant[] = apiProduct.variants || [];
           
           // Lấy danh sách màu sắc duy nhất từ biến thể
-          const uniqueColors = Array.from(new Set(variants.map((v: any) => v.color))) as string[];
+          const uniqueColors = Array.from(new Set(variants.map((v: Variant) => v.color))) as string[];
           const colors = uniqueColors;
           
           // Lấy danh sách kích thước duy nhất từ biến thể
-          const uniqueSizes = Array.from(new Set(variants.map((v: any) => v.size))).sort() as string[];
-          const sizes = uniqueSizes.length > 0 ? uniqueSizes : ["39", "40", "41", "42", "43"];
+          const uniqueSizes = Array.from(new Set(variants.map((v: Variant) => v.size))).sort() as string[];
+          const sizes = uniqueSizes;
 
-          const foundProduct = {
+          const foundProduct: Product = {
             id: apiProduct.id,
             name: apiProduct.name,
             price: apiProduct.price,
@@ -85,7 +91,6 @@ export default function ProductDetailPage() {
             description: apiProduct.description || 'Chưa có mô tả',
             brand: apiProduct.brand?.name || 'SHOESTORE',
             discountPercentage: apiProduct.discountPercentage || 0,
-            rating: apiProduct.rating || 0,
             variants: variants,
             sizes: sizes,
             colors: colors,
@@ -98,21 +103,20 @@ export default function ProductDetailPage() {
           
           // Chọn màu đầu tiên có hàng
           const firstAvailableColor = colors.find(c => 
-            variants.length === 0 || variants.some((v: any) => v.color === c && v.quantity > 0)
+            variants.some((v: Variant) => v.color === c && v.quantity > 0)
           ) || colors[0];
           
           setSelectedColor(firstAvailableColor);
 
           // Chọn size đầu tiên có hàng của màu đó
           const availableSizesForColor = sizes.filter(s => 
-            variants.length === 0 || variants.some((v: any) => v.color === firstAvailableColor && v.size === s && v.quantity > 0)
+            variants.some((v: Variant) => v.color === firstAvailableColor && v.size === String(s) && v.quantity > 0)
           );
-          setSelectedSize(availableSizesForColor.length > 0 ? availableSizesForColor[0] : sizes[0]);
+          setSelectedSize(availableSizesForColor.length > 0 ? availableSizesForColor[0] : String(sizes[0]));
         } else {
           setError(res.message || "Không tìm thấy sản phẩm");
         }
-      } catch (error) {
-        console.error("Lỗi lấy thông tin sản phẩm", error);
+      } catch {
         setError("Lỗi kết nối đến máy chủ. Vui lòng thử lại sau.");
       } finally {
         setIsLoading(false);
@@ -158,12 +162,15 @@ export default function ProductDetailPage() {
         
         {/* ================= CỘT TRÁI: DÃY ẢNH ================= */}
         <div className="lg:col-span-7 flex flex-col">
-          {product.images.map((img: string, idx: number) => (
-            <div key={idx} className="w-full bg-gray-50 border-b border-gray-100 last:border-b-0">
-              <img 
+          {product.images?.map((img: string, idx: number) => (
+            <div key={idx} className="w-full bg-gray-50 border-b border-gray-100 last:border-b-0 relative">
+              <Image 
                 src={img} 
                 alt={`${product.name} - Góc ${idx + 1}`} 
+                width={1200}
+                height={1200}
                 className="w-full h-auto object-cover"
+                priority={idx === 0}
               />
             </div>
           ))}
@@ -174,7 +181,9 @@ export default function ProductDetailPage() {
           <div className="sticky top-24 max-w-md">
             
             <div className="flex justify-between items-start mb-4">
-              <span className="text-xs text-gray-500 font-medium tracking-widest uppercase">{product.category}</span>
+              <span className="text-xs text-gray-500 font-medium tracking-widest uppercase">
+                {typeof product.category === 'string' ? product.category : product.category?.name}
+              </span>
               <button className="text-gray-400 hover:text-red-500 transition-colors">
                 <Heart size={20} />
               </button>
@@ -188,7 +197,7 @@ export default function ProductDetailPage() {
               <span className="text-xl font-medium text-gray-900">
                 {formatPrice(product.price)}
               </span>
-              {product.discountPercentage > 0 && (
+              {product.discountPercentage !== undefined && product.discountPercentage > 0 && (
                 <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest">
                   -{product.discountPercentage}%
                 </span>
@@ -202,17 +211,17 @@ export default function ProductDetailPage() {
                 <button className="text-xs text-gray-500 underline hover:text-gray-900 transition-colors font-medium">Bảng kích cỡ</button>
               </div>
               <div className="grid grid-cols-5 gap-2">
-                {product.sizes.map((size: string) => {
-                  const variant = product.variants.find((v: any) => v.color === selectedColor && v.size === size);
-                  const isOutOfStock = product.variants.length > 0 && (!variant || variant.quantity <= 0);
+                {product.sizes?.map((size: string | number) => {
+                  const variant = product.variants?.find((v: Variant) => v.color === selectedColor && v.size === String(size));
+                  const isOutOfStock = (product.variants?.length || 0) > 0 && (!variant || variant.quantity <= 0);
                   
                   return (
                     <button
                       key={size}
                       disabled={isOutOfStock}
-                      onClick={() => setSelectedSize(size)}
+                      onClick={() => setSelectedSize(String(size))}
                       className={`py-3 rounded-none text-sm font-medium transition-all border relative
-                        ${selectedSize === size 
+                        ${selectedSize === String(size) 
                           ? 'border-gray-900 bg-gray-900 text-white' 
                           : 'border-gray-200 text-gray-900 hover:border-gray-900 bg-white'}
                         ${isOutOfStock ? 'opacity-30 cursor-not-allowed bg-gray-50 border-dashed' : ''}`}
@@ -234,7 +243,7 @@ export default function ProductDetailPage() {
                   const hexValue = COLOR_HEX_MAP[color] || "#000000";
                   
                   // Kiểm tra màu này còn hàng không (bất kỳ size nào)
-                  const hasStock = product.variants.length === 0 || product.variants.some((v: any) => v.color === color && v.quantity > 0);
+                  const hasStock = (product.variants?.length || 0) === 0 || product.variants?.some((v: Variant) => v.color === color && v.quantity > 0);
                   
                   // Tính toán màu nền và màu chữ dựa trên trạng thái
                   const bgColor = isSelected ? hexValue : "#ffffff";
@@ -249,10 +258,10 @@ export default function ProductDetailPage() {
                       onClick={() => {
                         setSelectedColor(color);
                         // Khi đổi màu, tự động chọn size đầu tiên còn hàng của màu mới
-                        const availableSize = product.sizes.find((s: string) => 
-                          product.variants.some((v: any) => v.color === color && v.size === s && v.quantity > 0)
+                        const availableSize = product.sizes?.find((s: string | number) => 
+                          product.variants?.some((v: Variant) => v.color === color && v.size === String(s) && v.quantity > 0)
                         );
-                        if (availableSize) setSelectedSize(availableSize);
+                        if (availableSize) setSelectedSize(String(availableSize));
                       }}
                       className={`flex items-center gap-2.5 px-5 py-2.5 text-xs font-medium transition-all border uppercase tracking-widest relative
                         ${isSelected 
@@ -279,10 +288,10 @@ export default function ProductDetailPage() {
             </div>
 
             {/* HIỂN THỊ TỒN KHO */}
-            {selectedColor && selectedSize && product.variants.length > 0 && (
+            {selectedColor && selectedSize && (product.variants?.length || 0) > 0 && (
               <div className="mb-8">
                 {(() => {
-                  const v = product.variants.find((v: any) => v.color === selectedColor && v.size === selectedSize);
+                  const v = product.variants?.find((v: Variant) => v.color === selectedColor && v.size === selectedSize);
                   const q = v ? v.quantity : 0;
                   return (
                     <p className={`text-[10px] font-bold uppercase tracking-widest ${q > 0 ? 'text-green-600' : 'text-red-500'}`}>
@@ -341,7 +350,7 @@ export default function ProductDetailPage() {
                     <ul className="list-disc pl-5 space-y-2">
                       <li>Mã sản phẩm: {product.id}</li>
                       <li>Màu sắc đã chọn: {selectedColor}</li>
-                      <li>Thương hiệu: {product.brand || "SHOESTORE"}</li>
+                      <li>Thương hiệu: {typeof product.brand === 'string' ? product.brand : (product.brand?.name || "SHOESTORE")}</li>
                       <li>Chất liệu: Da và Vải cao cấp.</li>
                     </ul>
                   </div>

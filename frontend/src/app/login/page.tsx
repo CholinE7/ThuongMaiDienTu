@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Mail, Lock, ArrowRight, ChevronLeft, Loader2, CheckCircle2, XCircle, Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
@@ -95,12 +96,12 @@ const LoginPage = () => {
       {/* NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-100 z-50">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <a href="/" className="text-xl font-black text-blue-600 tracking-tighter italic">
+          <Link href="/" className="text-xl font-black text-blue-600 tracking-tighter italic">
             SHOE<span className="text-black">STORE</span>
-          </a>
-          <a href="/" className="text-sm font-bold text-gray-500 hover:text-blue-600 flex items-center gap-1 transition-colors">
+          </Link>
+          <Link href="/" className="text-sm font-bold text-gray-500 hover:text-blue-600 flex items-center gap-1 transition-colors">
             <ChevronLeft size={16} /> Quay lại trang chủ
-          </a>
+          </Link>
         </div>
       </nav>
 
@@ -183,7 +184,7 @@ const LoginPage = () => {
           </div>
 
           <p className="mt-10 text-center text-sm font-medium text-gray-500">
-            Chưa có tài khoản? <a href="/register" className="text-blue-600 font-bold hover:underline ml-1">Đăng ký ngay</a>
+            Chưa có tài khoản? <Link href="/register" className="text-blue-600 font-bold hover:underline ml-1">Đăng ký ngay</Link>
           </p>
         </div>
       </div>

@@ -15,7 +15,7 @@ export interface CartItem {
 
 export const getCart = async (): Promise<CartItem[]> => {
   // Kiểm tra token trước khi gọi API
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token = typeof window !== "undefined" ? sessionStorage.getItem("token") : null;
   if (!token || token === "fail") return [];
 
   try {
@@ -23,7 +23,13 @@ export const getCart = async (): Promise<CartItem[]> => {
     if (!response.ok) return [];
     const data = await response.json();
     if (data.code === 200 && Array.isArray(data.result)) {
-      return data.result.map((item: any) => ({
+      return data.result.map((item: { 
+        id: number, 
+        product: { id: number, name: string, price: number, imageUrl?: string, image?: string, category?: { name: string } }, 
+        quantity: number, 
+        size?: string, 
+        color?: string 
+      }) => ({
         id: item.id,
         productId: item.product.id,
         name: item.product.name,

@@ -6,8 +6,24 @@ import { Plus, Search, CheckCircle2, Lock, ChevronLeft, ChevronRight, X, ArrowLe
 const USERS_PER_PAGE = 5;
 const API_BASE_URL = "http://localhost:8080";
 
+interface User {
+  id: number;
+  fullName: string;
+  email?: string;
+  username?: string;
+  phone: string;
+  city: string;
+  ward: string;
+  street: string;
+  role: string;
+  status: number;
+  dateOfBirth: string;
+  salary: number;
+  password?: string;
+}
+
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchName, setSearchName] = useState("");
   const [searchAccount, setSearchAccount] = useState("");
@@ -23,7 +39,7 @@ export default function AdminUsersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   
-  const [currentUser, setCurrentUser] = useState({ 
+  const [currentUser, setCurrentUser] = useState<User>({ 
     id: 0, 
     fullName: "", 
     email: "", 
@@ -68,8 +84,8 @@ export default function AdminUsersPage() {
         const dataList = json.result.content || json.result;
         setUsers(Array.isArray(dataList) ? dataList : []); 
       } else { setUsers([]); }
-    } catch (error) { 
-        console.error("Lỗi fetch:", error); 
+    } catch { 
+        setUsers([]);
     } finally { 
         setIsLoading(false); 
     }
@@ -102,7 +118,7 @@ export default function AdminUsersPage() {
     const method = modalMode === "add" ? "POST" : "PUT";
     const url = modalMode === "add" ? endpoint : `${endpoint}/${currentUser.id}`;
 
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       fullName: currentUser.fullName,
       email: currentUser.email,
       username: currentUser.email,
@@ -118,9 +134,8 @@ export default function AdminUsersPage() {
     if (currentUser.password) {
         payload.password = currentUser.password;
     }
-    
-    if (isStaff) payload.salary = currentUser.salary || 0;
 
+    if (isStaff) payload.salary = currentUser.salary || 0;
     try {
       const response = await fetch(url, {
         method: method,
@@ -135,7 +150,7 @@ export default function AdminUsersPage() {
       } else { 
         showToast(result.message || "Lỗi dữ liệu", "error"); 
       }
-    } catch (error) { 
+    } catch { 
         showToast("Lỗi kết nối!", "error"); 
     }
   };
@@ -151,7 +166,7 @@ export default function AdminUsersPage() {
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (user: any) => {
+  const handleOpenEdit = (user: User) => {
     setModalMode("edit");
     setShowPassword(false);
     setCurrentUser({ 
@@ -176,7 +191,7 @@ export default function AdminUsersPage() {
     return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-gray-100 text-gray-700 text-xs font-bold"><User size={12} /> Khách hàng</span>;
   };
 
-  const toggleStatus = async (user: any) => {
+  const toggleStatus = async (user: User) => {
     const token = sessionStorage.getItem("token");
     const newStatus = user.status === 1 ? 0 : 1;
     const isStaff = appliedFilters.role === "staff" || appliedFilters.role === "admin";
@@ -202,7 +217,7 @@ export default function AdminUsersPage() {
         const errorData = await response.json();
         showToast(errorData.message || "Không thể cập nhật trạng thái", "error");
       }
-    } catch (error) { showToast("Lỗi kết nối máy chủ", "error"); }
+    } catch { showToast("Lỗi kết nối máy chủ", "error"); }
   };
 
   return (

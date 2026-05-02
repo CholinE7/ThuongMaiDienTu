@@ -6,7 +6,13 @@ import Navbar from "@/components/Navbar";
 import { ChevronRight, History, Users, MapPin } from "lucide-react";
 import Link from "next/link";
 
-const ABOUT_CONTENT: Record<string, any> = {
+interface AboutItem {
+  title: string;
+  icon: React.ReactNode;
+  content: React.ReactNode;
+}
+
+const ABOUT_CONTENT: Record<string, AboutItem> = {
   "brand-story": {
     title: "Câu chuyện thương hiệu",
     icon: <History className="w-12 h-12 text-blue-600" />,
@@ -19,7 +25,7 @@ const ABOUT_CONTENT: Record<string, any> = {
           Được thành lập từ năm 2016, hành trình của chúng tôi bắt đầu từ một cửa hàng nhỏ với khát khao mang đến cho người tiêu dùng Việt Nam những đôi giày không chỉ đẹp về mẫu mã mà còn vượt trội về chất lượng và sự thoải mái.
         </p>
         <p className="mb-4 text-gray-700 leading-relaxed">
-          Chúng tôi tin rằng, mỗi đôi giày không chỉ đơn thuần là một món phụ kiện, mà là người bạn đồng hành trên từng nẻo đường, giúp bạn tự tin thể hiện cá tính và chinh phục những đỉnh cao mới. Với triết lý "Chất lượng - Uy tín - Tận tâm", SHOESTORE đã và đang khẳng định vị thế là một trong những thương hiệu bán lẻ giày thể thao hàng đầu.
+          Chúng tôi tin rằng, mỗi đôi giày không chỉ đơn thuần là một món phụ kiện, mà là người bạn đồng hành trên từng nẻo đường, giúp bạn tự tin thể hiện cá tính và chinh phục những đỉnh cao mới. Với triết lý &quot;Chất lượng - Uy tín - Tận tâm&quot;, SHOESTORE đã và đang khẳng định vị thế là một trong những thương hiệu bán lẻ giày thể thao hàng đầu.
         </p>
       </>
     )
@@ -36,7 +42,7 @@ const ABOUT_CONTENT: Record<string, any> = {
           <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
             <h3 className="text-xl font-bold text-blue-900 mb-2">Nhân viên bán hàng (Full-time/Part-time)</h3>
             <p className="text-gray-600 mb-2">Số lượng: 05 | Địa điểm: Toàn quốc</p>
-            <p className="text-gray-700 italic">"Chúng tôi tìm kiếm những bạn trẻ năng động, yêu thích giao tiếp và có kiến thức về giày thể thao."</p>
+            <p className="text-gray-700 italic">&quot;Chúng tôi tìm kiếm những bạn trẻ năng động, yêu thích giao tiếp và có kiến thức về giày thể thao.&quot;</p>
           </div>
           <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
             <h3 className="text-xl font-bold text-blue-900 mb-2">Chuyên viên Marketing & Social Media</h3>

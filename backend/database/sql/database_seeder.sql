@@ -6,7 +6,7 @@ SET CHARACTER SET utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 DELETE FROM cart_items;
 DELETE FROM orders_details;
-DELETE FROM product_colors;
+DELETE FROM product_variants;
 DELETE FROM products;
 DELETE FROM orders;
 DELETE FROM brands;
@@ -61,32 +61,38 @@ INSERT INTO products (id, name, description, price, quantity, image_url, brand_i
 (33, 'New Balance 327 Pair', 'Thiết kế chữ N lớn phá cách', 5800000, 10, 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=800', 6, 3, 0, NULL, NULL),
 (34, 'Puma Roma Classic Pair', 'Vẻ đẹp cổ điển từ nước Đức', 3400000, 15, 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=800', 3, 3, 0, NULL, NULL);
 
--- 4. SEED CHO BẢNG PRODUCT_COLORS
-INSERT INTO product_colors (product_id, color) VALUES 
-(1, 'Đen'), (1, 'Trắng'),
-(2, 'Trắng'), (2, 'Đỏ'),
-(3, 'Nâu'), (3, 'Kem'),
-(4, 'Trắng'), (4, 'Xám'),
-(5, 'Trắng'), (5, 'Đen'),
-(8, 'Đen'), (8, 'Trắng'),
-(9, 'Xám'), (9, 'Đỏ'),
-(11, 'Be'), (11, 'Trắng'),
-(13, 'Đỏ'), (13, 'Trắng'),
-(16, 'Trắng'), (16, 'Kem'),
-(17, 'Kem'), (17, 'Trắng'),
-(18, 'Trắng'), (18, 'Nâu'),
-(19, 'Trắng'), (19, 'Đen'),
-(20, 'Xám'), (20, 'Kem'),
-(22, 'Kem'), (22, 'Trắng'),
-(24, 'Đỏ'), (24, 'Trắng'),
-(25, 'Đỏ'), (25, 'Đen'),
-(26, 'Trắng'), (26, 'Đen'),
-(27, 'Trắng'), (27, 'Xám'),
-(28, 'Be'), (28, 'Xám'),
-(31, 'Trắng'), (31, 'Đỏ'),
-(32, 'Nâu'), (32, 'Be'),
-(33, 'Xám'), (33, 'Trắng'),
-(34, 'Trắng'), (34, 'Kem');
+-- 4. SEED CHO BẢNG PRODUCT_VARIANTS (Thay thế cho product_colors)
+-- Giả định mỗi màu có các size từ 39-43 với số lượng mặc định
+INSERT INTO product_variants (product_id, color, size, quantity) VALUES 
+(1, 'Đen', '39', 10), (1, 'Đen', '40', 10), (1, 'Đen', '41', 10), (1, 'Đen', '42', 10), (1, 'Đen', '43', 9),
+(1, 'Trắng', '39', 5), (1, 'Trắng', '40', 5), (1, 'Trắng', '41', 5), (1, 'Trắng', '42', 5), (1, 'Trắng', '43', 5),
+(2, 'Trắng', '39', 10), (2, 'Trắng', '40', 10), (2, 'Trắng', '41', 10),
+(2, 'Đỏ', '39', 5), (2, 'Đỏ', '40', 5),
+(3, 'Nâu', '41', 15), (3, 'Nâu', '42', 15),
+(3, 'Kem', '41', 10), (3, 'Kem', '42', 5),
+(4, 'Trắng', '39', 20), (4, 'Trắng', '40', 20), (4, 'Trắng', '41', 20), (4, 'Trắng', '42', 20), (4, 'Trắng', '43', 20),
+(5, 'Trắng', '39', 10), (5, 'Trắng', '40', 10), (5, 'Trắng', '41', 10),
+(5, 'Đen', '39', 10), (5, 'Đen', '40', 10),
+(8, 'Đen', '39', 5), (8, 'Đen', '40', 5),
+(8, 'Trắng', '39', 5), (8, 'Trắng', '40', 5),
+(9, 'Xám', '41', 15), (9, 'Đỏ', '41', 15),
+(11, 'Be', '39', 30), (11, 'Trắng', '39', 30),
+(13, 'Đỏ', '42', 10), (13, 'Trắng', '42', 15),
+(16, 'Trắng', '39', 25), (16, 'Kem', '39', 25),
+(17, 'Kem', '38', 20), (17, 'Trắng', '38', 25),
+(18, 'Trắng', '37', 35), (18, 'Nâu', '37', 35),
+(19, 'Trắng', '39', 25), (19, 'Đen', '39', 30),
+(20, 'Xám', '38', 20), (20, 'Kem', '38', 20),
+(22, 'Kem', '37', 15), (22, 'Trắng', '37', 15),
+(24, 'Đỏ', '38', 10), (24, 'Trắng', '38', 10),
+(25, 'Đỏ', '40', 5), (25, 'Đen', '40', 5),
+(26, 'Trắng', '41', 8), (26, 'Đen', '41', 7),
+(27, 'Trắng', '39', 10), (27, 'Xám', '39', 10),
+(28, 'Be', '42', 15), (28, 'Xám', '42', 15),
+(31, 'Trắng', '41', 5), (31, 'Đỏ', '41', 5),
+(32, 'Nâu', '40', 9), (32, 'Be', '40', 9),
+(33, 'Xám', '42', 5), (33, 'Trắng', '42', 5),
+(34, 'Trắng', '41', 8), (34, 'Kem', '41', 7);
 
 -- 5. SEED CHO BẢNG CUSTOMERS
 INSERT INTO customers (id, username, password, full_name, email, phone, street, ward, city, status, created_at, date_of_birth) VALUES 

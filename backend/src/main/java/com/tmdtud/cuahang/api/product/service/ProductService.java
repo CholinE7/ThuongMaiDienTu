@@ -54,6 +54,20 @@ public class ProductService implements ProductServiceI {
     }
 
     @Override
+    public PageResponse<Products> getBestSellers(String name, Long categoryId, Long brandId, BigDecimal minPrice, BigDecimal maxPrice, String color, Pageable pageable) {
+        org.springframework.data.domain.Page<Products> products = productRepo.findBestSellersWithFilters(
+            name != null && !name.isEmpty() ? name : null, 
+            categoryId, 
+            brandId, 
+            minPrice, 
+            maxPrice, 
+            color,
+            pageable
+        );
+        return new PageResponse<Products>(products);
+    }
+
+    @Override
     public Products add(ProductStoreRequest request) {
         Brands brand = brandService.getById(request.getBrand_id());
         Categories category = categoryService.getById(request.getCategory_id());

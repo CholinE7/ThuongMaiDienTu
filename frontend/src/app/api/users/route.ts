@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     mockUsersDatabase = [newUser, ...mockUsersDatabase];
 
     return NextResponse.json({ success: true, message: "Thêm thành công!", data: newUser });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: "Lỗi dữ liệu" }, { status: 400 });
   }
 }

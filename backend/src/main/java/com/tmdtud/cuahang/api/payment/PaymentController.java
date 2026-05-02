@@ -35,14 +35,14 @@ public class PaymentController {
             return ApiResponse.error(404, "Đơn hàng không tồn tại");
         }
 
-        String requestId = UUID.randomUUID().toString();
-        String orderInfo = "Thanh toan don hang #" + order.getId();
-        String amount = String.valueOf(order.getTotalPrice().longValue());
-        String orderReference = order.getId().toString();
-        String extraData = ""; // Có thể dùng để gửi thêm thông tin nếu cần
+        // Tạo requestId và orderId duy nhất (Alphanumeric chỉ bao gồm chữ và số)
+        String requestId = UUID.randomUUID().toString().replace("-", "");
+        String orderReference = order.getId() + "TS" + System.currentTimeMillis();
+        String orderInfo = "Thanh toan don hang " + order.getId(); 
+        long amount = order.getTotalPrice().longValue();
+        String extraData = ""; 
 
-        // Tạo chữ ký (Signature) theo chuẩn MoMo
-        // rawSignature: accessKey=$accessKey&amount=$amount&extraData=$extraData&ipnUrl=$ipnUrl&orderId=$orderId&orderInfo=$orderInfo&partnerCode=$partnerCode&redirectUrl=$redirectUrl&requestId=$requestId&requestType=$requestType
+        // Chữ ký thô (BẮT BUỘC Sắp xếp theo thứ tự A-Z của Key theo chuẩn MoMo API v2)
         String rawSignature = "accessKey=" + MomoConfig.ACCESS_KEY
                 + "&amount=" + amount
                 + "&extraData=" + extraData
@@ -54,40 +54,42 @@ public class PaymentController {
                 + "&requestId=" + requestId
                 + "&requestType=captureWallet";
 
+        System.out.println("MoMo Debug - Raw Signature: " + rawSignature);
         String signature = MomoConfig.hmacSha256(rawSignature, MomoConfig.SECRET_KEY);
 
         // Tạo Request Body
-        Map<String, Object> requestBody = new HashMap<>();
+        Map<String, Object> requestBody = new java.util.LinkedHashMap<>();
         requestBody.put("partnerCode", MomoConfig.PARTNER_CODE);
-        requestBody.put("partnerName", "Test");
-        requestBody.put("storeId", "MomoTestStore");
         requestBody.put("requestId", requestId);
         requestBody.put("amount", amount);
         requestBody.put("orderId", orderReference);
         requestBody.put("orderInfo", orderInfo);
         requestBody.put("redirectUrl", MomoConfig.REDIRECT_URL);
         requestBody.put("ipnUrl", MomoConfig.NOTIFY_URL);
-        requestBody.put("lang", "vi");
         requestBody.put("extraData", extraData);
         requestBody.put("requestType", "captureWallet");
         requestBody.put("signature", signature);
+        requestBody.put("lang", "vi");
 
         try {
-            // Gọi API MoMo
             ResponseEntity<Map> response = restTemplate.postForEntity(MomoConfig.ENDPOINT, requestBody, Map.class);
             Map<String, Object> responseBody = response.getBody();
+            System.out.println("MoMo Debug - Response: " + responseBody);
 
             if (responseBody != null && responseBody.get("payUrl") != null) {
                 Map<String, Object> result = new HashMap<>();
-                result.put("qrUrl", responseBody.get("payUrl")); // MoMo trả về link thanh toán (chứa QR)
+                result.put("qrUrl", responseBody.get("payUrl"));
                 result.put("orderId", order.getId());
                 result.put("amount", order.getTotalPrice());
                 return ApiResponse.success(result);
             } else {
-                return ApiResponse.error(500, "Lỗi từ MoMo: " + (responseBody != null ? responseBody.get("message") : "Unknown"));
+                String errorMsg = responseBody != null && responseBody.get("message") != null 
+                                  ? responseBody.get("message").toString() 
+                                  : "Unknown Error";
+                return ApiResponse.error(500, "MoMo Error: " + errorMsg);
             }
         } catch (Exception e) {
-            return ApiResponse.error(500, "Lỗi kết nối MoMo: " + e.getMessage());
+            return ApiResponse.error(500, "Connection Error: " + e.getMessage());
         }
     }
 
@@ -101,8 +103,9 @@ public class PaymentController {
         // 1. Kiểm tra mã kết quả (resultCode = 0 là thành công)
         Object resultCodeObj = payload.get("resultCode");
         if (resultCodeObj != null && "0".equals(resultCodeObj.toString())) {
-            String orderIdStr = (String) payload.get("orderId");
-            Long orderId = Long.parseLong(orderIdStr);
+            String orderReference = (String) payload.get("orderId");
+            // Lấy ID đơn hàng gốc trước ký tự "TS"
+            Long orderId = Long.parseLong(orderReference.split("TS")[0]);
 
             Orders order = orderService.getById(orderId);
             if (order != null && !"PAID".equals(order.getPaymentStatus())) {

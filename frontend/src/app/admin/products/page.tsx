@@ -1,15 +1,46 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, Search, CheckCircle2, XCircle, Edit, Trash2, ChevronLeft, ChevronRight, X, Loader2, ImageIcon, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { apiRequest } from "@/services/app";
 
 const PRODUCTS_PER_PAGE = 5;
 
+interface ProductVariant {
+  color: string;
+  size: string;
+  quantity: number;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  brand?: string;
+  brandId: string | number;
+  image: string;
+  sellPrice: number;
+  category?: string;
+  categoryId: string | number;
+  status: string;
+  description: string;
+  discountPercentage: number;
+  variants: ProductVariant[];
+}
+
+interface Brand {
+  id: number | string;
+  name: string;
+}
+
+interface Category {
+  id: number | string;
+  name: string;
+}
+
 export default function AdminProductsPage() {
   // 1. STATE DỮ LIỆU & LOADING
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // 2. STATES TÌM KIẾM
@@ -22,13 +53,13 @@ export default function AdminProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   
-  const [brands, setBrands] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
-  const [currentProduct, setCurrentProduct] = useState({ 
-    id: 0, name: "", brandId: "", image: "", importPrice: 0, sellPrice: 0, categoryId: "", status: "visible", description: "",
-    discountPercentage: 0, rating: 0,
-    variants: [] as { color: string, size: string, quantity: number }[]
+  const [currentProduct, setCurrentProduct] = useState<Product>({ 
+    id: 0, name: "", brandId: "", image: "", sellPrice: 0, categoryId: "", status: "visible", description: "",
+    discountPercentage: 0,
+    variants: []
   });
 
   // Fetch Brands and Categories
@@ -61,7 +92,7 @@ export default function AdminProductsPage() {
   // ==========================================
   // HÀM GỌI API LẤY DỮ LIỆU
   // ==========================================
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     try {
       const query = new URLSearchParams({ 
@@ -72,34 +103,42 @@ export default function AdminProductsPage() {
       const response = await apiRequest(`/api/products?${query}`);
       const result = await response.json();
       if (result.code === 200 && result.result) {
-        setProducts(result.result.content.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          brand: p.brand?.name || "N/A",
-          brandId: p.brand?.id || "",
-          image: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=300",
-          importPrice: p.price * 0.7, 
-          sellPrice: p.price,
-          category: p.category?.name || "Khác",
-          categoryId: p.category?.id || "",
-          status: p.deleted === 0 ? "visible" : "hidden",
-          description: p.description,
-          discountPercentage: p.discountPercentage || 0,
-          rating: p.rating || 0,
-          variants: p.variants || []
-        })));
-        setTotalProducts(result.result.total);
-      }
-    } catch (error) {
+       setProducts(result.result.content.map((p: { 
+         id: number, 
+         name: string, 
+         brand?: { name: string, id: number }, 
+         imageUrl?: string, 
+         price: number, 
+         category?: { name: string, id: number }, 
+         deleted: number, 
+         description: string, 
+         discountPercentage?: number, 
+         variants?: unknown[] 
+       }) => ({
+         id: p.id,
+         name: p.name,
+         brand: p.brand?.name || "N/A",
+         brandId: p.brand?.id ? String(p.brand.id) : "",
+         image: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400",
+         sellPrice: p.price,
+         category: p.category?.name || "Khác",
+         categoryId: p.category?.id ? String(p.category.id) : "",
+         status: p.deleted === 0 ? "visible" : "hidden",
+         description: p.description,
+         discountPercentage: p.discountPercentage || 0,
+         variants: p.variants || []
+       })));
+       setTotalProducts(result.result.total);
+      }    } catch {
       showToast("Lỗi kết nối máy chủ!", "error");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [appliedFilters, currentPage]);
 
   useEffect(() => {
     fetchProducts();
-  }, [appliedFilters, currentPage]);
+  }, [fetchProducts]);
 
   // HÀNH ĐỘNG TÌM KIẾM
   const handleSearchClick = () => {
@@ -128,7 +167,6 @@ export default function AdminProductsPage() {
         category_id: Number(currentProduct.categoryId),
         deleted: currentProduct.status === "visible" ? 0 : 1,
         discountPercentage: currentProduct.discountPercentage,
-        rating: currentProduct.rating,
         variants: currentProduct.variants
       };
 
@@ -141,7 +179,7 @@ export default function AdminProductsPage() {
       } else {
         showToast(result.message || "Lỗi khi lưu", "error");
       }
-    } catch (error) {
+    } catch {
       showToast("Lỗi hệ thống!", "error");
     } finally {
       setIsLoading(false);
@@ -159,7 +197,7 @@ export default function AdminProductsPage() {
           showToast("Xóa thành công", "success");
           fetchProducts();
         }
-      } catch (error) {
+      } catch {
         showToast("Lỗi khi xóa!", "error");
         setIsLoading(false);
       }
@@ -169,15 +207,15 @@ export default function AdminProductsPage() {
   const handleOpenAdd = () => {
     setModalMode("add");
     setCurrentProduct({ 
-      id: 0, name: "", brandId: brands[0]?.id || "", image: "", importPrice: 0, sellPrice: 0, 
+      id: 0, name: "", brandId: brands[0]?.id || "", image: "", sellPrice: 0, 
       categoryId: categories[0]?.id || "", status: "visible", description: "",
-      discountPercentage: 0, rating: 0,
+      discountPercentage: 0,
       variants: []
     });
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (prod: any) => {
+  const handleOpenEdit = (prod: Product) => {
     setModalMode("edit");
     setCurrentProduct({
       ...prod,
@@ -188,7 +226,6 @@ export default function AdminProductsPage() {
 
   // PHÂN TRANG
   const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
-  const paginatedProducts = products; // Dữ liệu từ API đã là trang hiện tại
   const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
 
   // FORMAT TIỀN TỆ
@@ -246,8 +283,7 @@ export default function AdminProductsPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-5">
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giá nhập (VNĐ) <span className="text-red-500">*</span></label><input required type="number" value={currentProduct.importPrice || ""} onChange={(e) => setCurrentProduct({...currentProduct, importPrice: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
+                    <div className="grid grid-cols-1 gap-5">
                       <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giá bán (VNĐ) <span className="text-red-500">*</span></label><input required type="number" value={currentProduct.sellPrice || ""} onChange={(e) => setCurrentProduct({...currentProduct, sellPrice: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
                     </div>
 
@@ -258,7 +294,6 @@ export default function AdminProductsPage() {
 
                     <div className="grid grid-cols-2 gap-5 mt-4">
                       <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giảm giá (%)</label><input type="number" value={currentProduct.discountPercentage || 0} onChange={(e) => setCurrentProduct({...currentProduct, discountPercentage: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Đánh giá (1-5)</label><input type="number" step="0.1" min="1" max="5" value={currentProduct.rating || 5} onChange={(e) => setCurrentProduct({...currentProduct, rating: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
                     </div>
 
                     {/* BIẾN THỂ (MÀU/SIZE/SỐ LƯỢNG) */}
@@ -354,7 +389,6 @@ export default function AdminProductsPage() {
                   </div>
 
                   {/* CỘT PHẢI: ẢNH (Chiếm 1 phần) */}
-                 {/* CỘT PHẢI: ẢNH (Chiếm 1 phần) */}
 <div className="lg:col-span-1 flex flex-col items-center">
   <label className="block text-sm font-semibold text-gray-800 mb-4 w-full text-center">Hình ảnh sản phẩm</label>
   

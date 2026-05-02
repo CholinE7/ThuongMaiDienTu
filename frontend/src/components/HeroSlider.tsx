@@ -1,6 +1,6 @@
 "use client"; 
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -35,6 +35,14 @@ const slides = [
 export default function HeroSlider() {
   const [current, setCurrent] = useState(0);
 
+  const nextSlide = useCallback(() => {
+    setCurrent((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+  }, []);
+
+  const prevSlide = () => {
+    setCurrent((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+  };
+
   // Tự động chuyển slide sau 5 giây
   useEffect(() => {
     const slideInterval = setInterval(() => {
@@ -42,15 +50,7 @@ export default function HeroSlider() {
     }, 5000);
 
     return () => clearInterval(slideInterval);
-  }, [current]);
-
-  const nextSlide = () => {
-    setCurrent(current === slides.length - 1 ? 0 : current + 1);
-  };
-
-  const prevSlide = () => {
-    setCurrent(current === 0 ? slides.length - 1 : current - 1);
-  };
+  }, [nextSlide]);
 
   return (
     <div className="relative w-full h-[500px] md:h-[600px] overflow-hidden group bg-gray-900">

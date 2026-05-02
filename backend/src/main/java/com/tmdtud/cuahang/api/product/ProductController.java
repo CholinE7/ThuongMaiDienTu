@@ -70,6 +70,32 @@ public class ProductController extends BaseController {
         return ApiResponse.success(pageResponse2);
     }
 
+    @GetMapping("/best-sellers")
+    public ApiResponse<PageResponse<ProductDTO>> getBestSellers(
+            @RequestParam(value = "page_no", defaultValue = "0") int page,
+            @RequestParam(value = "page_size", defaultValue = "10") int size,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Long category_id,
+            @RequestParam(required = false) Long brand_id,
+            @RequestParam(required = false) BigDecimal min_price,
+            @RequestParam(required = false) BigDecimal max_price,
+            @RequestParam(required = false) String color) {
+        Pageable pageable = PageRequest.of(page, size);
+        
+        PageResponse<Products> pageResponse = productSer.getBestSellers(name, category_id, brand_id, min_price, max_price, color, pageable);
+        List<ProductDTO> productDTOs = pageResponse.getContent()
+                                        .stream()
+                                        .map(item -> productMapper.toDTO(item))
+                                        .collect(Collectors.toList());
+        PageResponse<ProductDTO> pageResponse2 = PageResponse.<ProductDTO>builder()
+                                                    .content(productDTOs)
+                                                    .num(pageResponse.getNum())
+                                                    .size(pageResponse.getSize())
+                                                    .total(pageResponse.getTotal()).build();
+
+        return ApiResponse.success(pageResponse2);
+    }
+
     @PostMapping()
     public ApiResponse<ProductDTO> add(@Validated @RequestBody ProductStoreRequest product){
         return ApiResponse.success(productMapper.toDTO(productSer.add(product)));

@@ -90,7 +90,7 @@ export default function LoginPage() {
         showToast("Email hoặc mật khẩu không chính xác!", "error");
         setIsLoading(false);
       }
-    } catch (error) {
+    } catch {
       showToast("Lỗi kết nối Server!", "error");
       setIsLoading(false);
     }
