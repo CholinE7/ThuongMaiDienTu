@@ -159,7 +159,7 @@ public class OrderController extends BaseController {
     }
 
     @PutMapping("/status")
-    public ApiResponse<OrdHasDetailDTO> updateStatus(@Validated @RequestBody UpdateOrderStatusRequest request) {
+    public ApiResponse<OrdHasDetailDTO> updateStatus(@Validated @RequestBody UpdateOrderStatusRequest request) throws Exception{
         return ApiResponse.success(orderService.toOrdHasDetailDTO(orderService.updateStatus(request)));
     }
 }

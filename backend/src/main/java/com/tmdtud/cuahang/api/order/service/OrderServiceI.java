@@ -24,7 +24,7 @@ public interface OrderServiceI {
 
     public OrdHasDetailDTO toOrdHasDetailDTO(Orders orders);
 
-    public Orders updateStatus(UpdateOrderStatusRequest request);
+    public Orders updateStatus(UpdateOrderStatusRequest request) throws Exception;
 
     public PageResponse<Orders> getAllByDateRange(String fromDate, String toDate, String status, Pageable pageable);
 
