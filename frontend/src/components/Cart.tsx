@@ -37,7 +37,7 @@ const Cart = () => {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
-    // Auto-fill thông tin khi modal thanh toán được mở
+    // Auto-fill thông tin khi modal thanh toán được mở  
     const updateCustomerInfo = async () => {
       const token = sessionStorage.getItem('token');
       if (!token) return;
