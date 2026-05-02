@@ -12,12 +12,11 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductDTO{
+public class ProductDTO {
     private Long id;
 
     @NotBlank(message = "name not empty")
@@ -41,6 +40,8 @@ public class ProductDTO{
     private Categories category;
 
     private String imageUrl;
+    private java.math.BigDecimal discountPercentage;
+    private java.math.BigDecimal rating;
 
-    private List<String> colors;
+    private java.util.List<ProductVariantDTO> variants;
 }

@@ -92,6 +92,8 @@ public class OrderDetailService implements OrderDetailServiceI {
                             .quantity(item.getQuantity())
                             .id(id)
                             .cost(item.getCost())
+                            .color(item.getColor())
+                            .size(item.getSize())
                             .total(item.getTotal()).build();
                     return _new;
                 })

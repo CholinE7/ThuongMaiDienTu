@@ -31,7 +31,7 @@ export default function AdminLayout({
           if (res.result && res.result.role === "STAFF") {
             setIsAuthorized(true);
             if (res.result.fullName) {
-              localStorage.setItem("customerName", res.result.fullName);
+              sessionStorage.setItem("customerName", res.result.fullName);
             }
           } else {
             // Not a staff member, redirect to admin login

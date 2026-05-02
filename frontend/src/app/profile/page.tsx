@@ -37,7 +37,7 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       setIsLoading(true);
       try {
-        let token = localStorage.getItem("token");
+        let token = sessionStorage.getItem("token");
         
         // Làm sạch token (loại bỏ dấu ngoặc kép nếu có)
         if (token) {
@@ -67,7 +67,7 @@ export default function ProfilePage() {
           setUserInfo(profileData);
           setEditForm(profileData);
           if (data.fullName) {
-            localStorage.setItem("customerName", data.fullName);
+            sessionStorage.setItem("customerName", data.fullName);
             window.dispatchEvent(new Event("authUpdated"));
           }
         }
@@ -96,7 +96,7 @@ export default function ProfilePage() {
 
   setIsSaving(true);
   try {
-    let token = localStorage.getItem("token");
+    let token = sessionStorage.getItem("token");
     
     // Làm sạch token
     if (token) {
@@ -127,7 +127,7 @@ export default function ProfilePage() {
     if (response.ok) {
       setUserInfo(editForm);
       setPasswords({ newPassword: "", confirmPassword: "" });
-      localStorage.setItem("customerName", editForm.fullName);
+      sessionStorage.setItem("customerName", editForm.fullName);
       window.dispatchEvent(new Event("authUpdated"));
       setIsEditing(false);
       

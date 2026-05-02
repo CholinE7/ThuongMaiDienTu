@@ -36,8 +36,6 @@ import com.tmdtud.cuahang.common.response.PageResponse;
 
 import lombok.Data;
 
-import com.tmdtud.cuahang.common.service.SseService;
-
 @Service
 @Data
 
@@ -68,9 +66,6 @@ public class OrderService implements OrderServiceI {
     @Autowired
     private CustomerMapper customerMapper;
 
-    @Autowired
-    private SseService sseService;
-
     @Override
     public PageResponse<Orders> getAll(Pageable pageable) {
         Page<Orders> orders = orderRepository.findAll(pageable);
@@ -86,22 +81,13 @@ public class OrderService implements OrderServiceI {
     @Override
     @Transactional
     public Orders add(OrderStoreRequest request) {
-        Customers customer = null;
-        if (request.getCustomerId() != null) {
-            CustomerDTO customerDTO = customerService.getById(request.getCustomerId());
-            customer = customerMapper.toEntity(customerDTO);
-        }
+        CustomerDTO customerDTO = customerService.getById(request.getCustomerId());
+        Customers customer = customerMapper.toEntity(customerDTO);
 
         Orders order = Orders.builder()
                 .customer(customer)
-                .fullName(request.getFullName())
-                .phone(request.getPhone())
-                .street(request.getStreet())
-                .ward(request.getWard())
-                .city(request.getCity())
                 .method(request.getMethod())
                 .status(OrderStatus.PENDING)
-                .paymentStatus("PENDING")
                 .deleted(0)
                 .totalPrice(request.getTotalPrice()).build();
 
@@ -111,9 +97,8 @@ public class OrderService implements OrderServiceI {
         }
 
         Orders newOrder = orderRepository.save(order);
-        orderDetailService.addAll(request.getDetails(), newOrder.getId()); 
-        
-        sseService.sendToAll(java.util.Map.of("orderId", newOrder.getId(), "status", newOrder.getStatus().toString()));
+        orderDetailService.addAll(request.getDetails(), newOrder.getId()); // tạo chi tiết đơn
+                                                                           // nhập
         return newOrder;
     }
 
@@ -133,6 +118,15 @@ public class OrderService implements OrderServiceI {
 
             for (OrdersDetails item : ordersDetails) {
                 Products pro = item.getProduct();
+                
+                // Restore variant quantity
+                java.util.Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variantOpt = variantRepo.findByProductAndColorAndSize(pro, item.getColor(), item.getSize());
+                if (variantOpt.isPresent()) {
+                    com.tmdtud.cuahang.api.product.model.ProductVariant variant = variantOpt.get();
+                    variant.setQuantity(variant.getQuantity() + item.getQuantity());
+                    variantRepo.save(variant);
+                }
+
                 pro.setQuantity(pro.getQuantity() + item.getQuantity());
                 products.add(pro);
             }
@@ -141,11 +135,9 @@ public class OrderService implements OrderServiceI {
         }
 
         order.setStatus(OrderStatus.CANCELLED);
-        order.setDeleted(1);
 
-        Orders updatedOrder = orderRepository.save(order);
-        sseService.sendToAll(java.util.Map.of("orderId", updatedOrder.getId(), "status", updatedOrder.getStatus().toString()));
-        return updatedOrder;
+        orderRepository.save(order);
+        return order;
     }
 
     @Override
@@ -176,24 +168,23 @@ public class OrderService implements OrderServiceI {
                         orderDetailService.getByOrderId(order.getId()));
     }
 
+    @Autowired
+    private com.tmdtud.cuahang.api.product.repository.ProductVariantRepository variantRepo;
+
     @Override
     @Transactional
-    public Orders updateStatus(UpdateOrderStatusRequest request) throws Exception {
+    public Orders updateStatus(UpdateOrderStatusRequest request) {
         Employers employer = employerService.getById(request.getEmployerId());
         Orders order = getById(request.getOrderId());
 
-        if(order.getStatus().equals(OrderStatus.CANCELLED)){
-            throw new Exception("Đơn hàng đã bị hủy trước đó");
-        }
-        if(order.getStatus().equals(OrderStatus.DELIVERED)){
-            throw new Exception("Đơn hàng đã được giao, không thể hủy");
-        }
-        if (!order.getStatus().canAdvanceTo(request.getOrderStatusNext())) {
-            throw new Exception("Không thể cập nhật trạng thái");
+        if (order.getDeleted() == 1)
+            return order;
+
+        if (order.getStatus().isTerminal() || !order.getStatus().canAdvanceTo(request.getOrderStatusNext())) {
+            return order;
         }
 
         order.setEmployer(employer);
-
         order.setStatus(request.getOrderStatusNext());
         orderRepository.save(order);
 
@@ -204,9 +195,24 @@ public class OrderService implements OrderServiceI {
 
             for (OrdersDetails item : ordersDetails) {
                 Products pro = item.getProduct();
-                if (pro.getQuantity() <= item.getQuantity() + 1) { // sản phẩm tồn tại tối thiểu 1 số lượng
-                    throw new Exception("Mã " + pro.getId() + ": " + pro.getName() + " không đủ số lượng sản phẩm");
+                
+                // Try to find the specific variant
+                java.util.Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variantOpt = variantRepo.findByProductAndColorAndSize(pro, item.getColor(), item.getSize());
+                
+                if (variantOpt.isPresent()) {
+                    com.tmdtud.cuahang.api.product.model.ProductVariant variant = variantOpt.get();
+                    if (variant.getQuantity() < item.getQuantity()) {
+                        throw new RuntimeException("Biến thể " + item.getColor() + " size " + item.getSize() + " của sản phẩm " + pro.getName() + " không đủ số lượng tồn kho!");
+                    }
+                    variant.setQuantity(variant.getQuantity() - item.getQuantity());
+                    variantRepo.save(variant);
+                } else {
+                    // Fallback to global quantity if no variant found
+                    if (pro.getQuantity() < item.getQuantity()) {
+                        throw new RuntimeException("Sản phẩm " + pro.getName() + " không đủ số lượng tồn kho!");
+                    }
                 }
+                
                 pro.setQuantity(pro.getQuantity() - item.getQuantity());
                 products.add(pro);
             }
@@ -214,7 +220,6 @@ public class OrderService implements OrderServiceI {
             productService.updateAll(products);
         }
 
-        sseService.sendToAll(java.util.Map.of("orderId", order.getId(), "status", order.getStatus().toString()));
         return order;
     }
 

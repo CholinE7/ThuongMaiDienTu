@@ -48,4 +48,10 @@ public class OrdersDetails{
 
     @Column(nullable = false)
     private BigDecimal total;
+
+    @Column
+    private String color;
+
+    @Column
+    private String size;
 }

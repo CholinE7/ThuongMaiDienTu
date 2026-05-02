@@ -20,28 +20,30 @@ import com.tmdtud.cuahang.common.response.PageResponse;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Service
 @Data
 @RequiredArgsConstructor
 public class ProductService implements ProductServiceI {
 
     private final ProductRepository productRepo;
+    private final com.tmdtud.cuahang.api.product.repository.ProductVariantRepository variantRepo;
 
     private final BrandService brandService;
     private final CategoryService categoryService;
 
     @Override
-    public PageResponse<Products> getAll(String name, Long categoryId, Pageable pageable) {
-        org.springframework.data.domain.Page<Products> products;
-        if (name != null && !name.isEmpty() && categoryId != null) {
-            products = productRepo.findByNameContainingIgnoreCaseAndCategoryId(name, categoryId, pageable);
-        } else if (name != null && !name.isEmpty()) {
-            products = productRepo.findByNameContainingIgnoreCase(name, pageable);
-        } else if (categoryId != null) {
-            products = productRepo.findByCategoryId(categoryId, pageable);
-        } else {
-            products = productRepo.findAll(pageable);
-        }
+    public PageResponse<Products> getAll(String name, Long categoryId, Long brandId, BigDecimal minPrice, BigDecimal maxPrice, String color, Pageable pageable) {
+        org.springframework.data.domain.Page<Products> products = productRepo.findProductsWithFilters(
+            name != null && !name.isEmpty() ? name : null, 
+            categoryId, 
+            brandId, 
+            minPrice, 
+            maxPrice, 
+            color,
+            pageable
+        );
         return new PageResponse<Products>(products);
     }
 
@@ -54,27 +56,49 @@ public class ProductService implements ProductServiceI {
     @Override
     public Products add(ProductStoreRequest request) {
         Brands brand = brandService.getById(request.getBrand_id());
-        System.out.println(brand.getName());
         Categories category = categoryService.getById(request.getCategory_id());
-        System.out.println(category.getName());
+
+        int totalQuantity = request.getQuantity();
+        if (request.getVariants() != null && !request.getVariants().isEmpty()) {
+            totalQuantity = request.getVariants().stream().mapToInt(v -> v.getQuantity()).sum();
+        }
 
         Products product = Products.builder()
                 .name(request.getName())
                 .description(request.getDescription())
-                .quantity(request.getQuantity())
+                .quantity(totalQuantity)
                 .price(request.getPrice())
                 .brand(brand)
-                .category(category)
-                .colors(request.getColors())
-                .build();
+                .imageUrl(request.getImageUrl())
+                .discountPercentage(request.getDiscountPercentage())
+                .rating(request.getRating())
+                .category(category).build();
 
-        return productRepo.save(product);
+        Products savedProduct = productRepo.save(product);
+
+        if (request.getVariants() != null) {
+            List<com.tmdtud.cuahang.api.product.model.ProductVariant> variants = request.getVariants().stream().map(v -> 
+                com.tmdtud.cuahang.api.product.model.ProductVariant.builder()
+                    .product(savedProduct)
+                    .color(v.getColor())
+                    .size(v.getSize())
+                    .quantity(v.getQuantity())
+                    .build()
+            ).collect(Collectors.toList());
+            variantRepo.saveAll(variants);
+        }
+
+        return savedProduct;
     }
 
     @Override
     public boolean delete(Long id) {
-        productRepo.deleteById(id);
-        return true;
+        Products products = getById(id);
+        if (products != null) {
+            productRepo.delete(products);
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -88,17 +112,43 @@ public class ProductService implements ProductServiceI {
         Brands brand = brandService.getById(request.getBrand_id());
         Categories category = categoryService.getById(request.getCategory_id());
 
+        int totalQuantity = request.getQuantity();
+        if (request.getVariants() != null && !request.getVariants().isEmpty()) {
+            totalQuantity = request.getVariants().stream().mapToInt(v -> v.getQuantity()).sum();
+        }
+
         Products product = Products.builder()
+                .id(request.getId())
                 .name(request.getName())
                 .description(request.getDescription())
-                .quantity(request.getQuantity())
+                .quantity(totalQuantity)
                 .price(request.getPrice())
                 .brand(brand)
-                .id(request.getId())
-                .category(category)
-                .colors(request.getColors())
-                .build();
-        return productRepo.save(product);
+                .imageUrl(request.getImageUrl())
+                .deleted(request.getDeleted())
+                .discountPercentage(request.getDiscountPercentage())
+                .rating(request.getRating())
+                .category(category).build();
+        
+        Products savedProduct = productRepo.save(product);
+
+        // Update variants
+        if (request.getVariants() != null) {
+            List<com.tmdtud.cuahang.api.product.model.ProductVariant> oldVariants = variantRepo.findByProduct(savedProduct);
+            variantRepo.deleteAll(oldVariants);
+
+            List<com.tmdtud.cuahang.api.product.model.ProductVariant> variants = request.getVariants().stream().map(v -> 
+                com.tmdtud.cuahang.api.product.model.ProductVariant.builder()
+                    .product(savedProduct)
+                    .color(v.getColor())
+                    .size(v.getSize())
+                    .quantity(v.getQuantity())
+                    .build()
+            ).collect(Collectors.toList());
+            variantRepo.saveAll(variants);
+        }
+
+        return savedProduct;
     }
 
     @Override

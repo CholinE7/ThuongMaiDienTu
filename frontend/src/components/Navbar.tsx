@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart, Search, User, Menu, X, LogOut, FileText } from 'lucide-react';
 import { getCartCount } from '@/utils/cartUtils';
+import { apiRequest } from '@/services/app';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
 
   // --- STATE CHO TÌM KIẾM ---
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,42 +16,41 @@ export default function Navbar() {
 
   // --- STATE LƯU THÔNG TIN ĐĂNG NHẬP ---
   const [userName, setUserName] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isMounted, setIsMounted] = useState(false); // Để fix lỗi Hydration
 
   const [cartCount, setCartCount] = useState(0);
 
   // KHI NAVBAR LOAD LÊN, KIỂM TRA XEM CÓ TÊN NGƯỜI DÙNG TRONG LOCAL STORAGE KHÔNG
   useEffect(() => {
-    setIsMounted(true);
     const updateAuth = async () => {
-      let storedName = localStorage.getItem("customerName");
-      let token = localStorage.getItem("token");
+      let storedName = sessionStorage.getItem("customerName");
+      let token = sessionStorage.getItem("token");
 
       // Làm sạch token (loại bỏ dấu ngoặc kép nếu có)
       if (token) {
         token = token.replace(/^["'](.+)["']$/, '$1').trim();
       }
 
-      const hasToken = !!(token && token !== "fail");
-      setIsLoggedIn(hasToken);
-
-      if (!storedName && hasToken) {
-        // Nếu có token nhưng chưa có tên, thử lấy lại từ BE
+      if (token && token !== "fail") {
+        // Luôn xác thực token với Backend để đảm bảo phiên đăng nhập còn hiệu lực
         try {
-          const res = await fetch("http://localhost:8080/api/auth/me", {
-            headers: { "Authorization": `Bearer ${token}` }
-          });
+          const res = await apiRequest("/api/auth/me", "GET");
           if (res.ok) {
             const data = await res.json();
-            if (data.code === 200 && data.result) {
+            if (data && data.code === 200 && data.result) {
               storedName = data.result.fullName;
-              localStorage.setItem("customerName", storedName || "");
-              localStorage.setItem("customerEmail", data.result.email || "");
-              localStorage.setItem("customerId", data.result.id?.toString() || "");
+              sessionStorage.setItem("customerName", storedName || "");
+              sessionStorage.setItem("customerEmail", data.result.email || "");
+              sessionStorage.setItem("customerId", data.result.id?.toString() || "");
             }
+          } else if (res.status === 401) {
+            // Token không hợp lệ, xóa sạch thông tin
+            storedName = null;
+            sessionStorage.removeItem("customerName");
+            sessionStorage.removeItem("token");
           }
         } catch (err) {
-          console.error("Auto fetch user failed", err);
+          console.error("Session validation failed", err);
         }
       }
       setUserName(storedName);
@@ -86,10 +85,10 @@ export default function Navbar() {
 
   // HÀM XỬ LÝ ĐĂNG XUẤT
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("customerName");
-    localStorage.removeItem("customerEmail");
-    localStorage.removeItem("customerId");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("customerName");
+    sessionStorage.removeItem("customerEmail");
+    sessionStorage.removeItem("customerId");
     setUserName(null); // Xóa trên giao diện
 
     // Phát sự kiện để các thành phần khác biết đã đăng xuất
@@ -135,6 +134,7 @@ export default function Navbar() {
         {/* MENU & ICONS */}
         <div className="flex items-center space-x-6">
           <div className="hidden lg:flex space-x-6 text-gray-600 font-medium text-sm">
+            <Link href="/search" className="hover:text-blue-600 transition">Tất cả sản phẩm</Link>
             <Link href="/category/nam" className="hover:text-blue-600 transition">Giày Thể Thao Nam</Link>
             <Link href="/category/nu" className="hover:text-blue-600 transition">Giày Thể Thao Nữ</Link>
             <Link href="/category/cap" className="hover:text-blue-600 transition">Giày Cặp</Link>
@@ -144,7 +144,8 @@ export default function Navbar() {
 
             {/* KIỂM TRA ĐĂNG NHẬP ĐỂ HIỂN THỊ TÊN HOẶC NÚT ĐĂNG NHẬP */}
             <div className="relative group cursor-pointer">
-              {isMounted && (userName || isLoggedIn) ? (
+              {/* Chỉ render phần phụ thuộc vào sessionStorage/state sau khi đã mounted */}
+              {isMounted && userName ? (
                 // --- ĐÃ ĐĂNG NHẬP ---
                 <div className="flex items-center gap-2 p-2 rounded-full text-gray-700 hover:bg-gray-100 transition">
                   <div className="bg-blue-100 text-blue-600 p-1.5 rounded-full">
@@ -164,7 +165,7 @@ export default function Navbar() {
               <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-y-1 transition-all duration-300 z-50">
                 <div className="absolute -top-4 left-0 w-full h-4 bg-transparent"></div>
                 <div className="py-2 flex flex-col">
-                  {isMounted && (userName || isLoggedIn) ? (
+                  {isMounted && userName ? (
                     // Menu khi đã đăng nhập
                     <>
                       <div className="px-4 py-2 border-b border-gray-100 md:hidden">
@@ -220,6 +221,7 @@ export default function Navbar() {
           </form>
 
           <Link href="/" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Trang chủ</Link>
+          <Link href="/search" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Tất cả sản phẩm</Link>
           <Link href="/category/nam" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Giày Thể Thao Nam</Link>
           <Link href="/category/nu" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Giày Thể Thao Nữ</Link>
           <Link href="/category/cap" className="block py-2 text-gray-700 font-medium hover:text-blue-600 border-b border-gray-50">Giày Cặp</Link>

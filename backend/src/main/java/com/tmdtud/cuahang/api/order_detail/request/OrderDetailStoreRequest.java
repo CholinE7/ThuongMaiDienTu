@@ -25,4 +25,7 @@ public class OrderDetailStoreRequest {
     @NotNull(message = "total not null")
     @DecimalMin(value = "0.0", inclusive = false, message = "total more than 0")
     private BigDecimal total;
+
+    private String color;
+    private String size;
 }

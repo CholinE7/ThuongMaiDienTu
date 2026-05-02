@@ -37,57 +37,41 @@ const LoginPage = () => {
         body: JSON.stringify({ username: email, password }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        const token = data.token;
+      const data = await res.json();
+      const token = data.token;
 
-        if (token && token !== "fail") {
-          // Lưu chìa khóa JWT vào túi của trình duyệt
-          localStorage.setItem("token", token);
+      if (res.ok && token && token !== "fail") {
+        // Lưu chìa khóa JWT vào túi của trình duyệt
+        sessionStorage.setItem("token", token);
 
-          // Lấy thông tin cá nhân sau khi có token
-          try {
-            const meRes = await fetch("http://localhost:8080/api/auth/me", {
-              headers: { "Authorization": `Bearer ${token}` }
-            });
-            if (meRes.ok) {
-              const meData = await meRes.json();
-              if (meData.code === 200) {
-                localStorage.setItem("customerName", meData.result.fullName);
-                localStorage.setItem("customerEmail", meData.result.email);
-                localStorage.setItem("customerId", meData.result.id.toString());
-                
-                // Phát sự kiện để Navbar cập nhật ngay lập tức
-                window.dispatchEvent(new Event("authUpdated"));
-              }
-            }
-          } catch (e) {
-            console.error("Lỗi lấy thông tin user", e);
-          }
-
-          showToast("Đăng nhập thành công!", "success");
-
-          // Chờ 1 giây để hiện hiệu ứng thành công rồi mới chuyển hướng
-          setTimeout(() => {
-            router.push("/");
-          }, 1000);
-        } else {
-          showToast("Đăng nhập thất bại!", "error");
-          setIsLoading(false);
-        }
-      } else {
-        // Xử lý lỗi từ Server (Ví dụ: 401 Unauthorized)
-        let errorMsg = "Email hoặc mật khẩu không chính xác!";
+        // Gọi /api/auth/me để lấy user info
         try {
-          const errorData = await res.json();
-          if (errorData.message) errorMsg = errorData.message;
+          const meRes = await fetch("http://localhost:8080/api/auth/me", {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (meRes.ok) {
+            const meData = await meRes.json();
+            if (meData.code === 200) {
+              sessionStorage.setItem("customerName", meData.result.fullName);
+              sessionStorage.setItem("customerEmail", meData.result.email);
+              sessionStorage.setItem("customerId", meData.result.id.toString());
+              
+              // Phát sự kiện để Navbar cập nhật ngay lập tức
+              window.dispatchEvent(new Event("authUpdated"));
+            }
+          }
         } catch (e) {
-          // Nếu không phải JSON, thử lấy text
-          const textError = await res.text();
-          if (textError) console.log("Backend error text:", textError);
+          console.error("Lỗi lấy thông tin user", e);
         }
-        
-        showToast(errorMsg, "error");
+
+        showToast("Đăng nhập thành công!", "success");
+
+        // Chờ 1 giây để hiện hiệu ứng thành công rồi mới chuyển hướng
+        setTimeout(() => {
+          router.push("/");
+        }, 1000);
+      } else {
+        showToast("Email hoặc mật khẩu không chính xác!", "error");
         setIsLoading(false);
       }
     } catch (error) {

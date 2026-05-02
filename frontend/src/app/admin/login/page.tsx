@@ -40,67 +40,54 @@ export default function LoginPage() {
         body: JSON.stringify({ username: email, password }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        const token = data.token;
+      const data = await response.json();
+      const token = data.token;
 
-        if (token && token !== "fail") {
-          // --- ĐOẠN KIỂM TRA ROLE BỔ SUNG ---
-          // Thử gọi 1 API chỉ dành cho Admin để kiểm tra xem Token này có quyền STAFF/ADMIN không
-          const checkRole = await fetch(
-            "http://localhost:8080/api/employers?page_no=0&page_size=1",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
+      if (response.ok && token && token !== "fail") {
+        // --- ĐOẠN KIỂM TRA ROLE BỔ SUNG ---
+        // Thử gọi 1 API chỉ dành cho Admin để kiểm tra xem Token này có quyền STAFF/ADMIN không
+        const checkRole = await fetch(
+          "http://localhost:8080/api/employers?page_no=0&page_size=1",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
 
-          if (checkRole.status === 403) {
-            showToast("Bạn không có quyền truy cập hệ thống nội bộ!", "error");
-            setIsLoading(false);
-            return; // Dừng lại, không lưu token
-          }
-          // ----------------------------------
-
-          localStorage.setItem("token", token);
-          
-          // Lấy thêm thông tin nhân viên
-          try {
-            const meRes = await fetch("http://localhost:8080/api/auth/me", {
-              headers: { "Authorization": `Bearer ${token}` }
-            });
-            if (meRes.ok) {
-              const meData = await meRes.json();
-              if (meData.code === 200) {
-                localStorage.setItem("employerId", meData.result.id.toString());
-                localStorage.setItem("customerName", meData.result.fullName);
-                localStorage.setItem("customerEmail", meData.result.email);
-                // Phát sự kiện cập nhật UI
-                window.dispatchEvent(new Event("authUpdated"));
-              }
-            }
-          } catch (err) {
-            console.error("Lỗi lấy thông tin admin", err);
-          }
-
-          showToast("Xác thực thành công! Đang vào hệ thống...", "success");
-
-          setTimeout(() => {
-            router.push("/admin/dashboard");
-          }, 1000);
-        } else {
-          showToast("Đăng nhập thất bại!", "error");
+        if (checkRole.status === 403) {
+          showToast("Bạn không có quyền truy cập hệ thống nội bộ!", "error");
           setIsLoading(false);
+          return; // Dừng lại, không lưu token
         }
-      } else {
-        // Xử lý lỗi từ Server
-        let errorMsg = "Email hoặc mật khẩu không chính xác!";
+        // ----------------------------------
+
+        sessionStorage.setItem("token", token);
+        
+        // Lấy thêm thông tin nhân viên
         try {
-          const errorData = await response.json();
-          if (errorData.message) errorMsg = errorData.message;
-        } catch (e) {
-          // Fallback if not JSON
+          const meRes = await fetch("http://localhost:8080/api/auth/me", {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (meRes.ok) {
+            const meData = await meRes.json();
+            if (meData.code === 200) {
+              sessionStorage.setItem("employerId", meData.result.id.toString());
+              sessionStorage.setItem("customerName", meData.result.fullName);
+              sessionStorage.setItem("customerEmail", meData.result.email);
+              // Phát sự kiện cập nhật UI
+              window.dispatchEvent(new Event("authUpdated"));
+            }
+          }
+        } catch (err) {
+          console.error("Lỗi lấy thông tin admin", err);
         }
-        showToast(errorMsg, "error");
+
+        showToast("Xác thực thành công! Đang vào hệ thống...", "success");
+
+        setTimeout(() => {
+          router.push("/admin/dashboard");
+        }, 1000);
+      } else {
+        showToast("Email hoặc mật khẩu không chính xác!", "error");
         setIsLoading(false);
       }
     } catch (error) {

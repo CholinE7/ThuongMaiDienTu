@@ -1,5 +1,6 @@
 package com.tmdtud.cuahang.api.product;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,13 +46,17 @@ public class ProductController extends BaseController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) Long category_id) {
+            @RequestParam(required = false) Long category_id,
+            @RequestParam(required = false) Long brand_id,
+            @RequestParam(required = false) BigDecimal min_price,
+            @RequestParam(required = false) BigDecimal max_price,
+            @RequestParam(required = false) String color) {
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
         
-        PageResponse<Products> pageResponse = productSer.getAll(name, category_id, pageable);
+        PageResponse<Products> pageResponse = productSer.getAll(name, category_id, brand_id, min_price, max_price, color, pageable);
         List<ProductDTO> productDTOs = pageResponse.getContent()
                                         .stream()
                                         .map(item -> productMapper.toDTO(item))

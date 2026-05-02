@@ -17,7 +17,7 @@ export default function MomoPaymentPage() {
   useEffect(() => {
     if (orderId) {
       fetch(`http://localhost:8080/api/payment/momo/create_payment?orderId=${orderId}`, {
-        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
       })
       .then(res => res.json())
       .then(result => {
@@ -34,7 +34,7 @@ export default function MomoPaymentPage() {
     try {
       const res = await fetch(`http://localhost:8080/api/payment/momo/confirm?orderId=${orderId}`, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
       });
       const result = await res.json();
       if (result.success) {

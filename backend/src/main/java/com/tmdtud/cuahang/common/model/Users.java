@@ -1,5 +1,6 @@
 package com.tmdtud.cuahang.common.model;
 
+
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 

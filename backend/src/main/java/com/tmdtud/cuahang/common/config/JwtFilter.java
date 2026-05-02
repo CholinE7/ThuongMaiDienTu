@@ -39,7 +39,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-            username = jwtService.extractUserName(token);
+            try {
+                username = jwtService.extractUserName(token);
+            } catch (Exception e) {
+                // Token không hợp lệ hoặc hết hạn - bỏ qua để cho phép truy cập các public endpoint
+            }
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

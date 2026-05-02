@@ -50,7 +50,7 @@ export default function AdminUsersPage() {
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const isStaffTab = appliedFilters.role === "staff" || appliedFilters.role === "admin";
       const endpoint = isStaffTab ? `${API_BASE_URL}/api/employers` : `${API_BASE_URL}/api/customers`;
       const params = new URLSearchParams({ page_no: "0", page_size: "1000" }).toString();
@@ -96,7 +96,7 @@ export default function AdminUsersPage() {
 
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     const isStaff = currentUser.role === "staff" || currentUser.role === "admin";
     const endpoint = isStaff ? `${API_BASE_URL}/api/employers` : `${API_BASE_URL}/api/customers`;
     const method = modalMode === "add" ? "POST" : "PUT";
@@ -177,7 +177,7 @@ export default function AdminUsersPage() {
   };
 
   const toggleStatus = async (user: any) => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     const newStatus = user.status === 1 ? 0 : 1;
     const isStaff = appliedFilters.role === "staff" || appliedFilters.role === "admin";
     const endpoint = isStaff ? `${API_BASE_URL}/api/employers` : `${API_BASE_URL}/api/customers`;
