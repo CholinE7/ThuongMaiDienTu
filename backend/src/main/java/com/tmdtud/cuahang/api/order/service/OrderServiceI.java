@@ -26,6 +26,8 @@ public interface OrderServiceI {
 
     public Orders updateStatus(UpdateOrderStatusRequest request) throws Exception;
 
+    public Orders confirmPayment(Long orderId) throws Exception;
+
     public PageResponse<Orders> getAllByDateRange(String fromDate, String toDate, String status, Pageable pageable);
 
     public PageResponse<Orders> getMyOrders(Long customerId, Pageable pageable);

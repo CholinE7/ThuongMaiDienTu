@@ -38,9 +38,9 @@ public class PaymentController {
         // Tạo requestId và orderId duy nhất (Alphanumeric chỉ bao gồm chữ và số)
         String requestId = UUID.randomUUID().toString().replace("-", "");
         String orderReference = order.getId() + "TS" + System.currentTimeMillis();
-        String orderInfo = "Thanh toan don hang " + order.getId(); 
+        String orderInfo = "Thanh toan don hang " + order.getId();
         long amount = order.getTotalPrice().longValue();
-        String extraData = ""; 
+        String extraData = "";
 
         // Chữ ký thô (BẮT BUỘC Sắp xếp theo thứ tự A-Z của Key theo chuẩn MoMo API v2)
         String rawSignature = "accessKey=" + MomoConfig.ACCESS_KEY
@@ -83,9 +83,9 @@ public class PaymentController {
                 result.put("amount", order.getTotalPrice());
                 return ApiResponse.success(result);
             } else {
-                String errorMsg = responseBody != null && responseBody.get("message") != null 
-                                  ? responseBody.get("message").toString() 
-                                  : "Unknown Error";
+                String errorMsg = responseBody != null && responseBody.get("message") != null
+                        ? responseBody.get("message").toString()
+                        : "Unknown Error";
                 return ApiResponse.error(500, "MoMo Error: " + errorMsg);
             }
         } catch (Exception e) {
@@ -116,10 +116,9 @@ public class PaymentController {
 
                 // 3. Thông báo Realtime cho Frontend qua SSE
                 sseService.sendToAll(Map.of(
-                    "orderId", order.getId(),
-                    "status", "PAID",
-                    "message", "MoMo payment successful"
-                ));
+                        "orderId", order.getId(),
+                        "status", "PAID",
+                        "message", "MoMo payment successful"));
             }
         }
 

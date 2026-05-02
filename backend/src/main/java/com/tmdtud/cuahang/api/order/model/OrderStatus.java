@@ -2,9 +2,9 @@ package com.tmdtud.cuahang.api.order.model;
 
 /**
  * Vòng đời đơn hàng (một chiều, không thể lùi):
- *   PENDING → CONFIRMED → SHIPPING → DELIVERED
+ * PENDING → CONFIRMED → SHIPPING → DELIVERED
  *
- * Huỷ được:  PENDING, CONFIRMED
+ * Huỷ được: PENDING, CONFIRMED
  * Không huỷ: SHIPPING, DELIVERED, CANCELLED (terminal)
  */
 public enum OrderStatus {
@@ -20,10 +20,10 @@ public enum OrderStatus {
      */
     public boolean canAdvanceTo(OrderStatus next) {
         return switch (this) {
-            case PENDING   -> next == CONFIRMED;
+            case PENDING -> next == CONFIRMED;
             case CONFIRMED -> next == SHIPPING;
-            case SHIPPING  -> next == DELIVERED;
-            default        -> false;   // DELIVERED, CANCELLED: terminal
+            case SHIPPING -> next == DELIVERED;
+            default -> false; // DELIVERED, CANCELLED: terminal
         };
     }
 

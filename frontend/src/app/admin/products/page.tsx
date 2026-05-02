@@ -1,48 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, CheckCircle2, XCircle, Edit, Trash2, ChevronLeft, ChevronRight, X, Loader2, ImageIcon, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { apiRequest } from "@/services/app";
 
 const PRODUCTS_PER_PAGE = 5;
 
-interface ProductVariant {
-  color: string;
-  size: string;
-  quantity: number;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  brand?: string;
-  brandId: string | number;
-  image: string;
-  sellPrice: number;
-  category?: string;
-  categoryId: string | number;
-  status: string;
-  description: string;
-  discountPercentage: number;
-  variants: ProductVariant[];
-}
-
-interface Brand {
-  id: number | string;
-  name: string;
-}
-
-interface Category {
-  id: number | string;
-  name: string;
-}
-
 export default function AdminProductsPage() {
   // 1. STATE DỮ LIỆU & LOADING
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // 2. STATES TÌM KIẾM
   const [searchName, setSearchName] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -52,14 +21,14 @@ export default function AdminProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-  
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
 
-  const [currentProduct, setCurrentProduct] = useState<Product>({ 
-    id: 0, name: "", brandId: "", image: "", sellPrice: 0, categoryId: "", status: "visible", description: "",
-    discountPercentage: 0,
-    variants: []
+  const [brands, setBrands] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+
+  const [currentProduct, setCurrentProduct] = useState({
+    id: 0, name: "", brandId: "", image: "", importPrice: 0, sellPrice: 0, categoryId: "", status: "visible", description: "",
+    discountPercentage: 0, rating: 0,
+    variants: [] as { color: string, size: string, quantity: number }[]
   });
 
   // Fetch Brands and Categories
@@ -69,7 +38,7 @@ export default function AdminProductsPage() {
         const brandRes = await apiRequest('/api/brands?page_size=100');
         const brandData = await brandRes.json();
         if (brandData.code === 200) setBrands(brandData.result.content);
-        
+
         const catRes = await apiRequest('/api/categories');
         const catData = await catRes.json();
         if (catData.code === 200) setCategories(catData.result.content);
@@ -92,53 +61,61 @@ export default function AdminProductsPage() {
   // ==========================================
   // HÀM GỌI API LẤY DỮ LIỆU
   // ==========================================
-  const fetchProducts = useCallback(async () => {
-    setIsLoading(true);
+  const fetchProducts = async (isSilent = false) => {
+    if (!isSilent) setIsLoading(true);
     try {
-      const query = new URLSearchParams({ 
-        name: appliedFilters.name, 
+      const query = new URLSearchParams({
+        name: appliedFilters.name,
         page_no: (currentPage - 1).toString(),
         page_size: PRODUCTS_PER_PAGE.toString()
       }).toString();
       const response = await apiRequest(`/api/products?${query}`);
       const result = await response.json();
       if (result.code === 200 && result.result) {
-       setProducts(result.result.content.map((p: { 
-         id: number, 
-         name: string, 
-         brand?: { name: string, id: number }, 
-         imageUrl?: string, 
-         price: number, 
-         category?: { name: string, id: number }, 
-         deleted: number, 
-         description: string, 
-         discountPercentage?: number, 
-         variants?: unknown[] 
-       }) => ({
-         id: p.id,
-         name: p.name,
-         brand: p.brand?.name || "N/A",
-         brandId: p.brand?.id ? String(p.brand.id) : "",
-         image: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400",
-         sellPrice: p.price,
-         category: p.category?.name || "Khác",
-         categoryId: p.category?.id ? String(p.category.id) : "",
-         status: p.deleted === 0 ? "visible" : "hidden",
-         description: p.description,
-         discountPercentage: p.discountPercentage || 0,
-         variants: p.variants || []
-       })));
-       setTotalProducts(result.result.total);
-      }    } catch {
-      showToast("Lỗi kết nối máy chủ!", "error");
+        setProducts(result.result.content.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          brand: p.brand?.name || "N/A",
+          brandId: p.brand?.id || "",
+          image: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=300",
+          importPrice: p.price * 0.7,
+          sellPrice: p.price,
+          category: p.category?.name || "Khác",
+          categoryId: p.category?.id || "",
+          status: p.deleted === 0 ? "visible" : "hidden",
+          description: p.description,
+          discountPercentage: p.discountPercentage || 0,
+          rating: p.rating || 0,
+          variants: p.variants || [],
+          totalQuantity: (p.variants || []).reduce((acc: number, v: any) => acc + (v.quantity || 0), 0)
+        })));
+        setTotalProducts(result.result.total);
+      }
+    } catch (error) {
+      if (!isSilent) showToast("Lỗi kết nối máy chủ!", "error");
     } finally {
-      setIsLoading(false);
+      if (!isSilent) setIsLoading(false);
     }
-  }, [appliedFilters, currentPage]);
+  };
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+
+    // Kết nối SSE để đồng bộ kho thời gian thực
+    const eventSource = new EventSource("http://localhost:8080/api/orders/stream");
+    eventSource.addEventListener("orderUpdate", (event: any) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "STOCK_UPDATE") {
+          fetchProducts(true); // Cập nhật âm thầm không hiện loading
+        }
+      } catch (e) {
+        console.error("SSE Error", e);
+      }
+    });
+
+    return () => eventSource.close();
+  }, [appliedFilters, currentPage]);
 
   // HÀNH ĐỘNG TÌM KIẾM
   const handleSearchClick = () => {
@@ -155,8 +132,8 @@ export default function AdminProductsPage() {
     try {
       const url = '/api/products';
       const method = modalMode === "add" ? 'POST' : 'PUT';
-      
-      const payload = { 
+
+      const payload = {
         id: currentProduct.id || null,
         name: currentProduct.name,
         price: currentProduct.sellPrice,
@@ -167,19 +144,20 @@ export default function AdminProductsPage() {
         category_id: Number(currentProduct.categoryId),
         deleted: currentProduct.status === "visible" ? 0 : 1,
         discountPercentage: currentProduct.discountPercentage,
+        rating: currentProduct.rating,
         variants: currentProduct.variants
       };
 
       const response = await apiRequest(url, method, payload);
       const result = await response.json();
-      
+
       if (result.code === 200) {
         showToast(modalMode === "add" ? "Thêm thành công" : "Cập nhật thành công", "success");
-        fetchProducts(); 
+        fetchProducts();
       } else {
         showToast(result.message || "Lỗi khi lưu", "error");
       }
-    } catch {
+    } catch (error) {
       showToast("Lỗi hệ thống!", "error");
     } finally {
       setIsLoading(false);
@@ -197,7 +175,7 @@ export default function AdminProductsPage() {
           showToast("Xóa thành công", "success");
           fetchProducts();
         }
-      } catch {
+      } catch (error) {
         showToast("Lỗi khi xóa!", "error");
         setIsLoading(false);
       }
@@ -206,16 +184,16 @@ export default function AdminProductsPage() {
 
   const handleOpenAdd = () => {
     setModalMode("add");
-    setCurrentProduct({ 
-      id: 0, name: "", brandId: brands[0]?.id || "", image: "", sellPrice: 0, 
+    setCurrentProduct({
+      id: 0, name: "", brandId: brands[0]?.id || "", image: "", importPrice: 0, sellPrice: 0,
       categoryId: categories[0]?.id || "", status: "visible", description: "",
-      discountPercentage: 0,
+      discountPercentage: 0, rating: 0,
       variants: []
     });
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (prod: Product) => {
+  const handleOpenEdit = (prod: any) => {
     setModalMode("edit");
     setCurrentProduct({
       ...prod,
@@ -226,6 +204,7 @@ export default function AdminProductsPage() {
 
   // PHÂN TRANG
   const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
+  const paginatedProducts = products; // Dữ liệu từ API đã là trang hiện tại
   const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
 
   // FORMAT TIỀN TỆ
@@ -233,7 +212,7 @@ export default function AdminProductsPage() {
 
   return (
     <div className="relative min-h-[80vh] font-sans pb-10">
-      
+
       {/* THÔNG BÁO TOAST */}
       {toastMsg && (
         <div className={`fixed top-6 right-6 bg-white border-l-4 shadow-xl px-6 py-4 rounded-lg flex items-center gap-3 z-[60] animate-in slide-in-from-right-8 ${toastType === 'success' ? 'border-green-500' : 'border-red-500'}`}>
@@ -252,7 +231,7 @@ export default function AdminProductsPage() {
               </h2>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-red-500 transition p-1 rounded-full"><X size={24} /></button>
             </div>
-            
+
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8">
               <div className="mb-6 border-b pb-4">
                 <h3 className="text-lg font-bold text-gray-900">Thông tin sản phẩm</h3>
@@ -261,49 +240,51 @@ export default function AdminProductsPage() {
 
               <form onSubmit={handleSaveProduct}>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                  
+
                   {/* CỘT TRÁI: ĐIỀN CHỮ (Chiếm 2 phần) */}
                   <div className="lg:col-span-2 space-y-5">
-                    <div><label className="block text-sm font-semibold text-gray-800 mb-2">Tên sản phẩm <span className="text-red-500">*</span></label><input required type="text" value={currentProduct.name} onChange={(e) => setCurrentProduct({...currentProduct, name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
-                    
+                    <div><label className="block text-sm font-semibold text-gray-800 mb-2">Tên sản phẩm <span className="text-red-500">*</span></label><input required type="text" value={currentProduct.name} onChange={(e) => setCurrentProduct({ ...currentProduct, name: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
+
                     <div className="grid grid-cols-2 gap-5">
                       <div>
                         <label className="block text-sm font-semibold text-gray-800 mb-2">Thương hiệu <span className="text-red-500">*</span></label>
-                        <select required value={currentProduct.brandId} onChange={(e) => setCurrentProduct({...currentProduct, brandId: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white">
+                        <select required value={currentProduct.brandId} onChange={(e) => setCurrentProduct({ ...currentProduct, brandId: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white">
                           <option value="">Chọn thương hiệu</option>
                           {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                         </select>
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-800 mb-2">Danh mục <span className="text-red-500">*</span></label>
-                        <select required value={currentProduct.categoryId} onChange={(e) => setCurrentProduct({...currentProduct, categoryId: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white">
+                        <select required value={currentProduct.categoryId} onChange={(e) => setCurrentProduct({ ...currentProduct, categoryId: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white">
                           <option value="">Chọn danh mục</option>
                           {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-5">
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giá bán (VNĐ) <span className="text-red-500">*</span></label><input required type="number" value={currentProduct.sellPrice || ""} onChange={(e) => setCurrentProduct({...currentProduct, sellPrice: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
+                    <div className="grid grid-cols-2 gap-5">
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giá nhập (VNĐ) <span className="text-red-500">*</span></label><input required type="number" value={currentProduct.importPrice || ""} onChange={(e) => setCurrentProduct({ ...currentProduct, importPrice: Number(e.target.value) })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giá bán (VNĐ) <span className="text-red-500">*</span></label><input required type="number" value={currentProduct.sellPrice || ""} onChange={(e) => setCurrentProduct({ ...currentProduct, sellPrice: Number(e.target.value) })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-5">
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Trạng thái <span className="text-red-500">*</span></label><select required value={currentProduct.status} onChange={(e) => setCurrentProduct({...currentProduct, status: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white"><option value="visible">Hiển thị</option><option value="hidden">Ẩn</option></select></div>
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Mô tả sản phẩm</label><textarea rows={2} value={currentProduct.description} onChange={(e) => setCurrentProduct({...currentProduct, description: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none resize-none" /></div>
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Trạng thái <span className="text-red-500">*</span></label><select required value={currentProduct.status} onChange={(e) => setCurrentProduct({ ...currentProduct, status: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white"><option value="visible">Hiển thị</option><option value="hidden">Ẩn</option></select></div>
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Mô tả sản phẩm</label><textarea rows={2} value={currentProduct.description} onChange={(e) => setCurrentProduct({ ...currentProduct, description: e.target.value })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none resize-none" /></div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-5 mt-4">
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giảm giá (%)</label><input type="number" value={currentProduct.discountPercentage || 0} onChange={(e) => setCurrentProduct({...currentProduct, discountPercentage: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giảm giá (%)</label><input type="number" value={currentProduct.discountPercentage || 0} onChange={(e) => setCurrentProduct({ ...currentProduct, discountPercentage: Number(e.target.value) })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Đánh giá (1-5)</label><input type="number" step="0.1" min="1" max="5" value={currentProduct.rating || 5} onChange={(e) => setCurrentProduct({ ...currentProduct, rating: Number(e.target.value) })} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
                     </div>
 
                     {/* BIẾN THỂ (MÀU/SIZE/SỐ LƯỢNG) */}
                     <div className="border-t pt-5">
                       <div className="flex justify-between items-center mb-4">
                         <label className="text-sm font-bold text-gray-900 uppercase tracking-wide">Quản lý biến thể (Màu sắc & Size)</label>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={() => setCurrentProduct({
-                            ...currentProduct, 
+                            ...currentProduct,
                             variants: [...currentProduct.variants, { color: "Trắng", size: "40", quantity: 10 }]
                           })}
                           className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5"
@@ -311,7 +292,7 @@ export default function AdminProductsPage() {
                           <Plus size={14} /> Thêm biến thể
                         </button>
                       </div>
-                      
+
                       <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                         {currentProduct.variants.length > 0 ? (
                           <div className="space-y-3">
@@ -324,52 +305,52 @@ export default function AdminProductsPage() {
                             {currentProduct.variants.map((v, idx) => (
                               <div key={idx} className="grid grid-cols-12 gap-3 items-center bg-white p-2 rounded-lg border border-gray-200 shadow-sm animate-in fade-in slide-in-from-top-1">
                                 <div className="col-span-4">
-                                  <input 
-                                    required 
-                                    type="text" 
-                                    value={v.color} 
+                                  <input
+                                    required
+                                    type="text"
+                                    value={v.color}
                                     onChange={(e) => {
                                       const newVariants = [...currentProduct.variants];
                                       newVariants[idx].color = e.target.value;
-                                      setCurrentProduct({...currentProduct, variants: newVariants});
+                                      setCurrentProduct({ ...currentProduct, variants: newVariants });
                                     }}
                                     placeholder="Vd: Đen"
                                     className="w-full border-none focus:ring-0 text-sm font-medium p-1"
                                   />
                                 </div>
                                 <div className="col-span-3">
-                                  <input 
-                                    required 
-                                    type="text" 
-                                    value={v.size} 
+                                  <input
+                                    required
+                                    type="text"
+                                    value={v.size}
                                     onChange={(e) => {
                                       const newVariants = [...currentProduct.variants];
                                       newVariants[idx].size = e.target.value;
-                                      setCurrentProduct({...currentProduct, variants: newVariants});
+                                      setCurrentProduct({ ...currentProduct, variants: newVariants });
                                     }}
                                     placeholder="40"
                                     className="w-full border-none focus:ring-0 text-sm font-medium p-1"
                                   />
                                 </div>
                                 <div className="col-span-4">
-                                  <input 
-                                    required 
-                                    type="number" 
-                                    value={v.quantity} 
+                                  <input
+                                    required
+                                    type="number"
+                                    value={v.quantity}
                                     onChange={(e) => {
                                       const newVariants = [...currentProduct.variants];
                                       newVariants[idx].quantity = Number(e.target.value);
-                                      setCurrentProduct({...currentProduct, variants: newVariants});
+                                      setCurrentProduct({ ...currentProduct, variants: newVariants });
                                     }}
                                     className="w-full border-none focus:ring-0 text-sm font-bold text-blue-600 p-1"
                                   />
                                 </div>
                                 <div className="col-span-1 flex justify-end">
-                                  <button 
-                                    type="button" 
+                                  <button
+                                    type="button"
                                     onClick={() => {
                                       const newVariants = currentProduct.variants.filter((_, i) => i !== idx);
-                                      setCurrentProduct({...currentProduct, variants: newVariants});
+                                      setCurrentProduct({ ...currentProduct, variants: newVariants });
                                     }}
                                     className="text-gray-300 hover:text-red-500 transition"
                                   >
@@ -389,49 +370,50 @@ export default function AdminProductsPage() {
                   </div>
 
                   {/* CỘT PHẢI: ẢNH (Chiếm 1 phần) */}
-<div className="lg:col-span-1 flex flex-col items-center">
-  <label className="block text-sm font-semibold text-gray-800 mb-4 w-full text-center">Hình ảnh sản phẩm</label>
-  
-  <div className="w-full aspect-square border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center bg-gray-50 overflow-hidden relative group">
-    {currentProduct.image ? (
-      <Image src={currentProduct.image} alt="Preview" fill className="object-cover" />
-    ) : (
-      <div className="text-gray-400 flex flex-col items-center"><ImageIcon size={48} className="mb-2 opacity-50" /><span>Chưa có ảnh</span></div>
-    )}
-    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-      <span className="text-white font-medium text-sm">Bấm nút bên dưới để đổi</span>
-    </div>
-  </div>
+                  {/* CỘT PHẢI: ẢNH (Chiếm 1 phần) */}
+                  <div className="lg:col-span-1 flex flex-col items-center">
+                    <label className="block text-sm font-semibold text-gray-800 mb-4 w-full text-center">Hình ảnh sản phẩm</label>
 
-  {/* KHUNG CHỨA NÚT VÀ INPUT FILE (ẨN) */}
-  <div className="w-full relative mt-4">
-    {/* Thẻ input ẩn đi */}
-    <input 
-      type="file" 
-      accept="image/*"
-      id="imageUpload"
-      className="hidden"
-      onChange={(e) => {
-        const file = e.target.files?.[0];
-        if (file) {
-          // Tạo một URL tạm thời (blob URL) để preview ảnh vừa chọn ngay lập tức
-          const imageUrl = URL.createObjectURL(file);
-          setCurrentProduct({...currentProduct, image: imageUrl});
-        }
-      }}
-    />
-    {/* Label này đóng vai trò như một nút bấm, khi click vào nó sẽ kích hoạt thẻ input ẩn bên trên */}
-    <label 
-      htmlFor="imageUpload" 
-      className="w-full cursor-pointer bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition"
-    >
-      <Edit size={16} /> Thay đổi hình ảnh
-    </label>
-  </div>
-  
-  <p className="text-xs text-gray-500 mt-3 text-center">Hỗ trợ JPG, PNG, WEBP. Kích thước tối đa 5MB.</p>
-</div>
-</div>
+                    <div className="w-full aspect-square border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center bg-gray-50 overflow-hidden relative group">
+                      {currentProduct.image ? (
+                        <Image src={currentProduct.image} alt="Preview" fill className="object-cover" />
+                      ) : (
+                        <div className="text-gray-400 flex flex-col items-center"><ImageIcon size={48} className="mb-2 opacity-50" /><span>Chưa có ảnh</span></div>
+                      )}
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <span className="text-white font-medium text-sm">Bấm nút bên dưới để đổi</span>
+                      </div>
+                    </div>
+
+                    {/* KHUNG CHỨA NÚT VÀ INPUT FILE (ẨN) */}
+                    <div className="w-full relative mt-4">
+                      {/* Thẻ input ẩn đi */}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id="imageUpload"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            // Tạo một URL tạm thời (blob URL) để preview ảnh vừa chọn ngay lập tức
+                            const imageUrl = URL.createObjectURL(file);
+                            setCurrentProduct({ ...currentProduct, image: imageUrl });
+                          }
+                        }}
+                      />
+                      {/* Label này đóng vai trò như một nút bấm, khi click vào nó sẽ kích hoạt thẻ input ẩn bên trên */}
+                      <label
+                        htmlFor="imageUpload"
+                        className="w-full cursor-pointer bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition"
+                      >
+                        <Edit size={16} /> Thay đổi hình ảnh
+                      </label>
+                    </div>
+
+                    <p className="text-xs text-gray-500 mt-3 text-center">Hỗ trợ JPG, PNG, WEBP. Kích thước tối đa 5MB.</p>
+                  </div>
+                </div>
 
                 {/* NÚT LƯU Ở DƯỚI CÙNG */}
                 <div className="pt-8 flex justify-end gap-4 border-t border-gray-100 mt-8">
@@ -483,6 +465,7 @@ export default function AdminProductsPage() {
                 <th className="px-4 py-4 whitespace-nowrap">HÌNH ẢNH</th>
                 <th className="px-4 py-4 whitespace-nowrap">GIÁ BÁN</th>
                 <th className="px-4 py-4 whitespace-nowrap">DANH MỤC</th>
+                <th className="px-4 py-4 whitespace-nowrap">TỒN KHO</th>
                 <th className="px-4 py-4 whitespace-nowrap">TRẠNG THÁI</th>
                 <th className="px-4 py-4 whitespace-nowrap">THAO TÁC</th>
               </tr>
@@ -506,16 +489,21 @@ export default function AdminProductsPage() {
                     <td className="px-4 py-4 font-bold text-red-500">{formatPrice(prod.sellPrice)}</td>
                     <td className="px-4 py-4"><span className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs font-bold border border-gray-200">{prod.category}</span></td>
                     <td className="px-4 py-4">
+                      <span className={`font-bold text-base ${prod.totalQuantity > 0 ? 'text-blue-600' : 'text-red-500'}`}>
+                        {prod.totalQuantity}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
                       {prod.status === "visible" ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-green-700 border border-green-200 bg-green-50 text-xs font-bold"><CheckCircle2 size={14}/> Hiện</span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-green-700 border border-green-200 bg-green-50 text-xs font-bold"><CheckCircle2 size={14} /> Hiện</span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-gray-500 border border-gray-200 bg-gray-100 text-xs font-bold"><XCircle size={14}/> Ẩn</span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-gray-500 border border-gray-200 bg-gray-100 text-xs font-bold"><XCircle size={14} /> Ẩn</span>
                       )}
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex justify-center items-center gap-2">
-                        <button onClick={() => handleOpenEdit(prod)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded shadow-sm transition font-semibold flex items-center gap-1.5"><Edit size={16}/> Sửa</button>
-                        <button onClick={() => handleDelete(prod.id, prod.name)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded shadow-sm transition font-semibold flex items-center gap-1.5"><Trash2 size={16}/> Xóa</button>
+                        <button onClick={() => handleOpenEdit(prod)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded shadow-sm transition font-semibold flex items-center gap-1.5"><Edit size={16} /> Sửa</button>
+                        <button onClick={() => handleDelete(prod.id, prod.name)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded shadow-sm transition font-semibold flex items-center gap-1.5"><Trash2 size={16} /> Xóa</button>
                       </div>
                     </td>
                   </tr>

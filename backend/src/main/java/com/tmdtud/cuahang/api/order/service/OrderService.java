@@ -38,7 +38,6 @@ import lombok.Data;
 
 @Service
 @Data
-
 public class OrderService implements OrderServiceI {
 
     @Autowired
@@ -55,16 +54,22 @@ public class OrderService implements OrderServiceI {
     private OrderDetailService orderDetailService;
 
     @Autowired
-    private final EmployerService employerService;
+    private EmployerService employerService;
 
     @Autowired
-    private final CustomerService customerService;
+    private CustomerService customerService;
 
     @Autowired
-    private final ProductService productService;
+    private ProductService productService;
 
     @Autowired
     private CustomerMapper customerMapper;
+
+    @Autowired
+    private com.tmdtud.cuahang.common.service.SseService sseService;
+
+    @Autowired
+    private com.tmdtud.cuahang.api.product.repository.ProductVariantRepository variantRepo;
 
     @Override
     public PageResponse<Orders> getAll(Pageable pageable) {
@@ -107,8 +112,8 @@ public class OrderService implements OrderServiceI {
         }
 
         Orders newOrder = orderRepository.save(order);
-        orderDetailService.addAll(request.getDetails(), newOrder.getId()); 
-        
+        orderDetailService.addAll(request.getDetails(), newOrder.getId());
+
         return newOrder;
     }
 
@@ -121,33 +126,61 @@ public class OrderService implements OrderServiceI {
         if (!order.getStatus().isCancellable())
             throw new RuntimeException("Chỉ có thể hủy đơn hàng ở trạng thái Chờ xác nhận hoặc Đã xác nhận");
 
-        if (!order.getStatus().equals(OrderStatus.PENDING)) {
-            List<OrdersDetails> ordersDetails = orderDetailService
-                    .getByOrderId(order.getId());
-            List<Products> products = new ArrayList<>();
-
-            for (OrdersDetails item : ordersDetails) {
-                Products pro = item.getProduct();
-                
-                // Restore variant quantity
-                java.util.Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variantOpt = variantRepo.findByProductAndColorAndSize(pro, item.getColor(), item.getSize());
-                if (variantOpt.isPresent()) {
-                    com.tmdtud.cuahang.api.product.model.ProductVariant variant = variantOpt.get();
-                    variant.setQuantity(variant.getQuantity() + item.getQuantity());
-                    variantRepo.save(variant);
-                }
-
-                pro.setQuantity(pro.getQuantity() + item.getQuantity());
-                products.add(pro);
-            }
-
-            productService.updateAll(products);
-        }
+        // Hoàn trả kho (bất kể trạng thái nào vì ta đã trừ lúc PENDING)
+        List<OrdersDetails> details = orderDetailService.getByOrderId(order.getId());
+        restoreStock(order, details);
 
         order.setStatus(OrderStatus.CANCELLED);
-
         orderRepository.save(order);
         return order;
+    }
+
+    private void subtractStock(Orders order, List<OrdersDetails> details) {
+        List<Products> productsToUpdate = new ArrayList<>();
+        for (OrdersDetails item : details) {
+            Products pro = item.getProduct();
+            java.util.Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variantOpt = variantRepo
+                    .findByProductAndColorAndSize(pro, item.getColor(), item.getSize());
+
+            if (variantOpt.isPresent()) {
+                com.tmdtud.cuahang.api.product.model.ProductVariant variant = variantOpt.get();
+                if (variant.getQuantity() < item.getQuantity()) {
+                    throw new RuntimeException("Sản phẩm " + pro.getName() + " (Màu: " + item.getColor() + ", Size: "
+                            + item.getSize() + ") không đủ hàng!");
+                }
+                variant.setQuantity(variant.getQuantity() - item.getQuantity());
+                variantRepo.save(variant);
+            } else if (pro.getQuantity() < item.getQuantity()) {
+                throw new RuntimeException("Sản phẩm " + pro.getName() + " không đủ số lượng!");
+            }
+
+            pro.setQuantity(pro.getQuantity() - item.getQuantity());
+            productsToUpdate.add(pro);
+        }
+        productService.updateAll(productsToUpdate);
+        // Thông báo đồng bộ kho cho tất cả các client
+        sseService.sendToAll(java.util.Map.of("type", "STOCK_UPDATE"));
+    }
+
+    private void restoreStock(Orders order, List<OrdersDetails> details) {
+        List<Products> productsToUpdate = new ArrayList<>();
+        for (OrdersDetails item : details) {
+            Products pro = item.getProduct();
+            java.util.Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variantOpt = variantRepo
+                    .findByProductAndColorAndSize(pro, item.getColor(), item.getSize());
+
+            if (variantOpt.isPresent()) {
+                com.tmdtud.cuahang.api.product.model.ProductVariant variant = variantOpt.get();
+                variant.setQuantity(variant.getQuantity() + item.getQuantity());
+                variantRepo.save(variant);
+            }
+
+            pro.setQuantity(pro.getQuantity() + item.getQuantity());
+            productsToUpdate.add(pro);
+        }
+        productService.updateAll(productsToUpdate);
+        // Thông báo đồng bộ kho cho tất cả các client
+        sseService.sendToAll(java.util.Map.of("type", "STOCK_UPDATE"));
     }
 
     @Override
@@ -160,7 +193,7 @@ public class OrderService implements OrderServiceI {
     public Orders update(OrderUpdateRequest request) {
         Orders order = orderRepository.findById(request.getId()).orElse(null);
         if (order.getDeleted() == 1)
-            return order; // nếu đã xóa đơn hàng thì k làm gì cả
+            return order;
 
         order.setMethod(request.getMethod());
         order.setTotalPrice(request.getTotalPrice());
@@ -178,71 +211,50 @@ public class OrderService implements OrderServiceI {
                         orderDetailService.getByOrderId(order.getId()));
     }
 
-    @Autowired
-    private com.tmdtud.cuahang.api.product.repository.ProductVariantRepository variantRepo;
-
     @Override
     @Transactional
-    public Orders updateStatus(UpdateOrderStatusRequest request) throws Exception{
+    public Orders updateStatus(UpdateOrderStatusRequest request) throws Exception {
         Employers employer = employerService.getById(request.getEmployerId());
         Orders order = getById(request.getOrderId());
 
-        if(order.getStatus().equals(OrderStatus.CANCELLED)){
+        if (order.getStatus().equals(OrderStatus.CANCELLED)) {
             throw new Exception("Đơn hàng đã bị hủy trước đó");
         }
-        if(order.getStatus().equals(OrderStatus.DELIVERED)){
-            throw new Exception("Đơn hàng đã được giao, không thể hủy");
+        if (order.getStatus().equals(OrderStatus.DELIVERED)) {
+            throw new Exception("Đơn hàng đã được giao");
         }
         if (!order.getStatus().canAdvanceTo(request.getOrderStatusNext())) {
-            throw new Exception("Không thể cập nhật trạng thái");
+            throw new Exception(
+                    "Không thể cập nhật trạng thái từ " + order.getStatus() + " sang " + request.getOrderStatusNext());
         }
 
         order.setEmployer(employer);
         order.setStatus(request.getOrderStatusNext());
-        orderRepository.save(order);
+        return orderRepository.save(order);
+    }
 
-        if (request.getOrderStatusNext().equals(OrderStatus.CONFIRMED)) {
-            List<OrdersDetails> ordersDetails = orderDetailService
-                    .getByOrderId(request.getOrderId());
-            List<Products> products = new ArrayList<>();
+    @Override
+    @Transactional
+    public Orders confirmPayment(Long orderId) throws Exception {
+        Orders order = getById(orderId);
+        if (order == null)
+            throw new Exception("Không tìm thấy đơn hàng");
 
-            for (OrdersDetails item : ordersDetails) {
-                Products pro = item.getProduct();
-                
-                // Try to find the specific variant
-                java.util.Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variantOpt = variantRepo.findByProductAndColorAndSize(pro, item.getColor(), item.getSize());
-                
-                if (variantOpt.isPresent()) {
-                    com.tmdtud.cuahang.api.product.model.ProductVariant variant = variantOpt.get();
-                    if (variant.getQuantity() < item.getQuantity()) {
-                        throw new RuntimeException("Biến thể " + item.getColor() + " size " + item.getSize() + " của sản phẩm " + pro.getName() + " không đủ số lượng tồn kho!");
-                    }
-                    variant.setQuantity(variant.getQuantity() - item.getQuantity());
-                    variantRepo.save(variant);
-                } else {
-                    // Fallback to global quantity if no variant found
-                    if (pro.getQuantity() < item.getQuantity()) {
-                        throw new RuntimeException("Sản phẩm " + pro.getName() + " không đủ số lượng tồn kho!");
-                    }
-                }
-                
-                pro.setQuantity(pro.getQuantity() - item.getQuantity());
-                products.add(pro);
-            }
-
-            productService.updateAll(products);
+        order.setPaymentStatus("PAID");
+        if (order.getStatus() == OrderStatus.PENDING) {
+            order.setStatus(OrderStatus.CONFIRMED);
         }
-
-        return order;
+        return orderRepository.save(order);
     }
 
     @Override
     public PageResponse<Orders> getAllByDateRange(String fromDate, String toDate, String status, Pageable pageable) {
         LocalDate from = (fromDate != null && !fromDate.isEmpty()) ? LocalDate.parse(fromDate) : null;
         LocalDate to = (toDate != null && !toDate.isEmpty()) ? LocalDate.parse(toDate) : null;
-        OrderStatus orderStatus = (status != null && !status.isEmpty() && !status.equalsIgnoreCase("all")) 
-                                  ? OrderStatus.valueOf(status) : null;
-        
+        OrderStatus orderStatus = (status != null && !status.isEmpty() && !status.equalsIgnoreCase("all"))
+                ? OrderStatus.valueOf(status)
+                : null;
+
         Page<Orders> orders = orderRepository.findAllByDateRange(from, to, orderStatus, pageable);
         return new PageResponse<Orders>(orders);
     }
