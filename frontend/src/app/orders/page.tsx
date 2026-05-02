@@ -17,10 +17,10 @@ export default function OrdersPage() {
     try {
       const response = await apiRequest('/api/orders/my-orders?page_size=50', 'GET');
       const res = await response.json();
-      if (res.code === 200 && res.result) {
+      if (res && res.code === 200 && res.result) {
         setOrders(res.result.content || []);
       } else {
-        setError(res.message || "Không thể tải lịch sử đơn hàng.");
+        setError(res?.message || "Không thể tải lịch sử đơn hàng.");
       }
     } catch (err) {
       console.error("Lỗi lấy lịch sử đơn hàng", err);
@@ -31,7 +31,7 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (token) {
       fetchOrders();
     } else {
@@ -68,11 +68,11 @@ export default function OrdersPage() {
     try {
       const response = await apiRequest(`/api/orders/${orderId}/cancel`, 'PUT');
       const res = await response.json();
-      if (res.code === 200) {
+      if (res && res.code === 200) {
         toast.success("Hủy đơn hàng thành công!", { id: toastId });
         fetchOrders(); // Reload list mà không cần refresh toàn trang
       } else {
-        toast.error(res.message || "Lỗi khi hủy đơn hàng.", { id: toastId });
+        toast.error(res?.message || "Lỗi khi hủy đơn hàng.", { id: toastId });
       }
     } catch (err) {
       console.error("Lỗi hủy đơn hàng", err);

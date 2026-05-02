@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.tmdtud.cuahang.api.product.dto.ProductVariantDTO;
 
 @Data
 @NoArgsConstructor
@@ -28,9 +29,15 @@ public class ProductStoreRequest {
     @Min(value = 0)
     private int quantity;
 
+    private java.math.BigDecimal discountPercentage;
+    private java.math.BigDecimal rating;
+
     @NotNull(message = "brand not null")
     private Long brand_id;
 
     @NotNull(message = "category not null")
     private Long category_id;
+
+    private String imageUrl;
+    private java.util.List<ProductVariantDTO> variants;
 }

@@ -19,6 +19,7 @@ public class CartService {
     private final CartRepository cartRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
+    private final com.tmdtud.cuahang.api.product.repository.ProductVariantRepository variantRepo;
 
     public List<CartItem> getCartByCustomer(Long customerId) {
         Customers customer = customerRepository.findById(customerId)
@@ -33,11 +34,34 @@ public class CartService {
         Products product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
 
+        // Validate stock
+        Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variant = variantRepo.findByProductAndColorAndSize(product, color, size);
+        if (variant.isPresent()) {
+            if (variant.get().getQuantity() < quantity) {
+                throw new RuntimeException("Số lượng sản phẩm trong kho không đủ (Chỉ còn " + variant.get().getQuantity() + " sản phẩm)");
+            }
+        } else {
+            // If variants exist for this product but not this specific combo, it might be an error or legacy product
+            List<com.tmdtud.cuahang.api.product.model.ProductVariant> variants = variantRepo.findByProduct(product);
+            if (!variants.isEmpty()) {
+                throw new RuntimeException("Biến thể màu/size này không tồn tại cho sản phẩm này");
+            }
+            // Fallback for legacy products without variants
+            if (product.getQuantity() < quantity) {
+                throw new RuntimeException("Sản phẩm đã hết hàng");
+            }
+        }
+
         Optional<CartItem> existingItem = cartRepository.findByCustomerAndProductAndSizeAndColor(customer, product, size, color);
 
         if (existingItem.isPresent()) {
             CartItem item = existingItem.get();
-            item.setQuantity(item.getQuantity() + quantity);
+            int newQuantity = item.getQuantity() + quantity;
+            // Check stock for total quantity
+            if (variant.isPresent() && variant.get().getQuantity() < newQuantity) {
+                throw new RuntimeException("Tổng số lượng trong giỏ hàng vượt quá tồn kho");
+            }
+            item.setQuantity(newQuantity);
             return cartRepository.save(item);
         } else {
             CartItem newItem = CartItem.builder()
@@ -58,6 +82,12 @@ public class CartService {
 
         if (!item.getCustomer().getId().equals(customerId)) {
             throw new RuntimeException("Bạn không có quyền chỉnh sửa mục này");
+        }
+
+        // Validate stock
+        Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variant = variantRepo.findByProductAndColorAndSize(item.getProduct(), item.getColor(), item.getSize());
+        if (variant.isPresent() && variant.get().getQuantity() < quantity) {
+            throw new RuntimeException("Số lượng tồn kho không đủ (Chỉ còn " + variant.get().getQuantity() + " sản phẩm)");
         }
 
         item.setQuantity(quantity);

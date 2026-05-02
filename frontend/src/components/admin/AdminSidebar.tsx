@@ -21,8 +21,8 @@ export default function AdminSidebar() {
 
   useEffect(() => {
     const updateAuth = async () => {
-      let name = localStorage.getItem("customerName");
-      let token = localStorage.getItem("token");
+      let name = sessionStorage.getItem("customerName");
+      let token = sessionStorage.getItem("token");
       
       // Làm sạch token
       if (token) {
@@ -38,8 +38,8 @@ export default function AdminSidebar() {
             const data = await res.json();
             if (data.code === 200) {
               name = data.result.fullName;
-              localStorage.setItem("customerName", name || "");
-              localStorage.setItem("customerEmail", data.result.email || "");
+              sessionStorage.setItem("customerName", name || "");
+              sessionStorage.setItem("customerEmail", data.result.email || "");
             }
           }
         } catch (err) {

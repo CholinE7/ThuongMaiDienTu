@@ -19,7 +19,15 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JWTService {
     @Value("${app.jwt.secret}")
+    private String configuredSecret;
+    
     private String secretKey;
+
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        this.secretKey = configuredSecret;
+        
+    }
 
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap();
@@ -28,7 +36,7 @@ public class JWTService {
                 .add(claims)
                 .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 60 * 60 * 1000 * 30))
+                .expiration(new Date(System.currentTimeMillis() + 60 * 60 * 1000))
                 .and()
                 .signWith(getKey())
                 .compact();

@@ -7,7 +7,7 @@ import { Truck, ShieldCheck, RefreshCw } from 'lucide-react';
 // Hàm lấy dữ liệu sản phẩm từ API
 async function getProducts() {
   try {
-    const res = await fetch('http://localhost:8080/api/products?page_size=50', { 
+    const res = await fetch('http://localhost:8080/api/products?page_size=1000', { 
       cache: 'no-store' 
     });
     if (!res.ok) return [];
@@ -29,8 +29,8 @@ async function getProducts() {
 export default async function Home() {
   const products = await getProducts();
 
-  const shoesNu = products.filter((product: any) => product.category === "Giày Thể Thao Nữ").slice(0, 4);
-  const shoesNam = products.filter((product: any) => product.category === "Giày Thể Thao Nam").slice(0, 4);
+  const shoesNu = products.filter((product: any) => product.category?.toLowerCase() === "womens-shoes").slice(0, 4);
+  const shoesNam = products.filter((product: any) => product.category?.toLowerCase() === "mens-shoes").slice(0, 4);
 
   // Sản phẩm bán chạy: sort theo rating giảm dần, lấy top 4
   const bestSellers = [...products]

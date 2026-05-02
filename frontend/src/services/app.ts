@@ -2,8 +2,8 @@
 const API_URL = "http://localhost:8080";
 
 export const apiRequest = async (endpoint: string, method: string = "GET", body: any = null) => {
-    // Lấy token từ localStorage
-    let token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    // Lấy token từ sessionStorage
+    let token = typeof window !== "undefined" ? sessionStorage.getItem("token") : null;
     
     // Làm sạch token (loại bỏ dấu ngoặc kép nếu có)
     if (token) {
@@ -21,9 +21,49 @@ export const apiRequest = async (endpoint: string, method: string = "GET", body:
             headers,
             body: body ? JSON.stringify(body) : null,
         });
-        return response;
-    } catch (error) {
-        console.error("API Error:", error);
-        throw error;
+        
+        // Nếu token hết hạn hoặc không hợp lệ (401 Unauthorized)
+        if (response.status === 401) {
+            if (typeof window !== "undefined") {
+                sessionStorage.removeItem("token");
+                sessionStorage.removeItem("user");
+                sessionStorage.removeItem("customerName");
+                sessionStorage.removeItem("employerId");
+                // Phát sự kiện để Navbar cập nhật lại giao diện (ẩn tên người dùng)
+                window.dispatchEvent(new Event("authUpdated"));
+            }
+        }
+
+        const text = await response.text();
+        if (!text) {
+            return { ok: response.ok, status: response.status, json: () => Promise.resolve(null), text: () => Promise.resolve("") };
+        }
+        
+        try {
+            const data = JSON.parse(text);
+            return { 
+                ok: response.ok, 
+                status: response.status, 
+                json: () => Promise.resolve(data),
+                text: () => Promise.resolve(text)
+            };
+        } catch (e) {
+            console.error("JSON Parse Error:", text);
+            return { 
+                ok: response.ok, 
+                status: response.status, 
+                json: () => { throw new Error("Invalid JSON response"); },
+                text: () => Promise.resolve(text)
+            };
+        }
+    } catch (error: any) {
+        console.error("API Network Error:", error);
+        // Trả về một đối tượng giả lập Response để tránh crash ứng dụng
+        return { 
+            ok: false, 
+            status: 0, 
+            json: () => Promise.resolve({ code: 500, message: "Không thể kết nối đến máy chủ" }),
+            text: () => Promise.resolve("Network Error")
+        };
     }
 };

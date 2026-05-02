@@ -60,7 +60,7 @@ export default function LoginPage() {
         }
         // ----------------------------------
 
-        localStorage.setItem("token", token);
+        sessionStorage.setItem("token", token);
         
         // Lấy thêm thông tin nhân viên
         try {
@@ -70,9 +70,9 @@ export default function LoginPage() {
           if (meRes.ok) {
             const meData = await meRes.json();
             if (meData.code === 200) {
-              localStorage.setItem("employerId", meData.result.id.toString());
-              localStorage.setItem("customerName", meData.result.fullName);
-              localStorage.setItem("customerEmail", meData.result.email);
+              sessionStorage.setItem("employerId", meData.result.id.toString());
+              sessionStorage.setItem("customerName", meData.result.fullName);
+              sessionStorage.setItem("customerEmail", meData.result.email);
               // Phát sự kiện cập nhật UI
               window.dispatchEvent(new Event("authUpdated"));
             }

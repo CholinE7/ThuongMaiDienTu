@@ -57,31 +57,57 @@ export default function ProductDetailPage() {
       setIsLoading(true);
       try {
         const response = await apiRequest(`/api/products/${productId}`, 'GET');
+        if (!response.ok) {
+          const errorData = await response.text();
+          console.error("API Error Response:", errorData);
+          throw new Error("Lỗi tải dữ liệu từ máy chủ");
+        }
         const res = await response.json();
         if (res.code === 200 && res.result) {
           const apiProduct = res.result;
           
           // Chuyển đổi dữ liệu API sang định dạng hiển thị
+          const variants = apiProduct.variants || [];
+          
+          // Lấy danh sách màu sắc duy nhất từ biến thể
+          const uniqueColors = Array.from(new Set(variants.map((v: any) => v.color))) as string[];
+          const colors = uniqueColors;
+          
+          // Lấy danh sách kích thước duy nhất từ biến thể
+          const uniqueSizes = Array.from(new Set(variants.map((v: any) => v.size))).sort() as string[];
+          const sizes = uniqueSizes.length > 0 ? uniqueSizes : ["39", "40", "41", "42", "43"];
+
           const foundProduct = {
             id: apiProduct.id,
             name: apiProduct.name,
             price: apiProduct.price,
             category: apiProduct.category?.name || 'Giày',
             description: apiProduct.description || 'Chưa có mô tả',
-            sizes: [39, 40, 41, 42, 43], // Mock sizes vì backend chưa có sizes
-            colors: ["Đen", "Trắng"], // Mock colors vì backend chưa có colors
+            brand: apiProduct.brand?.name || 'SHOESTORE',
+            discountPercentage: apiProduct.discountPercentage || 0,
+            rating: apiProduct.rating || 0,
+            variants: variants,
+            sizes: sizes,
+            colors: colors,
             images: [
               apiProduct.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop"
             ]
           };
 
           setProduct(foundProduct);
-          if (foundProduct.colors?.length > 0) {
-            setSelectedColor(foundProduct.colors[0]);
-          }
-          if (foundProduct.sizes?.length > 0) {
-            setSelectedSize(foundProduct.sizes[0]);
-          }
+          
+          // Chọn màu đầu tiên có hàng
+          const firstAvailableColor = colors.find(c => 
+            variants.length === 0 || variants.some((v: any) => v.color === c && v.quantity > 0)
+          ) || colors[0];
+          
+          setSelectedColor(firstAvailableColor);
+
+          // Chọn size đầu tiên có hàng của màu đó
+          const availableSizesForColor = sizes.filter(s => 
+            variants.length === 0 || variants.some((v: any) => v.color === firstAvailableColor && v.size === s && v.quantity > 0)
+          );
+          setSelectedSize(availableSizesForColor.length > 0 ? availableSizesForColor[0] : sizes[0]);
         } else {
           setError(res.message || "Không tìm thấy sản phẩm");
         }
@@ -158,8 +184,15 @@ export default function ProductDetailPage() {
               {product.name}
             </h1>
 
-            <div className="text-xl font-medium text-gray-900 mb-10">
-              {formatPrice(product.price)}
+            <div className="flex items-center gap-4 mb-10">
+              <span className="text-xl font-medium text-gray-900">
+                {formatPrice(product.price)}
+              </span>
+              {product.discountPercentage > 0 && (
+                <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest">
+                  -{product.discountPercentage}%
+                </span>
+              )}
             </div>
 
             {/* CHỌN KÍCH THƯỚC */}
@@ -169,49 +202,68 @@ export default function ProductDetailPage() {
                 <button className="text-xs text-gray-500 underline hover:text-gray-900 transition-colors font-medium">Bảng kích cỡ</button>
               </div>
               <div className="grid grid-cols-5 gap-2">
-                {product.sizes.map((size: number) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`py-3 rounded-none text-sm font-medium transition-all border 
-                      ${selectedSize === size 
-                        ? 'border-gray-900 bg-gray-900 text-white' 
-                        : 'border-gray-200 text-gray-900 hover:border-gray-900 bg-white'}`}
-                  >
-                    {size}
-                  </button>
-                ))}
+                {product.sizes.map((size: string) => {
+                  const variant = product.variants.find((v: any) => v.color === selectedColor && v.size === size);
+                  const isOutOfStock = product.variants.length > 0 && (!variant || variant.quantity <= 0);
+                  
+                  return (
+                    <button
+                      key={size}
+                      disabled={isOutOfStock}
+                      onClick={() => setSelectedSize(size)}
+                      className={`py-3 rounded-none text-sm font-medium transition-all border relative
+                        ${selectedSize === size 
+                          ? 'border-gray-900 bg-gray-900 text-white' 
+                          : 'border-gray-200 text-gray-900 hover:border-gray-900 bg-white'}
+                        ${isOutOfStock ? 'opacity-30 cursor-not-allowed bg-gray-50 border-dashed' : ''}`}
+                    >
+                      {size}
+                      {isOutOfStock && <div className="absolute inset-0 flex items-center justify-center"><div className="w-full h-[1px] bg-gray-400 rotate-45"></div></div>}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* CHỌN MÀU SẮC */}
-            <div className="mb-10">
+            <div className="mb-6">
               <span className="text-xs font-medium text-gray-900 uppercase tracking-widest block mb-4">Màu sắc</span>
               <div className="flex flex-wrap gap-3">
                 {product.colors?.map((color: string) => {
                   const isSelected = selectedColor === color;
                   const hexValue = COLOR_HEX_MAP[color] || "#000000";
                   
+                  // Kiểm tra màu này còn hàng không (bất kỳ size nào)
+                  const hasStock = product.variants.length === 0 || product.variants.some((v: any) => v.color === color && v.quantity > 0);
+                  
                   // Tính toán màu nền và màu chữ dựa trên trạng thái
                   const bgColor = isSelected ? hexValue : "#ffffff";
                   const textColor = isSelected 
-                    ? (isLightColor(color) ? "#111827" : "#ffffff") // Nền sáng chữ đen, nền tối chữ trắng
-                    : "#111827"; // Mặc định chữ đen
+                    ? (isLightColor(color) ? "#111827" : "#ffffff") 
+                    : "#111827";
 
                   return (
                     <button
                       key={color}
-                      onClick={() => setSelectedColor(color)}
-                      className={`flex items-center gap-2.5 px-5 py-2.5 text-xs font-medium transition-all border uppercase tracking-widest
+                      disabled={!hasStock}
+                      onClick={() => {
+                        setSelectedColor(color);
+                        // Khi đổi màu, tự động chọn size đầu tiên còn hàng của màu mới
+                        const availableSize = product.sizes.find((s: string) => 
+                          product.variants.some((v: any) => v.color === color && v.size === s && v.quantity > 0)
+                        );
+                        if (availableSize) setSelectedSize(availableSize);
+                      }}
+                      className={`flex items-center gap-2.5 px-5 py-2.5 text-xs font-medium transition-all border uppercase tracking-widest relative
                         ${isSelected 
                           ? 'border-transparent shadow-md ring-1 ring-offset-2 ring-gray-200' 
-                          : 'border-gray-200 hover:border-gray-900'}`}
+                          : 'border-gray-200 hover:border-gray-900'}
+                        ${!hasStock ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
                       style={{ 
                         backgroundColor: bgColor,
                         color: textColor
                       }}
                     >
-                      {/* Chấm màu nhỏ (chỉ hiện khi chưa được chọn để nút nhìn thanh thoát) */}
                       {!isSelected && (
                         <span 
                           className="w-3 h-3 rounded-full border border-gray-300"
@@ -219,15 +271,31 @@ export default function ProductDetailPage() {
                         />
                       )}
                       {color}
+                      {!hasStock && <div className="absolute inset-0 flex items-center justify-center"><div className="w-full h-[1px] bg-gray-400"></div></div>}
                     </button>
                   );
                 })}
               </div>
             </div>
 
+            {/* HIỂN THỊ TỒN KHO */}
+            {selectedColor && selectedSize && product.variants.length > 0 && (
+              <div className="mb-8">
+                {(() => {
+                  const v = product.variants.find((v: any) => v.color === selectedColor && v.size === selectedSize);
+                  const q = v ? v.quantity : 0;
+                  return (
+                    <p className={`text-[10px] font-bold uppercase tracking-widest ${q > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                      {q > 0 ? `Còn lại ${q} sản phẩm` : "Hết hàng"}
+                    </p>
+                  );
+                })()}
+              </div>
+            )}
+
             <button 
               onClick={async () => {
-                const token = localStorage.getItem("token");
+                const token = sessionStorage.getItem("token");
                 if (!token) {
                   toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng!");
                   router.push("/login");
@@ -238,7 +306,14 @@ export default function ProductDetailPage() {
                 if (success) {
                   toast.success("Đã thêm vào giỏ hàng!", { id: toastId });
                 } else {
-                  toast.error("Lỗi khi thêm vào giỏ hàng. Vui lòng thử lại!", { id: toastId });
+                  // Nếu thất bại và token đã bị xóa (do 401 Unauthorized trong apiRequest)
+                  const currentToken = sessionStorage.getItem("token");
+                  if (!currentToken) {
+                    toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!", { id: toastId });
+                    router.push("/login");
+                  } else {
+                    toast.error("Lỗi khi thêm vào giỏ hàng. Vui lòng thử lại!", { id: toastId });
+                  }
                 }
               }}
               className="w-full bg-black text-white py-4 rounded-full font-medium text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors mb-10 active:scale-95 shadow-lg shadow-gray-200">
@@ -262,12 +337,12 @@ export default function ProductDetailPage() {
                 </button>
                 {openSection === 'details' && (
                   <div className="pb-5 text-sm text-gray-600 leading-relaxed animate-in fade-in slide-in-from-top-2">
+                    <p className="mb-4">{product.description}</p>
                     <ul className="list-disc pl-5 space-y-2">
                       <li>Mã sản phẩm: {product.id}</li>
                       <li>Màu sắc đã chọn: {selectedColor}</li>
-                      <li>Chất liệu: Da PU và Vải cao cấp.</li>
-                      <li>Đế ngoài bằng cao su đúc nguyên khối chống trượt.</li>
-                      <li>Thiết kế tại studio của SHOESTORE.</li>
+                      <li>Thương hiệu: {product.brand || "SHOESTORE"}</li>
+                      <li>Chất liệu: Da và Vải cao cấp.</li>
                     </ul>
                   </div>
                 )}

@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductDTO{
+public class ProductDTO {
     private Long id;
 
     @NotBlank(message = "name not empty")
@@ -40,4 +40,8 @@ public class ProductDTO{
     private Categories category;
 
     private String imageUrl;
+    private java.math.BigDecimal discountPercentage;
+    private java.math.BigDecimal rating;
+
+    private java.util.List<ProductVariantDTO> variants;
 }

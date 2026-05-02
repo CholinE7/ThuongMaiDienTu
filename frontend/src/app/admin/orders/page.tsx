@@ -40,7 +40,6 @@ export default function AdminOrdersPage() {
   const [totalOrders, setTotalOrders] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [statusUpdateValue, setStatusUpdateValue] = useState("");
 
   const [toastMsg, setToastMsg] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
@@ -67,7 +66,7 @@ export default function AdminOrdersPage() {
       const response = await apiRequest(`/api/orders?${query}`);
       const result = await response.json();
 
-      if (result.code === 200) {
+      if (result && result.code === 200) {
         const mappedOrders = result.result.content.map((item: any) => {
           const ord = item.order;
           return {
@@ -102,14 +101,14 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const token = localStorage.getItem("token");
-      const empId = localStorage.getItem("employerId");
+      const token = sessionStorage.getItem("token");
+      const empId = sessionStorage.getItem("employerId");
       if (token && !empId) {
         try {
           const res = await apiRequest("/api/auth/me");
           const data = await res.json();
-          if (data.code === 200 && data.result.id) {
-            localStorage.setItem("employerId", data.result.id.toString());
+          if (data && data.code === 200 && data.result?.id) {
+            sessionStorage.setItem("employerId", data.result.id.toString());
           }
         } catch (e) {
           console.error("Lỗi lấy thông tin nhân viên:", e);
@@ -120,15 +119,16 @@ export default function AdminOrdersPage() {
     fetchOrders();
   }, [appliedFilters, currentPage]);
 
-  // HÀM CẬP NHẬT TRẠNG THÁI (Trong Modal Chi tiết)
-  const handleUpdateStatus = async () => {
-    if (!statusUpdateValue || !selectedOrder) return;
+  // HÀM CẬP NHẬT TRẠNG THÁI (Tiến sang trạng thái tiếp theo)
+  const handleAdvanceStatus = async (nextStatus: string) => {
+    if (!selectedOrder) return;
 
-    if (statusUpdateValue === "CANCELLED") {
+    if (nextStatus === "CANCELLED") {
       if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?"))
         return;
     }
-    const empId = localStorage.getItem("employerId");
+    
+    const empId = sessionStorage.getItem("employerId");
     if (!empId) {
       showToast("Không tìm thấy thông tin nhân viên. Vui lòng đăng nhập lại!", "error");
       return;
@@ -138,21 +138,34 @@ export default function AdminOrdersPage() {
     try {
       const response = await apiRequest("/api/orders/status", "PUT", {
         orderId: selectedOrder.id,
-        orderStatusNext: statusUpdateValue,
+        orderStatusNext: nextStatus,
         employerId: Number(empId),
       });
       const result = await response.json();
-      if (result.code === 200) {
+      if (result && result.code === 200) {
         showToast("Cập nhật trạng thái thành công", "success");
-        setSelectedOrder({ ...selectedOrder, status: statusUpdateValue });
+        setSelectedOrder({ ...selectedOrder, status: nextStatus });
         fetchOrders();
       } else {
-        showToast(result.message || "Lỗi khi cập nhật", "error");
+        showToast(result?.message || "Lỗi khi cập nhật", "error");
       }
     } catch (error) {
       showToast("Lỗi khi cập nhật trạng thái!", "error");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const getNextStatusAction = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return { label: "Xác nhận đơn hàng", next: "CONFIRMED", color: "bg-blue-600 hover:bg-blue-700" };
+      case "CONFIRMED":
+        return { label: "Giao hàng cho đơn vị vận chuyển", next: "SHIPPING", color: "bg-yellow-600 hover:bg-yellow-700" };
+      case "SHIPPING":
+        return { label: "Hoàn thành đơn hàng", next: "DELIVERED", color: "bg-green-600 hover:bg-green-700" };
+      default:
+        return null;
     }
   };
 
@@ -171,7 +184,6 @@ export default function AdminOrdersPage() {
 
   const handleOpenDetails = (order: any) => {
     setSelectedOrder(order);
-    setStatusUpdateValue(order.status);
     setIsModalOpen(true);
   };
 
@@ -351,25 +363,25 @@ export default function AdminOrdersPage() {
                 </table>
               </div>
 
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div className="flex items-center gap-3">
-                  <select
-                    value={statusUpdateValue}
-                    onChange={(e) => setStatusUpdateValue(e.target.value)}
-                    className="border rounded-lg px-4 py-2 bg-white"
-                  >
-                    <option value="PENDING">Chờ xác nhận</option>
-                    <option value="CONFIRMED">Đã xác nhận</option>
-                    <option value="SHIPPING">Đang giao</option>
-                    <option value="DELIVERED">Đã giao</option>
-                    <option value="CANCELLED">Đã hủy</option>
-                  </select>
-                  <button
-                    onClick={handleUpdateStatus}
-                    className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg font-bold flex items-center gap-2"
-                  >
-                    <Save size={18} /> Cập nhật
-                  </button>
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-t pt-8">
+                <div className="flex flex-wrap gap-3">
+                  {getNextStatusAction(selectedOrder.status) && (
+                    <button
+                      onClick={() => handleAdvanceStatus(getNextStatusAction(selectedOrder.status)!.next)}
+                      className={`${getNextStatusAction(selectedOrder.status)!.color} text-white px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 shadow-md transition-all active:scale-95`}
+                    >
+                      <CheckCircle2 size={18} /> {getNextStatusAction(selectedOrder.status)!.label}
+                    </button>
+                  )}
+                  
+                  {(selectedOrder.status === "PENDING" || selectedOrder.status === "CONFIRMED") && (
+                    <button
+                      onClick={() => handleAdvanceStatus("CANCELLED")}
+                      className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 transition-all active:scale-95"
+                    >
+                      <XCircle size={18} /> Hủy đơn hàng
+                    </button>
+                  )}
                 </div>
                 <div className="text-right">
                   <p className="text-gray-500 font-medium">

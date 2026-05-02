@@ -42,7 +42,7 @@ const LoginPage = () => {
 
       if (res.ok && token && token !== "fail") {
         // Lưu chìa khóa JWT vào túi của trình duyệt
-        localStorage.setItem("token", token);
+        sessionStorage.setItem("token", token);
 
         // Gọi /api/auth/me để lấy user info
         try {
@@ -52,9 +52,9 @@ const LoginPage = () => {
           if (meRes.ok) {
             const meData = await meRes.json();
             if (meData.code === 200) {
-              localStorage.setItem("customerName", meData.result.fullName);
-              localStorage.setItem("customerEmail", meData.result.email);
-              localStorage.setItem("customerId", meData.result.id.toString());
+              sessionStorage.setItem("customerName", meData.result.fullName);
+              sessionStorage.setItem("customerEmail", meData.result.email);
+              sessionStorage.setItem("customerId", meData.result.id.toString());
               
               // Phát sự kiện để Navbar cập nhật ngay lập tức
               window.dispatchEvent(new Event("authUpdated"));

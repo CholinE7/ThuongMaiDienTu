@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, CheckCircle2, XCircle, Edit, Trash2, ChevronLeft, ChevronRight, X, Loader2, ImageIcon, ArrowLeft } from "lucide-react";
 import Image from "next/image";
+import { apiRequest } from "@/services/app";
 
 const PRODUCTS_PER_PAGE = 5;
 
@@ -20,9 +21,33 @@ export default function AdminProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  
+  const [brands, setBrands] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+
   const [currentProduct, setCurrentProduct] = useState({ 
-    id: 0, name: "", brand: "", image: "", importPrice: 0, sellPrice: 0, category: "Giày Thể Thao Nam", status: "visible", description: ""
+    id: 0, name: "", brandId: "", image: "", importPrice: 0, sellPrice: 0, categoryId: "", status: "visible", description: "",
+    discountPercentage: 0, rating: 0,
+    variants: [] as { color: string, size: string, quantity: number }[]
   });
+
+  // Fetch Brands and Categories
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const brandRes = await apiRequest('/api/brands?page_size=100');
+        const brandData = await brandRes.json();
+        if (brandData.code === 200) setBrands(brandData.result.content);
+        
+        const catRes = await apiRequest('/api/categories');
+        const catData = await catRes.json();
+        if (catData.code === 200) setCategories(catData.result.content);
+      } catch (error) {
+        console.error("Error fetching admin data:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   // TOAST THÔNG BÁO
   const [toastMsg, setToastMsg] = useState("");
@@ -44,19 +69,24 @@ export default function AdminProductsPage() {
         page_no: (currentPage - 1).toString(),
         page_size: PRODUCTS_PER_PAGE.toString()
       }).toString();
-      const response = await fetch(`http://localhost:8080/api/products?${query}`);
+      const response = await apiRequest(`/api/products?${query}`);
       const result = await response.json();
       if (result.code === 200 && result.result) {
         setProducts(result.result.content.map((p: any) => ({
           id: p.id,
           name: p.name,
           brand: p.brand?.name || "N/A",
+          brandId: p.brand?.id || "",
           image: p.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=300",
-          importPrice: p.price * 0.7, // Giả định giá nhập vì backend chưa có
+          importPrice: p.price * 0.7, 
           sellPrice: p.price,
           category: p.category?.name || "Khác",
+          categoryId: p.category?.id || "",
           status: p.deleted === 0 ? "visible" : "hidden",
-          description: p.description
+          description: p.description,
+          discountPercentage: p.discountPercentage || 0,
+          rating: p.rating || 0,
+          variants: p.variants || []
         })));
         setTotalProducts(result.result.total);
       }
@@ -84,7 +114,7 @@ export default function AdminProductsPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const url = 'http://localhost:8080/api/products';
+      const url = '/api/products';
       const method = modalMode === "add" ? 'POST' : 'PUT';
       
       const payload = { 
@@ -93,23 +123,21 @@ export default function AdminProductsPage() {
         price: currentProduct.sellPrice,
         description: currentProduct.description,
         imageUrl: currentProduct.image,
-        quantity: 100, // Mặc định số lượng
-        deleted: currentProduct.status === "visible" ? 0 : 1
+        quantity: currentProduct.variants.reduce((acc, v) => acc + v.quantity, 0) || 0,
+        brand_id: Number(currentProduct.brandId),
+        category_id: Number(currentProduct.categoryId),
+        deleted: currentProduct.status === "visible" ? 0 : 1,
+        discountPercentage: currentProduct.discountPercentage,
+        rating: currentProduct.rating,
+        variants: currentProduct.variants
       };
 
-      const response = await fetch(url, {
-        method, 
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem("token")}`
-        }, 
-        body: JSON.stringify(payload)
-      });
+      const response = await apiRequest(url, method, payload);
       const result = await response.json();
       
       if (result.code === 200) {
         showToast(modalMode === "add" ? "Thêm thành công" : "Cập nhật thành công", "success");
-        fetchProducts(); // Tải lại bảng
+        fetchProducts(); 
       } else {
         showToast(result.message || "Lỗi khi lưu", "error");
       }
@@ -125,12 +153,7 @@ export default function AdminProductsPage() {
     if (window.confirm(`Bạn có chắc muốn xóa sản phẩm "${name}" không?`)) {
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:8080/api/products/1/${id}`, { 
-          method: 'DELETE',
-          headers: { 
-            'Authorization': `Bearer ${localStorage.getItem("token")}`
-          }
-        });
+        const response = await apiRequest(`/api/products/${id}`, 'DELETE');
         const result = await response.json();
         if (result.code === 200) {
           showToast("Xóa thành công", "success");
@@ -145,13 +168,21 @@ export default function AdminProductsPage() {
 
   const handleOpenAdd = () => {
     setModalMode("add");
-    setCurrentProduct({ id: 0, name: "", brand: "", image: "", importPrice: 0, sellPrice: 0, category: "Giày Thể Thao Nam", status: "visible", description: "" });
+    setCurrentProduct({ 
+      id: 0, name: "", brandId: brands[0]?.id || "", image: "", importPrice: 0, sellPrice: 0, 
+      categoryId: categories[0]?.id || "", status: "visible", description: "",
+      discountPercentage: 0, rating: 0,
+      variants: []
+    });
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (prod: any) => {
     setModalMode("edit");
-    setCurrentProduct(prod);
+    setCurrentProduct({
+      ...prod,
+      variants: prod.variants || []
+    });
     setIsModalOpen(true);
   };
 
@@ -199,8 +230,20 @@ export default function AdminProductsPage() {
                     <div><label className="block text-sm font-semibold text-gray-800 mb-2">Tên sản phẩm <span className="text-red-500">*</span></label><input required type="text" value={currentProduct.name} onChange={(e) => setCurrentProduct({...currentProduct, name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
                     
                     <div className="grid grid-cols-2 gap-5">
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Thương hiệu <span className="text-red-500">*</span></label><input required type="text" value={currentProduct.brand} onChange={(e) => setCurrentProduct({...currentProduct, brand: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Danh mục <span className="text-red-500">*</span></label><select required value={currentProduct.category} onChange={(e) => setCurrentProduct({...currentProduct, category: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white"><option value="Giày Thể Thao Nam">Giày Thể Thao Nam</option><option value="Giày Thể Thao Nữ">Giày Thể Thao Nữ</option><option value="Giày Chạy Bộ">Giày Chạy Bộ</option><option value="Giày Sneaker">Giày Sneaker</option><option value="Giày Lười">Giày Lười</option></select></div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-800 mb-2">Thương hiệu <span className="text-red-500">*</span></label>
+                        <select required value={currentProduct.brandId} onChange={(e) => setCurrentProduct({...currentProduct, brandId: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white">
+                          <option value="">Chọn thương hiệu</option>
+                          {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-800 mb-2">Danh mục <span className="text-red-500">*</span></label>
+                        <select required value={currentProduct.categoryId} onChange={(e) => setCurrentProduct({...currentProduct, categoryId: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white">
+                          <option value="">Chọn danh mục</option>
+                          {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-5">
@@ -208,9 +251,106 @@ export default function AdminProductsPage() {
                       <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giá bán (VNĐ) <span className="text-red-500">*</span></label><input required type="number" value={currentProduct.sellPrice || ""} onChange={(e) => setCurrentProduct({...currentProduct, sellPrice: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
                     </div>
 
-                    <div><label className="block text-sm font-semibold text-gray-800 mb-2">Trạng thái <span className="text-red-500">*</span></label><select required value={currentProduct.status} onChange={(e) => setCurrentProduct({...currentProduct, status: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white"><option value="visible">Hiển thị</option><option value="hidden">Ẩn</option></select></div>
-                    
-                    <div><label className="block text-sm font-semibold text-gray-800 mb-2">Mô tả sản phẩm</label><textarea rows={4} value={currentProduct.description} onChange={(e) => setCurrentProduct({...currentProduct, description: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none resize-none" /></div>
+                    <div className="grid grid-cols-2 gap-5">
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Trạng thái <span className="text-red-500">*</span></label><select required value={currentProduct.status} onChange={(e) => setCurrentProduct({...currentProduct, status: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white"><option value="visible">Hiển thị</option><option value="hidden">Ẩn</option></select></div>
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Mô tả sản phẩm</label><textarea rows={2} value={currentProduct.description} onChange={(e) => setCurrentProduct({...currentProduct, description: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none resize-none" /></div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-5 mt-4">
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giảm giá (%)</label><input type="number" value={currentProduct.discountPercentage || 0} onChange={(e) => setCurrentProduct({...currentProduct, discountPercentage: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Đánh giá (1-5)</label><input type="number" step="0.1" min="1" max="5" value={currentProduct.rating || 5} onChange={(e) => setCurrentProduct({...currentProduct, rating: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none" /></div>
+                    </div>
+
+                    {/* BIẾN THỂ (MÀU/SIZE/SỐ LƯỢNG) */}
+                    <div className="border-t pt-5">
+                      <div className="flex justify-between items-center mb-4">
+                        <label className="text-sm font-bold text-gray-900 uppercase tracking-wide">Quản lý biến thể (Màu sắc & Size)</label>
+                        <button 
+                          type="button" 
+                          onClick={() => setCurrentProduct({
+                            ...currentProduct, 
+                            variants: [...currentProduct.variants, { color: "Trắng", size: "40", quantity: 10 }]
+                          })}
+                          className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5"
+                        >
+                          <Plus size={14} /> Thêm biến thể
+                        </button>
+                      </div>
+                      
+                      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                        {currentProduct.variants.length > 0 ? (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-12 gap-3 px-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                              <div className="col-span-4">Màu sắc</div>
+                              <div className="col-span-3">Kích thước</div>
+                              <div className="col-span-4">Số lượng</div>
+                              <div className="col-span-1"></div>
+                            </div>
+                            {currentProduct.variants.map((v, idx) => (
+                              <div key={idx} className="grid grid-cols-12 gap-3 items-center bg-white p-2 rounded-lg border border-gray-200 shadow-sm animate-in fade-in slide-in-from-top-1">
+                                <div className="col-span-4">
+                                  <input 
+                                    required 
+                                    type="text" 
+                                    value={v.color} 
+                                    onChange={(e) => {
+                                      const newVariants = [...currentProduct.variants];
+                                      newVariants[idx].color = e.target.value;
+                                      setCurrentProduct({...currentProduct, variants: newVariants});
+                                    }}
+                                    placeholder="Vd: Đen"
+                                    className="w-full border-none focus:ring-0 text-sm font-medium p-1"
+                                  />
+                                </div>
+                                <div className="col-span-3">
+                                  <input 
+                                    required 
+                                    type="text" 
+                                    value={v.size} 
+                                    onChange={(e) => {
+                                      const newVariants = [...currentProduct.variants];
+                                      newVariants[idx].size = e.target.value;
+                                      setCurrentProduct({...currentProduct, variants: newVariants});
+                                    }}
+                                    placeholder="40"
+                                    className="w-full border-none focus:ring-0 text-sm font-medium p-1"
+                                  />
+                                </div>
+                                <div className="col-span-4">
+                                  <input 
+                                    required 
+                                    type="number" 
+                                    value={v.quantity} 
+                                    onChange={(e) => {
+                                      const newVariants = [...currentProduct.variants];
+                                      newVariants[idx].quantity = Number(e.target.value);
+                                      setCurrentProduct({...currentProduct, variants: newVariants});
+                                    }}
+                                    className="w-full border-none focus:ring-0 text-sm font-bold text-blue-600 p-1"
+                                  />
+                                </div>
+                                <div className="col-span-1 flex justify-end">
+                                  <button 
+                                    type="button" 
+                                    onClick={() => {
+                                      const newVariants = currentProduct.variants.filter((_, i) => i !== idx);
+                                      setCurrentProduct({...currentProduct, variants: newVariants});
+                                    }}
+                                    className="text-gray-300 hover:text-red-500 transition"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6">
+                            <p className="text-xs text-gray-400 italic">Chưa có biến thể nào. Vui lòng thêm để quản lý kho theo màu/size.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* CỘT PHẢI: ẢNH (Chiếm 1 phần) */}
@@ -281,8 +421,13 @@ export default function AdminProductsPage() {
       {/* --- BỘ LỌC TÌM KIẾM --- */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-end">
-          <div><label className="block text-sm font-semibold text-gray-900 mb-1.5">Tìm theo tên / thương hiệu</label><input type="text" placeholder="Nhập tên giày hoặc hãng..." value={searchName} onChange={(e) => setSearchName(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all" /></div>
-          <div><label className="block text-sm font-semibold text-gray-900 mb-1.5">Tìm theo danh mục</label><select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all bg-white font-medium"><option value="all">Tất cả danh mục</option><option value="Giày Thể Thao Nam">Giày Thể Thao Nam</option><option value="Giày Thể Thao Nữ">Giày Thể Thao Nữ</option><option value="Giày Chạy Bộ">Giày Chạy Bộ</option><option value="Giày Sneaker">Giày Sneaker</option><option value="Giày Lười">Giày Lười</option></select></div>
+          <div><label className="block text-sm font-semibold text-gray-900 mb-1.5">Tìm theo tên</label><input type="text" placeholder="Nhập tên giày..." value={searchName} onChange={(e) => setSearchName(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all" /></div>
+          <div><label className="block text-sm font-semibold text-gray-900 mb-1.5">Tìm theo danh mục</label>
+            <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all bg-white font-medium">
+              <option value="all">Tất cả danh mục</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
           <div><button onClick={handleSearchClick} className="bg-[#22C55E] text-white px-6 py-2.5 rounded-lg shadow-sm hover:bg-[#16A34A] transition flex items-center justify-center gap-2 font-bold w-full md:w-auto"><Search size={18} /> Tìm kiếm</button></div>
         </div>
       </div>
@@ -300,18 +445,17 @@ export default function AdminProductsPage() {
             <thead>
               <tr className="bg-blue-600 text-white text-sm font-semibold uppercase tracking-wide">
                 <th className="px-4 py-4 whitespace-nowrap">STT</th>
-                <th className="px-4 py-4 whitespace-nowrap text-left w-[30%]">TÊN SẢN PHẨM</th>
+                <th className="px-4 py-4 whitespace-nowrap text-left">TÊN SẢN PHẨM</th>
                 <th className="px-4 py-4 whitespace-nowrap">HÌNH ẢNH</th>
                 <th className="px-4 py-4 whitespace-nowrap">GIÁ BÁN</th>
-                <th className="px-4 py-4 whitespace-nowrap">GIÁ NHẬP</th>
                 <th className="px-4 py-4 whitespace-nowrap">DANH MỤC</th>
                 <th className="px-4 py-4 whitespace-nowrap">TRẠNG THÁI</th>
                 <th className="px-4 py-4 whitespace-nowrap">THAO TÁC</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 text-sm text-gray-700">
-              {!isLoading && paginatedProducts.length > 0 ? (
-                paginatedProducts.map((prod, index) => (
+              {!isLoading && products.length > 0 ? (
+                products.map((prod, index) => (
                   <tr key={prod.id} className="hover:bg-blue-50/50 transition-colors">
                     <td className="px-4 py-4">{startIndex + index + 1}</td>
                     <td className="px-4 py-4 text-left">
@@ -326,13 +470,12 @@ export default function AdminProductsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-4 font-bold text-red-500">{formatPrice(prod.sellPrice)}</td>
-                    <td className="px-4 py-4 font-semibold text-gray-600">{formatPrice(prod.importPrice)}</td>
                     <td className="px-4 py-4"><span className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs font-bold border border-gray-200">{prod.category}</span></td>
                     <td className="px-4 py-4">
                       {prod.status === "visible" ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-green-700 border border-green-200 bg-green-50 text-xs font-bold"><CheckCircle2 size={14}/> Hiển thị</span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-green-700 border border-green-200 bg-green-50 text-xs font-bold"><CheckCircle2 size={14}/> Hiện</span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-gray-500 border border-gray-200 bg-gray-100 text-xs font-bold"><XCircle size={14}/> Đã ẩn</span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-gray-500 border border-gray-200 bg-gray-100 text-xs font-bold"><XCircle size={14}/> Ẩn</span>
                       )}
                     </td>
                     <td className="px-4 py-4">

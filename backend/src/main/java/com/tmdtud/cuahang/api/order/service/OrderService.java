@@ -118,6 +118,15 @@ public class OrderService implements OrderServiceI {
 
             for (OrdersDetails item : ordersDetails) {
                 Products pro = item.getProduct();
+                
+                // Restore variant quantity
+                java.util.Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variantOpt = variantRepo.findByProductAndColorAndSize(pro, item.getColor(), item.getSize());
+                if (variantOpt.isPresent()) {
+                    com.tmdtud.cuahang.api.product.model.ProductVariant variant = variantOpt.get();
+                    variant.setQuantity(variant.getQuantity() + item.getQuantity());
+                    variantRepo.save(variant);
+                }
+
                 pro.setQuantity(pro.getQuantity() + item.getQuantity());
                 products.add(pro);
             }
@@ -126,7 +135,6 @@ public class OrderService implements OrderServiceI {
         }
 
         order.setStatus(OrderStatus.CANCELLED);
-        order.setDeleted(1);
 
         orderRepository.save(order);
         return order;
@@ -160,6 +168,9 @@ public class OrderService implements OrderServiceI {
                         orderDetailService.getByOrderId(order.getId()));
     }
 
+    @Autowired
+    private com.tmdtud.cuahang.api.product.repository.ProductVariantRepository variantRepo;
+
     @Override
     @Transactional
     public Orders updateStatus(UpdateOrderStatusRequest request) {
@@ -174,7 +185,6 @@ public class OrderService implements OrderServiceI {
         }
 
         order.setEmployer(employer);
-
         order.setStatus(request.getOrderStatusNext());
         orderRepository.save(order);
 
@@ -185,9 +195,24 @@ public class OrderService implements OrderServiceI {
 
             for (OrdersDetails item : ordersDetails) {
                 Products pro = item.getProduct();
-                if (pro.getQuantity() <= item.getQuantity() + 1) { // sản phẩm tồn tại tối thiểu 1 số lượng
-                    return order;
+                
+                // Try to find the specific variant
+                java.util.Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variantOpt = variantRepo.findByProductAndColorAndSize(pro, item.getColor(), item.getSize());
+                
+                if (variantOpt.isPresent()) {
+                    com.tmdtud.cuahang.api.product.model.ProductVariant variant = variantOpt.get();
+                    if (variant.getQuantity() < item.getQuantity()) {
+                        throw new RuntimeException("Biến thể " + item.getColor() + " size " + item.getSize() + " của sản phẩm " + pro.getName() + " không đủ số lượng tồn kho!");
+                    }
+                    variant.setQuantity(variant.getQuantity() - item.getQuantity());
+                    variantRepo.save(variant);
+                } else {
+                    // Fallback to global quantity if no variant found
+                    if (pro.getQuantity() < item.getQuantity()) {
+                        throw new RuntimeException("Sản phẩm " + pro.getName() + " không đủ số lượng tồn kho!");
+                    }
                 }
+                
                 pro.setQuantity(pro.getQuantity() - item.getQuantity());
                 products.add(pro);
             }
