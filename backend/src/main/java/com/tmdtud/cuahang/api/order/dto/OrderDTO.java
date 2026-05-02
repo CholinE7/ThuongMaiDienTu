@@ -7,7 +7,6 @@ import com.tmdtud.cuahang.api.customer.dto.CustomerDTO;
 import com.tmdtud.cuahang.api.customer.dto.CustomerSummaryDTO;
 import com.tmdtud.cuahang.api.employer.dto.EmployerSummaryDTO;
 import com.tmdtud.cuahang.api.order.model.OrderStatus;
-import com.tmdtud.cuahang.api.supplier.dto.SupplierDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

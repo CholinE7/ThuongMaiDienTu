@@ -40,17 +40,29 @@ export default function ProductCard({ product }: ProductCardProps) {
         </span>
         
         {/* Các chấm màu sắc */}
-        {/* {product.colors && product.colors.length > 0 && (
+        {product.colors && product.colors.length > 0 && (
           <div className="flex items-center justify-center gap-2 mt-auto pb-2">
-            {product.colors.map((color, index) => (
-              <div 
-                key={index}
-                className="w-4 h-4 rounded-full border border-gray-200"
-                style={{ backgroundColor: color }}
-              />
-            ))}
+            {product.colors.map((colorName: string, index: number) => {
+              const COLOR_HEX_MAP: Record<string, string> = {
+                "Đen": "#171717",
+                "Trắng": "#FFFFFF",
+                "Đỏ": "#991B1B",
+                "Nâu": "#78350F",
+                "Be": "#D4B996",
+                "Xám": "#6B7280",
+                "Kem": "#FEFCE8"
+              };
+              return (
+                <div 
+                  key={index}
+                  className="w-3.5 h-3.5 rounded-full border border-gray-200"
+                  style={{ backgroundColor: COLOR_HEX_MAP[colorName] || "#000000" }}
+                  title={colorName}
+                />
+              );
+            })}
           </div>
-        )} */}
+        )}
       </div>
     </div>
   );

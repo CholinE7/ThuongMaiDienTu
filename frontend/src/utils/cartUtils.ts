@@ -14,6 +14,10 @@ export interface CartItem {
 }
 
 export const getCart = async (): Promise<CartItem[]> => {
+  // Kiểm tra token trước khi gọi API
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (!token || token === "fail") return [];
+
   try {
     const response = await apiRequest("/api/cart", "GET");
     if (!response.ok) return [];

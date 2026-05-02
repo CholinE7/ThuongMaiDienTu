@@ -1,9 +1,18 @@
 package com.tmdtud.cuahang.common.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record ApiResponse<T>(int code, String message, T result) {
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class ApiResponse<T> {
+    private int code;
+    private String message;
+    private T result;
     
     public static <T> ApiResponse<T> success(T result){
         return new ApiResponse<T>(200, "Success", result);

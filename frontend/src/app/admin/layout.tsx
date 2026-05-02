@@ -34,8 +34,8 @@ export default function AdminLayout({
               localStorage.setItem("customerName", res.result.fullName);
             }
           } else {
-            // Not a staff member, redirect to home
-            router.push("/");
+            // Not a staff member, redirect to admin login
+            router.push("/admin/login");
           }
         } else {
           // Not authenticated, redirect to admin login

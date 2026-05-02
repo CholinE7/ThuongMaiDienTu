@@ -43,6 +43,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleAllExceptions(Exception ex){
-        return ResponseEntity.badRequest().body(ApiResponse.error(400, ex.getMessage()));
+        String message = ex.getMessage();
+        int status = 400;
+        
+        if (message != null && (message.contains("Chưa đăng nhập") || message.contains("Full authentication is required"))) {
+            status = 401;
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(status, message));
+        }
+        
+        return ResponseEntity.status(status).body(ApiResponse.error(status, message));
     }
 }

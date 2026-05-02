@@ -21,8 +21,13 @@ public class OrderStoreRequest {
     @DecimalMin(value = "0.0", inclusive = true)
     private BigDecimal totalPrice;
 
-    @NotNull(message = "customer not null")
     private Long customerId;
+
+    private String fullName;
+    private String phone;
+    private String street;
+    private String ward;
+    private String city;
 
     private Long employerId;
 

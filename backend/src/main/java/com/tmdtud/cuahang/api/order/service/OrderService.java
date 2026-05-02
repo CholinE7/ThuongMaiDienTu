@@ -36,6 +36,8 @@ import com.tmdtud.cuahang.common.response.PageResponse;
 
 import lombok.Data;
 
+import com.tmdtud.cuahang.common.service.SseService;
+
 @Service
 @Data
 
@@ -66,6 +68,9 @@ public class OrderService implements OrderServiceI {
     @Autowired
     private CustomerMapper customerMapper;
 
+    @Autowired
+    private SseService sseService;
+
     @Override
     public PageResponse<Orders> getAll(Pageable pageable) {
         Page<Orders> orders = orderRepository.findAll(pageable);
@@ -81,13 +86,22 @@ public class OrderService implements OrderServiceI {
     @Override
     @Transactional
     public Orders add(OrderStoreRequest request) {
-        CustomerDTO customerDTO = customerService.getById(request.getCustomerId());
-        Customers customer = customerMapper.toEntity(customerDTO);
+        Customers customer = null;
+        if (request.getCustomerId() != null) {
+            CustomerDTO customerDTO = customerService.getById(request.getCustomerId());
+            customer = customerMapper.toEntity(customerDTO);
+        }
 
         Orders order = Orders.builder()
                 .customer(customer)
+                .fullName(request.getFullName())
+                .phone(request.getPhone())
+                .street(request.getStreet())
+                .ward(request.getWard())
+                .city(request.getCity())
                 .method(request.getMethod())
                 .status(OrderStatus.PENDING)
+                .paymentStatus("PENDING")
                 .deleted(0)
                 .totalPrice(request.getTotalPrice()).build();
 
@@ -97,8 +111,9 @@ public class OrderService implements OrderServiceI {
         }
 
         Orders newOrder = orderRepository.save(order);
-        orderDetailService.addAll(request.getDetails(), newOrder.getId()); // tạo chi tiết đơn
-                                                                           // nhập
+        orderDetailService.addAll(request.getDetails(), newOrder.getId()); 
+        
+        sseService.sendToAll(java.util.Map.of("orderId", newOrder.getId(), "status", newOrder.getStatus().toString()));
         return newOrder;
     }
 
@@ -128,8 +143,9 @@ public class OrderService implements OrderServiceI {
         order.setStatus(OrderStatus.CANCELLED);
         order.setDeleted(1);
 
-        orderRepository.save(order);
-        return order;
+        Orders updatedOrder = orderRepository.save(order);
+        sseService.sendToAll(java.util.Map.of("orderId", updatedOrder.getId(), "status", updatedOrder.getStatus().toString()));
+        return updatedOrder;
     }
 
     @Override
@@ -195,6 +211,7 @@ public class OrderService implements OrderServiceI {
             productService.updateAll(products);
         }
 
+        sseService.sendToAll(java.util.Map.of("orderId", order.getId(), "status", order.getStatus().toString()));
         return order;
     }
 
