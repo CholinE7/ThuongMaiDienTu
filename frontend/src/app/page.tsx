@@ -3,6 +3,7 @@ import HeroSlider from '@/components/HeroSlider';
 import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 import { Truck, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Product } from '@/types';
 
 export const dynamic = "force-dynamic";
 
@@ -76,12 +77,23 @@ export default async function Home() {
     bestSellers = products.slice(0, 4);
   }
 
-  const shoesNu = products.filter((product: { category: string }) => product.category?.toLowerCase() === "womens-shoes").slice(0, 4);
-  const shoesNam = products.filter((product: { category: string }) => product.category?.toLowerCase() === "mens-shoes").slice(0, 4);
+  let shoesNu = products.filter((product: Product) => product.category === "Giày Thể Thao Nữ").slice(0, 4);
+  // Nếu không đủ 4 sản phẩm, lấy thêm từ danh sách chung (giống Sản Phẩm Bán Chạy)
+  if (shoesNu.length < 4) {
+    const moreNu = products.filter((p: Product) => !shoesNu.some((s: Product) => s.id === p.id)).slice(0, 4 - shoesNu.length);
+    shoesNu = [...shoesNu, ...moreNu];
+  }
+
+  let shoesNam = products.filter((product: Product) => product.category === "Giày Thể Thao Nam").slice(0, 4);
+  // Nếu không đủ 4 sản phẩm, lấy thêm từ danh sách chung (giống Sản Phẩm Bán Chạy)
+  if (shoesNam.length < 4) {
+    const moreNam = products.filter((p: Product) => !shoesNam.some((s: Product) => s.id === p.id)).slice(0, 4 - shoesNam.length);
+    shoesNam = [...shoesNam, ...moreNam];
+  }
 
   // Sản phẩm khuyến mãi: có discount_percentage > 0
   const discountedProducts = products
-    .filter((p: { discountPercentage?: number }) => (p.discountPercentage || 0) > 0)
+    .filter((p: Product) => (p.discountPercentage || 0) > 0)
     .slice(0, 4);
 
   return (
@@ -130,7 +142,7 @@ export default async function Home() {
         
         {/* Lưới sản phẩm */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
-          {bestSellers.map((product: { id: number, name: string, price: number, category: string, imageUrl?: string }) => (
+          {bestSellers.map((product: Product) => (
             <ProductCard key={`bs-${product.id}`} product={product} />
           ))}
         </div>
@@ -157,7 +169,7 @@ export default async function Home() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
-            {discountedProducts.map((product: { id: number, name: string, price: number, category: string, imageUrl?: string, discountPercentage?: number }) => (
+            {discountedProducts.map((product: Product) => (
               <div key={`promo-${product.id}`} className="relative">
                 <div className="absolute top-2 left-2 z-10 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md shadow">
                   -{product.discountPercentage}%
@@ -185,7 +197,7 @@ export default async function Home() {
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
-          {shoesNu.map((product: { id: number, name: string, price: number, category: string, imageUrl?: string }) => (
+          {shoesNu.map((product: Product) => (
             <ProductCard key={`nu-${product.id}`} product={product} />
           ))}
         </div>
@@ -207,7 +219,7 @@ export default async function Home() {
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
-          {shoesNam.map((product: { id: number, name: string, price: number, category: string, imageUrl?: string }) => (
+          {shoesNam.map((product: Product) => (
             <ProductCard key={`nam-${product.id}`} product={product} />
           ))}
         </div>
