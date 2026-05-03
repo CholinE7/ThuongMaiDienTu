@@ -441,7 +441,7 @@ export default function AdminOrdersPage() {
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="w-full border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white font-medium"
+              className="w-full border-2 rounded-lg px-4 py-2.5 outline-none focus:border-blue-600 font-black text-gray-900"
             />
           </div>
           <div>
@@ -450,7 +450,7 @@ export default function AdminOrdersPage() {
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="w-full border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white font-medium"
+              className="w-full border-2 rounded-lg px-4 py-2.5 outline-none focus:border-blue-600 font-black text-gray-900"
             />
           </div>
           <div>
@@ -460,7 +460,7 @@ export default function AdminOrdersPage() {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white font-medium"
+              className="w-full border-2 rounded-lg px-4 py-2.5 outline-none bg-white font-black text-gray-900"
             >
               <option value="all">Tất cả trạng thái</option>
               <option value="PENDING">Chờ xác nhận</option>

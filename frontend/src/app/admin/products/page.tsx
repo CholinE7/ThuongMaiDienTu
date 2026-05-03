@@ -95,11 +95,17 @@ export default function AdminProductsPage() {
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     try {
-      const query = new URLSearchParams({ 
-        name: appliedFilters.name, 
+      const params: Record<string, string> = {
         page_no: (currentPage - 1).toString(),
         page_size: PRODUCTS_PER_PAGE.toString()
-      }).toString();
+      };
+      
+      if (appliedFilters.name) params.name = appliedFilters.name;
+      if (appliedFilters.category && appliedFilters.category !== "all") {
+        params.category_id = appliedFilters.category;
+      }
+
+      const query = new URLSearchParams(params).toString();
       const response = await apiRequest(`/api/products?${query}`);
       const result = await response.json();
       if (result.code === 200 && result.result) {
@@ -266,19 +272,19 @@ export default function AdminProductsPage() {
                   
                   {/* CỘT TRÁI: ĐIỀN CHỮ (Chiếm 2 phần) */}
                   <div className="lg:col-span-2 space-y-5">
-                    <div><label className="block text-sm font-semibold text-gray-800 mb-2">Tên sản phẩm <span className="text-red-500">*</span></label><input required type="text" value={currentProduct.name} onChange={(e) => setCurrentProduct({...currentProduct, name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none font-medium" /></div>
+                    <div><label className="block text-sm font-semibold text-gray-800 mb-2">Tên sản phẩm <span className="text-red-500">*</span></label><input required type="text" value={currentProduct.name} onChange={(e) => setCurrentProduct({...currentProduct, name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none font-medium text-gray-900" /></div>
                     
                     <div className="grid grid-cols-2 gap-5">
                       <div>
                         <label className="block text-sm font-semibold text-gray-800 mb-2">Thương hiệu <span className="text-red-500">*</span></label>
-                        <select required value={currentProduct.brandId} onChange={(e) => setCurrentProduct({...currentProduct, brandId: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white font-medium">
+                        <select required value={currentProduct.brandId} onChange={(e) => setCurrentProduct({...currentProduct, brandId: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white font-medium text-gray-900">
                           <option value="">Chọn thương hiệu</option>
                           {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                         </select>
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-800 mb-2">Danh mục <span className="text-red-500">*</span></label>
-                        <select required value={currentProduct.categoryId} onChange={(e) => setCurrentProduct({...currentProduct, categoryId: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white font-medium">
+                        <select required value={currentProduct.categoryId} onChange={(e) => setCurrentProduct({...currentProduct, categoryId: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white font-medium text-gray-900">
                           <option value="">Chọn danh mục</option>
                           {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
@@ -286,16 +292,16 @@ export default function AdminProductsPage() {
                     </div>
 
                     <div className="grid grid-cols-1 gap-5">
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giá bán (VNĐ) <span className="text-red-500">*</span></label><input required type="number" value={currentProduct.sellPrice || ""} onChange={(e) => setCurrentProduct({...currentProduct, sellPrice: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none font-medium" /></div>
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giá bán (VNĐ) <span className="text-red-500">*</span></label><input required type="number" value={currentProduct.sellPrice || ""} onChange={(e) => setCurrentProduct({...currentProduct, sellPrice: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none font-medium text-gray-900" /></div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-5">
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Trạng thái <span className="text-red-500">*</span></label><select required value={currentProduct.status} onChange={(e) => setCurrentProduct({...currentProduct, status: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white font-medium"><option value="visible">Hiển thị</option><option value="hidden">Ẩn</option></select></div>
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Mô tả sản phẩm</label><textarea rows={2} value={currentProduct.description} onChange={(e) => setCurrentProduct({...currentProduct, description: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none resize-none font-medium" /></div>
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Trạng thái <span className="text-red-500">*</span></label><select required value={currentProduct.status} onChange={(e) => setCurrentProduct({...currentProduct, status: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white font-medium text-gray-900"><option value="visible">Hiển thị</option><option value="hidden">Ẩn</option></select></div>
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Mô tả sản phẩm</label><textarea rows={2} value={currentProduct.description} onChange={(e) => setCurrentProduct({...currentProduct, description: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none resize-none font-medium text-gray-900" /></div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-5 mt-4">
-                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giảm giá (%)</label><input type="number" value={currentProduct.discountPercentage || 0} onChange={(e) => setCurrentProduct({...currentProduct, discountPercentage: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none font-medium" /></div>
+                      <div><label className="block text-sm font-semibold text-gray-800 mb-2">Giảm giá (%)</label><input type="number" value={currentProduct.discountPercentage || 0} onChange={(e) => setCurrentProduct({...currentProduct, discountPercentage: Number(e.target.value)})} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none font-medium text-gray-900" /></div>
                     </div>
 
                     {/* BIẾN THỂ (MÀU/SIZE/SỐ LƯỢNG) */}
@@ -336,7 +342,7 @@ export default function AdminProductsPage() {
                                       setCurrentProduct({...currentProduct, variants: newVariants});
                                     }}
                                     placeholder="Vd: Đen"
-                                    className="w-full border-none focus:ring-0 text-sm font-medium p-1"
+                                    className="w-full border-none focus:ring-0 text-sm font-medium p-1 text-gray-900"
                                   />
                                 </div>
                                 <div className="col-span-3">
@@ -350,7 +356,7 @@ export default function AdminProductsPage() {
                                       setCurrentProduct({...currentProduct, variants: newVariants});
                                     }}
                                     placeholder="40"
-                                    className="w-full border-none focus:ring-0 text-sm font-medium p-1"
+                                    className="w-full border-none focus:ring-0 text-sm font-medium p-1 text-gray-900"
                                   />
                                 </div>
                                 <div className="col-span-4">
@@ -464,7 +470,7 @@ export default function AdminProductsPage() {
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
-          <div><button onClick={handleSearchClick} className="bg-[#22C55E] text-white px-6 py-2.5 rounded-lg shadow-sm hover:bg-[#16A34A] transition flex items-center justify-center gap-2 font-bold w-full md:w-auto font-medium"><Search size={18} /> Tìm kiếm</button></div>
+          <div><button onClick={handleSearchClick} className="bg-[#22C55E] text-white px-6 py-2.5 rounded-lg shadow-sm hover:bg-[#16A34A] transition flex items-center justify-center gap-2 font-bold w-full md:w-auto font-medium text-gray-900"><Search size={18} /> Tìm kiếm</button></div>
         </div>
       </div>
 
