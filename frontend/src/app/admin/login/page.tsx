@@ -123,7 +123,7 @@ export default function LoginPage() {
         <h2 className="text-center text-3xl font-black text-slate-900 uppercase tracking-tighter">
           Hệ thống <span className="text-blue-600">Nội bộ</span>
         </h2>
-        <p className="mt-2 text-center text-sm font-bold text-slate-400 uppercase tracking-widest">
+        <p className="mt-2 text-center text-sm font-black text-slate-500 uppercase tracking-widest">
           Chỉ dành cho Nhân viên & Quản trị
         </p>
       </div>
@@ -138,11 +138,11 @@ export default function LoginPage() {
 
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">
                 Email
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-blue-600 transition-colors">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
                   <Mail size={20} />
                 </div>
                 <input
@@ -150,18 +150,18 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 outline-none font-bold transition-all"
+                  className="block w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 outline-none font-bold transition-all text-slate-900"
                   placeholder="admin@shoestore.com"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">
                 Mật khẩu
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-blue-600 transition-colors">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
                   <Lock size={20} />
                 </div>
                 <input
@@ -169,7 +169,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-12 pr-12  py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 outline-none font-bold transition-all"
+                  className="block w-full pl-12 pr-12  py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 outline-none font-bold transition-all text-slate-900"
                   placeholder="••••••••"
                 />
                 <button

@@ -344,11 +344,11 @@ export default function AdminUsersPage() {
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-          <div><label className="block text-sm font-semibold text-gray-900 mb-1.5">Tìm theo họ tên</label><input type="text" placeholder="Nhập họ tên..." value={searchName} onChange={(e) => setSearchName(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all" /></div>
-          <div><label className="block text-sm font-semibold text-gray-900 mb-1.5">Tìm theo email</label><input type="text" placeholder="Nhập email..." value={searchAccount} onChange={(e) => setSearchAccount(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all" /></div>
-          <div><label className="block text-sm font-semibold text-gray-900 mb-1.5">Vai trò</label><select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all bg-white font-medium"><option value="customer">Khách hàng</option><option value="staff">Nhân viên</option></select></div>
-          <div><label className="block text-sm font-semibold text-gray-900 mb-1.5">Trạng thái</label><select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all bg-white font-medium"><option value="all">Tất cả</option><option value={1}>Hoạt động</option><option value={0}>Bị khóa</option></select></div>
-          <div><button onClick={handleSearchClick} className="bg-[#22C55E] text-white px-5 py-2.5 rounded-lg shadow-sm hover:bg-[#16A34A] transition flex items-center justify-center gap-2 font-bold w-full md:w-auto"><Search size={18} /> Tìm kiếm</button></div>
+          <div><label className="block text-sm font-bold text-gray-900 mb-1.5">Tìm theo họ tên</label><input type="text" placeholder="Nhập họ tên..." value={searchName} onChange={(e) => setSearchName(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all font-medium" /></div>
+          <div><label className="block text-sm font-bold text-gray-900 mb-1.5">Tìm theo email</label><input type="text" placeholder="Nhập email..." value={searchAccount} onChange={(e) => setSearchAccount(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all font-medium" /></div>
+          <div><label className="block text-sm font-bold text-gray-900 mb-1.5">Vai trò</label><select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all bg-white font-medium"><option value="customer">Khách hàng</option><option value="staff">Nhân viên</option></select></div>
+          <div><label className="block text-sm font-bold text-gray-900 mb-1.5">Trạng thái</label><select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full border-2 border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition-all bg-white font-medium"><option value="all">Tất cả</option><option value={1}>Hoạt động</option><option value={0}>Bị khóa</option></select></div>
+          <div><button onClick={handleSearchClick} className="bg-[#22C55E] text-white px-5 py-2.5 rounded-lg shadow-sm hover:bg-[#16A34A] transition flex items-center justify-center gap-2 font-black w-full md:w-auto"><Search size={18} /> Tìm kiếm</button></div>
         </div>
       </div>
 
@@ -357,7 +357,7 @@ export default function AdminUsersPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-center border-collapse">
             <thead>
-              <tr className="bg-blue-600 text-white text-sm font-semibold uppercase tracking-wide">
+              <tr className="bg-blue-600 text-white text-sm font-black uppercase tracking-wide">
                 <th className="px-4 py-4">STT</th>
                 <th className="px-4 py-4">HỌ VÀ TÊN</th>
                 <th className="px-4 py-4">EMAIL</th>
@@ -373,25 +373,25 @@ export default function AdminUsersPage() {
             <tbody className="divide-y divide-gray-200 text-sm">
               {!isLoading && paginatedUsers.map((user, index) => (
                 <tr key={user.id} className="hover:bg-blue-50/50 transition-colors">
-                  <td className="px-4 py-4">{startIndex + index + 1}</td>
-                  <td className="px-4 py-4 font-semibold">{user.fullName}</td>
-                  <td className="px-4 py-4">{user.email || user.username}</td>
-                  <td className="px-4 py-4">{user.phone}</td>
-                  <td className="px-4 py-4">{renderRoleBadge(user.role || appliedFilters.role)}</td>
+                  <td className="px-4 py-4 font-medium text-slate-700">{startIndex + index + 1}</td>
+                  <td className="px-4 py-4 font-medium text-slate-900">{user.fullName}</td>
+                  <td className="px-4 py-4 font-medium text-slate-800">{user.email || user.username}</td>
+                  <td className="px-4 py-4 font-medium text-slate-700">{user.phone}</td>
+                  <td className="px-4 py-4 font-medium">{renderRoleBadge(user.role || appliedFilters.role)}</td>
                   {(appliedFilters.role === "staff" || appliedFilters.role === "admin") && (
-                    <td className="px-4 py-4 font-bold text-blue-600">{user.salary?.toLocaleString('vi-VN')} ₫</td>
+                    <td className="px-4 py-4 font-medium text-blue-700">{user.salary?.toLocaleString('vi-VN')} ₫</td>
                   )}
                   <td className="px-4 py-4">
                     {user.status === 1 ? (
-                      <span className="bg-green-50 text-green-700 px-2.5 py-1 rounded font-bold text-xs border border-green-200 inline-flex items-center gap-1"><CheckCircle2 size={12}/> Hoạt động</span>
+                      <span className="bg-green-50 text-green-800 px-2.5 py-1 rounded font-medium text-xs border border-green-300 inline-flex items-center gap-1"><CheckCircle2 size={12}/> Hoạt động</span>
                     ) : (
-                      <span className="bg-red-50 text-red-600 px-2.5 py-1 rounded font-bold text-xs border border-red-200 inline-flex items-center gap-1"><Lock size={12}/> Đã khóa</span>
+                      <span className="bg-red-50 text-red-700 px-2.5 py-1 rounded font-medium text-xs border border-red-300 inline-flex items-center gap-1"><Lock size={12}/> Đã khóa</span>
                     )}
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex justify-center gap-2">
                       <button onClick={() => handleOpenEdit(user)} className="bg-blue-50 text-blue-600 p-2 rounded-lg hover:bg-blue-100 transition"><Edit size={16}/></button>
-                      <button onClick={() => toggleStatus(user)} className={`px-3 py-1.5 rounded-lg text-white font-semibold text-xs transition ${user.status === 1 ? "bg-red-500 hover:bg-red-600" : "bg-gray-500 hover:bg-gray-600"}`}>{user.status === 1 ? "Khóa" : "Mở khóa"}</button>
+                      <button onClick={() => toggleStatus(user)} className={`px-3 py-1.5 rounded-lg text-white font-medium text-xs transition ${user.status === 1 ? "bg-red-500 hover:bg-red-600" : "bg-gray-600 hover:bg-gray-700"}`}>{user.status === 1 ? "Khóa" : "Mở khóa"}</button>
                     </div>
                   </td>
                 </tr>

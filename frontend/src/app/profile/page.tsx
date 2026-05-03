@@ -186,23 +186,23 @@ export default function ProfilePage() {
                   <tbody className="divide-y divide-gray-200">
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="w-1/3 py-4 px-6 font-bold text-gray-800 bg-gray-50/50">Họ và tên</td>
-                      <td className="w-2/3 py-4 px-6 text-gray-700">{userInfo.fullName}</td>
+                      <td className="w-2/3 py-4 px-6 text-gray-700 font-medium">{userInfo.fullName}</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="w-1/3 py-4 px-6 font-bold text-gray-800 bg-gray-50/50">Email / Tên đăng nhập</td>
-                      <td className="w-2/3 py-4 px-6 text-gray-700">{userInfo.email}</td>
+                      <td className="w-2/3 py-4 px-6 text-gray-700 font-medium">{userInfo.email}</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="w-1/3 py-4 px-6 font-bold text-gray-800 bg-gray-50/50">Số điện thoại</td>
-                      <td className="w-2/3 py-4 px-6 text-gray-700">{userInfo.phone}</td>
+                      <td className="w-2/3 py-4 px-6 text-gray-700 font-medium">{userInfo.phone}</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="w-1/3 py-4 px-6 font-bold text-gray-800 bg-gray-50/50">Ngày sinh</td>
-                      <td className="w-2/3 py-4 px-6 text-gray-700">{userInfo.dateOfBirth }</td>
+                      <td className="w-2/3 py-4 px-6 text-gray-700 font-medium">{userInfo.dateOfBirth }</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="w-1/3 py-4 px-6 font-bold text-gray-800 bg-gray-50/50">Địa chỉ</td>
-                      <td className="w-2/3 py-4 px-6 text-gray-700">
+                      <td className="w-2/3 py-4 px-6 text-gray-700 font-medium">
                         {userInfo.street ? `${userInfo.street}, ${userInfo.ward}, ${userInfo.city}` : "Chưa cập nhật"}
                       </td>
                     </tr>

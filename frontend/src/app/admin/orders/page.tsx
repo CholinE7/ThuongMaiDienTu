@@ -436,31 +436,31 @@ export default function AdminOrdersPage() {
       <div className="bg-white rounded-lg shadow-sm border p-6 mb-6 mx-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div>
-            <label className="block text-sm font-semibold mb-2">Từ ngày</label>
+            <label className="block text-sm font-bold text-gray-900 mb-2">Từ ngày</label>
             <input
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="w-full border-2 rounded-lg px-4 py-2.5 outline-none focus:border-blue-600"
+              className="w-full border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white font-medium"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-2">Đến ngày</label>
+            <label className="block text-sm font-bold text-gray-900 mb-2">Đến ngày</label>
             <input
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="w-full border-2 rounded-lg px-4 py-2.5 outline-none focus:border-blue-600"
+              className="w-full border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white font-medium"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-2">
+            <label className="block text-sm font-bold text-gray-900 mb-2">
               Tình trạng đơn hàng
             </label>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full border-2 rounded-lg px-4 py-2.5 outline-none bg-white font-medium"
+              className="w-full border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none bg-white font-medium"
             >
               <option value="all">Tất cả trạng thái</option>
               <option value="PENDING">Chờ xác nhận</option>
@@ -474,13 +474,13 @@ export default function AdminOrdersPage() {
         <div className="flex gap-3">
           <button
             onClick={handleSearchClick}
-            className="bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 hover:bg-green-700 transition"
+            className="bg-green-600 text-white px-6 py-2.5 rounded-lg font-black flex items-center gap-2 hover:bg-green-700 transition"
           >
             <Search size={18} /> Tìm kiếm
           </button>
           <button
             onClick={handleResetFilters}
-            className="bg-gray-600 text-white px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 hover:bg-gray-700 transition"
+            className="bg-gray-600 text-white px-6 py-2.5 rounded-lg font-black flex items-center gap-2 hover:bg-gray-700 transition"
           >
             <RefreshCcw size={18} /> Đặt lại
           </button>
@@ -492,7 +492,7 @@ export default function AdminOrdersPage() {
           <div className="absolute inset-0 bg-white/70 z-10 flex items-center justify-center backdrop-blur-[1px]">
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-              <span className="font-semibold text-gray-600">
+              <span className="font-bold text-gray-600">
                 Đang tải dữ liệu...
               </span>
             </div>
@@ -501,7 +501,7 @@ export default function AdminOrdersPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-center">
             <thead>
-              <tr className="bg-blue-600 text-white text-sm font-bold uppercase">
+              <tr className="bg-blue-600 text-white text-sm font-black uppercase">
                 <th className="px-4 py-4">STT</th>
                 <th className="px-4 py-4">MÃ ĐƠN</th>
                 <th className="px-4 py-4 text-left">KHÁCH HÀNG</th>
@@ -513,31 +513,31 @@ export default function AdminOrdersPage() {
                 <th className="px-4 py-4">CHI TIẾT</th>
               </tr>
             </thead>
-            <tbody className="divide-y text-sm text-gray-700">
+            <tbody className="divide-y text-sm text-slate-900 font-medium">
               {!isLoading && paginatedOrders.length > 0
                 ? paginatedOrders.map((order, index) => (
                     <tr
                       key={order.id}
                       className="hover:bg-blue-50/50 transition-colors"
                     >
-                      <td className="px-4 py-5">{startIndex + index + 1}</td>
-                      <td className="px-4 py-5 font-bold">{order.orderCode}</td>
+                      <td className="px-4 py-5 font-medium text-slate-700">{startIndex + index + 1}</td>
+                      <td className="px-4 py-5 font-bold text-slate-900">{order.orderCode}</td>
                       <td className="px-4 py-5 text-left">
-                        <span className="font-bold block">
+                        <span className="font-bold block text-slate-900">
                           {order.customerName}
                         </span>
-                        <span className="text-gray-500 text-xs">
+                        <span className="text-slate-500 text-xs font-medium">
                           {order.totalProducts} sản phẩm
                         </span>
                       </td>
-                      <td className="px-4 py-5">{order.phone}</td>
-                      <td className="px-4 py-5">
+                      <td className="px-4 py-5 font-medium text-slate-700">{order.phone}</td>
+                      <td className="px-4 py-5 font-medium">
                         {formatDateDisplay(order.orderDate)}
                       </td>
-                      <td className="px-4 py-5 font-bold text-red-500">
+                      <td className="px-4 py-5 font-bold text-red-600">
                         {formatPrice(order.totalAmount)}
                       </td>
-                      <td className="px-4 py-5 font-semibold">
+                      <td className="px-4 py-5 font-medium text-slate-800">
                         {order.paymentMethod}
                       </td>
                       <td className="px-4 py-5">
@@ -546,7 +546,7 @@ export default function AdminOrdersPage() {
                       <td className="px-4 py-5">
                         <button
                           onClick={() => handleOpenDetails(order)}
-                          className="bg-blue-600 text-white px-4 py-1.5 rounded shadow-sm font-semibold flex items-center gap-1.5 mx-auto"
+                          className="bg-blue-600 text-white px-4 py-1.5 rounded shadow-sm font-medium flex items-center gap-1.5 mx-auto"
                         >
                           <Eye size={16} /> Xem
                         </button>
