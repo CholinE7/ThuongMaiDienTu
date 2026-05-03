@@ -76,6 +76,8 @@ Dự án này là một ứng dụng thương mại điện tử giày dép hoà
 - **Quản lý người dùng:** Phân quyền nhân viên (Staff) và quản lý khách hàng.
 
 ## ✨ Cập nhật mới nhất
+- **Dữ liệu mẫu (Seed Data):** Cập nhật giá sản phẩm về mức thực tế (~100.000 VND) và bổ sung đầy đủ các mốc thời gian `created_at` cho toàn bộ hệ thống.
+- **Tính nhất quán dữ liệu:** Đồng bộ hóa logic giá giữa Sản phẩm - Đơn hàng - Chi tiết đơn hàng trong database seeder.
 - **Tối ưu hóa hiệu suất:** Sử dụng Next.js `<Image />` component để giảm thời gian tải ảnh (LCP).
 - **Type Safety:** Loại bỏ hoàn toàn `any` types, chuyển sang hệ thống Interface chặt chẽ.
 - **Next.js 15 Core:** Áp dụng Suspense Boundaries cho tìm kiếm và thanh toán, tương thích hoàn toàn với Next.js 15.
