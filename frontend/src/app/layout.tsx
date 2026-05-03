@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 // 1. Import font Open Sans từ Google
-import { Open_Sans } from "next/font/google"; 
+import { Open_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 
@@ -9,9 +9,9 @@ const openSans = Open_Sans({
   subsets: ["latin"],
   display: "swap",
   // Đặt tên biến để dùng bên Tailwind
-  variable: "--font-open-sans", 
+  variable: "--font-open-sans",
   // Tùy chọn độ đậm (nếu cần cụ thể, hoặc để trống nó sẽ lấy auto)
-  weight: ["300", "400", "500", "600", "700", "800"], 
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -34,19 +34,19 @@ export default function RootLayout({
           toastOptions={{
             duration: 3000,
             style: {
-              borderRadius: '10px',
-              fontFamily: 'var(--font-open-sans)',
-              fontSize: '14px',
+              borderRadius: "10px",
+              fontFamily: "var(--font-open-sans)",
+              fontSize: "14px",
             },
             success: {
-              iconTheme: { primary: '#22c55e', secondary: '#fff' },
+              iconTheme: { primary: "#22c55e", secondary: "#fff" },
             },
             error: {
-              iconTheme: { primary: '#ef4444', secondary: '#fff' },
+              iconTheme: { primary: "#ef4444", secondary: "#fff" },
             },
           }}
         />
       </body>
     </html>
   );
-}
+}
