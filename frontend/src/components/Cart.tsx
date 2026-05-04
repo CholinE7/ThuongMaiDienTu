@@ -122,7 +122,7 @@ const Cart = () => {
   const formatPrice = (p: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p);
 
   const handlePlaceOrder = async () => {
-    const customerId = localStorage.getItem("customerId");
+    const customerId = sessionStorage.getItem("customerId");
     if (!customerName || !customerPhone || !customerStreet || !customerCity) {
       alert("Vui lòng điền đầy đủ thông tin giao hàng!");
       return;
