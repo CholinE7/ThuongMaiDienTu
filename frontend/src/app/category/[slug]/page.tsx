@@ -56,10 +56,10 @@ function CategoryContent() {
         const categories: { id: number; name: string }[] = catRes.result?.content || [];
 
         const SLUG_TO_NAME: Record<string, string> = {
-          "nu": "womens-shoes",
-          "nam": "mens-shoes",
+          "nu": "Giày Thể Thao Nữ",
+          "nam": "Giày Thể Thao Nam",
           "cap": "Giày Cặp",
-          "banchay": "sport-shoes" // Assuming banchay maps to something or is a special flag
+          "banchay": "Sản phẩm bán chạy"
         };
 
         const targetCategoryName = SLUG_TO_NAME[slug as string] || "";
