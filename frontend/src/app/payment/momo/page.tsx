@@ -30,8 +30,8 @@ function MomoPaymentContent() {
       })
       .then(res => res.json())
       .then(result => {
-        if (result.success) {
-          setPaymentData(result.data);
+        if (result.code === 200 && result.result) {
+          setPaymentData(result.result);
         }
         setIsLoading(false);
       });
@@ -41,14 +41,16 @@ function MomoPaymentContent() {
   const handleConfirm = async () => {
     setIsConfirming(true);
     try {
-      const res = await fetch(`http://localhost:8080/api/payment/momo/confirm?orderId=${orderId}`, {
-        method: "POST",
+      const res = await fetch(`http://localhost:8080/api/payment/momo/sync?orderId=${orderId}&resultCode=0`, {
+        method: "GET",
         headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
       });
       const result = await res.json();
-      if (result.success) {
+      if (result.code === 200) {
         alert("Xác nhận thanh toán thành công!");
         router.push("/profile");
+      } else {
+        alert("Lỗi: " + (result.message || "Không thể xác nhận"));
       }
     } catch {
       alert("Lỗi khi xác nhận!");

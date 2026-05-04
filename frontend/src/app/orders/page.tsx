@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { apiRequest } from '@/services/app';
 import Navbar from '@/components/Navbar';
 import { ChevronRight, Package, AlertCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'next/navigation';
 
 interface OrderData {
   order: { 
@@ -27,10 +28,11 @@ interface OrderData {
   }[];
 }
 
-export default function OrdersPage() {
+function OrdersContent() {
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const searchParams = useSearchParams();
 
   const handleRepay = async (orderId: number) => {
     const toastId = toast.loading("Đang khởi tạo thanh toán...");
@@ -66,14 +68,32 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
+    const syncPayment = async () => {
+      const resultCode = searchParams.get("resultCode");
+      const orderReference = searchParams.get("orderId");
+
+      if (resultCode !== null && orderReference !== null) {
+        const orderId = orderReference.split("TS")[0];
+        try {
+          const res = await apiRequest(`/api/payment/momo/sync?orderId=${orderId}&resultCode=${resultCode}`, 'GET');
+          const data = await res.json();
+          if (data.code === 200) {
+            toast.success("Thanh toán thành công!");
+          }
+        } catch (e) {
+          console.error("Error syncing payment", e);
+        }
+      }
+    };
+
     const token = sessionStorage.getItem("token");
     if (token) {
-      fetchOrders();
+      syncPayment().then(() => fetchOrders());
     } else {
       setError("Vui lòng đăng nhập để xem lịch sử mua hàng.");
       setIsLoading(false);
     }
-  }, []);
+  }, [searchParams]);
 
   const formatPrice = (p: number) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p);
@@ -249,5 +269,17 @@ export default function OrdersPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin" />
+      </div>
+    }>
+      <OrdersContent />
+    </Suspense>
   );
 }

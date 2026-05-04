@@ -81,6 +81,8 @@ public class PaymentController {
                 result.put("qrUrl", responseBody.get("payUrl"));
                 result.put("orderId", order.getId());
                 result.put("amount", order.getTotalPrice());
+                result.put("phone", MomoConfig.MOMO_PHONE);
+                result.put("accountName", MomoConfig.MOMO_ACCOUNT_NAME);
                 return ApiResponse.success(result);
             } else {
                 String errorMsg = responseBody != null && responseBody.get("message") != null 
@@ -106,24 +108,39 @@ public class PaymentController {
             String orderReference = (String) payload.get("orderId");
             // Lấy ID đơn hàng gốc trước ký tự "TS"
             Long orderId = Long.parseLong(orderReference.split("TS")[0]);
-
-            Orders order = orderService.getById(orderId);
-            if (order != null && !"PAID".equals(order.getPaymentStatus())) {
-                // 2. Cập nhật trạng thái đơn hàng
-                order.setPaymentStatus("PAID");
-                order.setStatus(OrderStatus.CONFIRMED);
-                orderService.getOrderRepository().save(order);
-
-                // 3. Thông báo Realtime cho Frontend qua SSE
-                sseService.sendToAll(Map.of(
-                    "orderId", order.getId(),
-                    "status", "PAID",
-                    "message", "MoMo payment successful"
-                ));
-            }
+            updateOrderAsPaid(orderId);
         }
 
         // Trả về 204 No Content cho MoMo
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Endpoint hỗ trợ Frontend đồng bộ trạng thái khi quay lại từ MoMo
+     * (Hữu ích khi IPN không tới được localhost)
+     */
+    @GetMapping("/momo/sync")
+    public ApiResponse<Boolean> syncPayment(@RequestParam Long orderId, @RequestParam int resultCode) {
+        if (resultCode == 0) {
+            updateOrderAsPaid(orderId);
+            return ApiResponse.success(true);
+        }
+        return ApiResponse.error(400, "Thanh toán không thành công");
+    }
+
+    private void updateOrderAsPaid(Long orderId) {
+        Orders order = orderService.getById(orderId);
+        if (order != null && !"PAID".equals(order.getPaymentStatus())) {
+            order.setPaymentStatus("PAID");
+            order.setStatus(OrderStatus.CONFIRMED);
+            orderService.getOrderRepository().save(order);
+
+            // Thông báo Realtime cho Frontend qua SSE
+            sseService.sendToAll(Map.of(
+                "orderId", order.getId(),
+                "status", "PAID",
+                "message", "MoMo payment successful"
+            ));
+        }
     }
 }
