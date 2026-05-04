@@ -63,3 +63,5 @@ build/
 npm-debug.log*
 
 /backend/target
+
+/backend/src/main/resources/application.yaml
