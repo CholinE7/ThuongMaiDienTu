@@ -140,16 +140,7 @@ public class OrderService implements OrderServiceI {
         return newOrder;
     }
 
-    @Override
-    @Transactional
-    public Orders delete(Long id) {
-        Orders order = getById(id);
-        if (order.getStatus().isTerminal())
-            throw new RuntimeException("Đơn hàng đã kết thúc, không thể hủy");
-        if (!order.getStatus().isCancellable())
-            throw new RuntimeException("Chỉ có thể hủy đơn hàng ở trạng thái Chờ xác nhận hoặc Đã xác nhận");
-
-        // Hoàn lại số lượng tồn kho khi hủy đơn hàng
+    private void restoreInventory(Orders order) {
         List<OrdersDetails> ordersDetails = orderDetailService.getByOrderId(order.getId());
         for (OrdersDetails item : ordersDetails) {
             Products pro = item.getProduct();
@@ -167,6 +158,18 @@ public class OrderService implements OrderServiceI {
             pro.setQuantity(pro.getQuantity() + item.getQuantity());
             productService.update(pro);
         }
+    }
+
+    @Override
+    @Transactional
+    public Orders delete(Long id) {
+        Orders order = getById(id);
+        if (order.getStatus().isTerminal())
+            throw new RuntimeException("Đơn hàng đã kết thúc, không thể hủy");
+        if (!order.getStatus().isCancellable())
+            throw new RuntimeException("Chỉ có thể hủy đơn hàng ở trạng thái Chờ xác nhận hoặc Đã xác nhận");
+
+        restoreInventory(order);
 
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
@@ -210,14 +213,15 @@ public class OrderService implements OrderServiceI {
         Employers employer = employerService.getById(request.getEmployerId());
         Orders order = getById(request.getOrderId());
 
-        if (order.getStatus().equals(OrderStatus.CANCELLED)) {
-            throw new Exception("Đơn hàng đã bị hủy trước đó");
-        }
-        if (order.getStatus().equals(OrderStatus.DELIVERED)) {
-            throw new Exception("Đơn hàng đã được giao, không thể hủy");
-        }
-        if (!order.getStatus().canAdvanceTo(request.getOrderStatusNext())) {
-            throw new Exception("Không thể cập nhật trạng thái");
+        if (request.getOrderStatusNext() == OrderStatus.CANCELLED) {
+            if (!order.getStatus().isCancellable()) {
+                throw new Exception("Đơn hàng ở trạng thái " + order.getStatus() + " không thể hủy");
+            }
+            // Hoàn lại kho khi hủy
+            restoreInventory(order);
+        } else if (!order.getStatus().canAdvanceTo(request.getOrderStatusNext())) {
+            throw new Exception(
+                    "Không thể cập nhật trạng thái từ " + order.getStatus() + " sang " + request.getOrderStatusNext());
         }
 
         // Kiểm tra logic thanh toán: MoMo phải PAID mới được CONFIRMED
