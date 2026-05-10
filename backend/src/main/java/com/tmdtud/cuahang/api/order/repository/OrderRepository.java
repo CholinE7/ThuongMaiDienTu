@@ -23,8 +23,8 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
             AND (:status is null OR o.status = :status)
             """)
     Page<Orders> findAllByDateRange(
-            @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate,
+            @Param("fromDate") java.time.LocalDateTime fromDate,
+            @Param("toDate") java.time.LocalDateTime toDate,
             @Param("status") OrderStatus status,
             Pageable pageable);
 
@@ -32,24 +32,50 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
     Page<Orders> findByCustomerId(@Param("customerId") Long customerId, Pageable pageable);
 
     @Query("""
-            SELECT COUNT(o) FROM Orders o WHERE o.deleted = 0
+            SELECT o.status, COUNT(o), SUM(o.totalPrice) 
+            FROM Orders o 
+            WHERE o.deleted = 0
             AND (:fromDate is null OR o.createdAt >= :fromDate)
             AND (:toDate is null OR o.createdAt <= :toDate)
-            AND (:status is null OR o.status = :status)
+            GROUP BY o.status
             """)
-    long countOrders(
-            @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate,
-            @Param("status") OrderStatus status);
+    java.util.List<Object[]> getStatsByStatus(
+            @Param("fromDate") java.time.LocalDateTime fromDate,
+            @Param("toDate") java.time.LocalDateTime toDate);
 
     @Query("""
-            SELECT COALESCE(SUM(o.totalPrice), 0) FROM Orders o WHERE o.deleted = 0
+            SELECT COALESCE(SUM(o.totalPrice), 0) 
+            FROM Orders o 
+            WHERE o.deleted = 0 
+            AND o.paymentStatus = 'PAID'
             AND (:fromDate is null OR o.createdAt >= :fromDate)
             AND (:toDate is null OR o.createdAt <= :toDate)
-            AND (:status is null OR o.status = :status)
             """)
-    java.math.BigDecimal sumRevenue(
-            @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate,
-            @Param("status") OrderStatus status);
+    java.math.BigDecimal sumPaidRevenue(
+            @Param("fromDate") java.time.LocalDateTime fromDate,
+            @Param("toDate") java.time.LocalDateTime toDate);
+
+    @Query("""
+            SELECT od.product.name, SUM(od.quantity), SUM(od.total)
+            FROM OrdersDetails od
+            JOIN od.order o
+            WHERE o.deleted = 0 AND o.status != 'CANCELLED'
+            AND (:fromDate is null OR o.createdAt >= :fromDate)
+            AND (:toDate is null OR o.createdAt <= :toDate)
+            GROUP BY od.product.id, od.product.name
+            ORDER BY SUM(od.quantity) DESC
+            """)
+    java.util.List<Object[]> getTopSellingProducts(
+            @Param("fromDate") java.time.LocalDateTime fromDate,
+            @Param("toDate") java.time.LocalDateTime toDate,
+            org.springframework.data.domain.Pageable pageable);
+
+    @Query("""
+            SELECT o FROM Orders o 
+            WHERE o.status = 'PENDING' 
+            AND o.paymentStatus = 'UNPAID' 
+            AND o.createdAt < :expiryTime 
+            AND o.deleted = 0
+            """)
+    java.util.List<Orders> findExpiredUnpaidOrders(@Param("expiryTime") java.sql.Timestamp expiryTime);
 }

@@ -22,28 +22,67 @@ public class DashboardController {
     public ApiResponse<DashboardDTO> getStats(
             @RequestParam(required = false) String fromDate,
             @RequestParam(required = false) String toDate) {
-        
-        LocalDate from = (fromDate != null && !fromDate.isEmpty()) ? LocalDate.parse(fromDate) : null;
-        LocalDate to = (toDate != null && !toDate.isEmpty()) ? LocalDate.parse(toDate) : null;
 
-        DashboardDTO.OrderStatsDTO orders = DashboardDTO.OrderStatsDTO.builder()
-                .total(orderRepository.countOrders(from, to, null))
-                .success(orderRepository.countOrders(from, to, OrderStatus.DELIVERED))
-                .pending(orderRepository.countOrders(from, to, OrderStatus.PENDING) 
-                         + orderRepository.countOrders(from, to, OrderStatus.CONFIRMED)
-                         + orderRepository.countOrders(from, to, OrderStatus.SHIPPING))
-                .cancelled(orderRepository.countOrders(from, to, OrderStatus.CANCELLED))
-                .build();
+        java.time.LocalDateTime start = (fromDate != null && !fromDate.isEmpty())
+                ? LocalDate.parse(fromDate).atStartOfDay()
+                : null;
+        java.time.LocalDateTime end = (toDate != null && !toDate.isEmpty())
+                ? LocalDate.parse(toDate).atTime(23, 59, 59, 999999999)
+                : null;
 
-        DashboardDTO.RevenueStatsDTO revenue = DashboardDTO.RevenueStatsDTO.builder()
-                .total(orderRepository.sumRevenue(from, to, null))
-                .success(orderRepository.sumRevenue(from, to, OrderStatus.DELIVERED))
-                .pending(orderRepository.sumRevenue(from, to, OrderStatus.PENDING)
-                         .add(orderRepository.sumRevenue(from, to, OrderStatus.CONFIRMED))
-                         .add(orderRepository.sumRevenue(from, to, OrderStatus.SHIPPING)))
-                .cancelled(orderRepository.sumRevenue(from, to, OrderStatus.CANCELLED))
-                .build();
+        // 1. Lấy dữ liệu tổng hợp theo status (Chỉ 1 câu Query)
+        java.util.List<Object[]> stats = orderRepository.getStatsByStatus(start, end);
 
-        return ApiResponse.success(new DashboardDTO(orders, revenue));
+        long totalOrders = 0, successOrders = 0, processingOrders = 0, waitingPaymentOrders = 0, cancelledOrders = 0;
+        java.math.BigDecimal totalRevenue = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal successRevenue = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal processingRevenue = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal waitingPaymentRevenue = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal cancelledRevenue = java.math.BigDecimal.ZERO;
+
+        for (Object[] row : stats) {
+            OrderStatus status = (OrderStatus) row[0];
+            long count = (long) row[1];
+            java.math.BigDecimal sum = (java.math.BigDecimal) row[2];
+
+            totalOrders += count;
+            totalRevenue = totalRevenue.add(sum);
+
+            if (status == OrderStatus.DELIVERED) {
+                successOrders = count;
+                successRevenue = sum;
+            } else if (status == OrderStatus.CANCELLED) {
+                cancelledOrders = count;
+                cancelledRevenue = sum;
+            } else if (status == OrderStatus.PENDING) {
+                waitingPaymentOrders = count;
+                waitingPaymentRevenue = sum;
+            } else {
+                // CONFIRMED, SHIPPING gom vào Đang xử lý
+                processingOrders += count;
+                processingRevenue = processingRevenue.add(sum);
+            }
+        }
+
+        // 2. Doanh thu thực tế (Đã thu tiền)
+        java.math.BigDecimal paidRevenue = orderRepository.sumPaidRevenue(start, end);
+
+        // 3. Top 5 sản phẩm bán chạy
+        java.util.List<Object[]> topProductsData = orderRepository.getTopSellingProducts(start, end,
+                org.springframework.data.domain.PageRequest.of(0, 5));
+        java.util.List<DashboardDTO.TopProductDTO> topProducts = topProductsData.stream()
+                .map(row -> new DashboardDTO.TopProductDTO((String) row[0], (long) row[1],
+                        (java.math.BigDecimal) row[2]))
+                .collect(java.util.stream.Collectors.toList());
+
+        DashboardDTO.OrderStatsDTO orderStats = DashboardDTO.OrderStatsDTO.builder()
+                .total(totalOrders).success(successOrders).processing(processingOrders)
+                .waitingPayment(waitingPaymentOrders).cancelled(cancelledOrders).build();
+
+        DashboardDTO.RevenueStatsDTO revenueStats = DashboardDTO.RevenueStatsDTO.builder()
+                .total(totalRevenue).success(successRevenue).processing(processingRevenue)
+                .waitingPayment(waitingPaymentRevenue).cancelled(cancelledRevenue).paid(paidRevenue).build();
+
+        return ApiResponse.success(new DashboardDTO(orderStats, revenueStats, topProducts));
     }
 }

@@ -248,13 +248,18 @@ public class OrderService implements OrderServiceI {
 
     @Override
     public PageResponse<Orders> getAllByDateRange(String fromDate, String toDate, String status, Pageable pageable) {
-        LocalDate from = (fromDate != null && !fromDate.isEmpty()) ? LocalDate.parse(fromDate) : null;
-        LocalDate to = (toDate != null && !toDate.isEmpty()) ? LocalDate.parse(toDate) : null;
+        java.time.LocalDateTime start = (fromDate != null && !fromDate.isEmpty()) 
+                ? LocalDate.parse(fromDate).atStartOfDay() 
+                : null;
+        java.time.LocalDateTime end = (toDate != null && !toDate.isEmpty()) 
+                ? LocalDate.parse(toDate).atTime(23, 59, 59, 999999999) 
+                : null;
+                
         OrderStatus orderStatus = (status != null && !status.isEmpty() && !status.equalsIgnoreCase("all"))
                 ? OrderStatus.valueOf(status)
                 : null;
 
-        Page<Orders> orders = orderRepository.findAllByDateRange(from, to, orderStatus, pageable);
+        Page<Orders> orders = orderRepository.findAllByDateRange(start, end, orderStatus, pageable);
         return new PageResponse<Orders>(orders);
     }
 }
