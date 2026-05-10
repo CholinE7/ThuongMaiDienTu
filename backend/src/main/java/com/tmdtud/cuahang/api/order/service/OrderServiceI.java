@@ -29,4 +29,6 @@ public interface OrderServiceI {
     public PageResponse<Orders> getAllByDateRange(String fromDate, String toDate, String status, Pageable pageable);
 
     public PageResponse<Orders> getMyOrders(Long customerId, Pageable pageable);
+
+    public void cancelOrderExpired();
 }

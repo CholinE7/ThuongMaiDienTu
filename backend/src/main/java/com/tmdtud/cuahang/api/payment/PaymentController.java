@@ -105,9 +105,11 @@ public class PaymentController {
         // 1. Kiểm tra mã kết quả (resultCode = 0 là thành công)
         Object resultCodeObj = payload.get("resultCode");
         if (resultCodeObj != null && "0".equals(resultCodeObj.toString())) {
+
             String orderReference = (String) payload.get("orderId");
             // Lấy ID đơn hàng gốc trước ký tự "TS"
             Long orderId = Long.parseLong(orderReference.split("TS")[0]);
+            
             updateOrderAsPaid(orderId);
         }
 
@@ -121,7 +123,8 @@ public class PaymentController {
      */
     @GetMapping("/momo/sync")
     public ApiResponse<Boolean> syncPayment(@RequestParam Long orderId, @RequestParam int resultCode) {
-        if (resultCode == 0) {
+        if (resultCode == 0) {  
+            
             updateOrderAsPaid(orderId);
             return ApiResponse.success(true);
         }
@@ -131,6 +134,7 @@ public class PaymentController {
     private void updateOrderAsPaid(Long orderId) {
         Orders order = orderService.getById(orderId);
         if (order != null && !"PAID".equals(order.getPaymentStatus())) {
+           
             order.setPaymentStatus("PAID");
             order.setStatus(OrderStatus.CONFIRMED);
             orderService.getOrderRepository().save(order);
