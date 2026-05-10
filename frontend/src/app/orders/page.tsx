@@ -115,6 +115,23 @@ function OrdersContent() {
     }
   };
 
+  const getPaymentStatusBadge = (pStatus?: string) => {
+    if (!pStatus) return null;
+    const baseClass = "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ml-2";
+    
+    if (pStatus === "PAID") {
+      return <span className={`${baseClass} bg-green-100 text-green-700`}>Đã thanh toán</span>;
+    }
+    if (pStatus === "UNPAID") {
+      return <span className={`${baseClass} bg-red-100 text-red-700`}>Chưa thanh toán</span>;
+    }
+    if (pStatus === "COD") {
+      return <span className={`${baseClass} bg-blue-100 text-blue-700`}>COD</span>;
+    }
+    
+    return null;
+  };
+
   const handleCancelOrder = async (orderId: number) => {
     if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
 
@@ -194,6 +211,7 @@ function OrdersContent() {
                     <div>
                       <span className="text-xs text-gray-500 uppercase tracking-widest">Phương thức: </span>
                       <span className="font-medium text-gray-900">{order.method}</span>
+                      {getPaymentStatusBadge(order.paymentStatus)}
                     </div>
                     <div>{getStatusBadge(order.status)}</div>
                   </div>

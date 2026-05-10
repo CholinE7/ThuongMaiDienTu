@@ -8,11 +8,11 @@ import { Product } from "@/types";
 import { addToCart } from '@/utils/cartUtils';
 import Navbar from '@/components/Navbar';
 import toast from 'react-hot-toast';
-import { 
-  Heart, 
+import {
+  Heart,
   Plus,
   Minus,
-  Loader2 
+  Loader2
 } from 'lucide-react';
 
 interface Variant {
@@ -57,7 +57,7 @@ export default function ProductDetailPage() {
 
   // --- GỌI API LẤY DỮ LIỆU ---
   useEffect(() => {
-    if (!productId) return; 
+    if (!productId) return;
 
     const fetchProduct = async () => {
       setIsLoading(true);
@@ -71,14 +71,14 @@ export default function ProductDetailPage() {
         const res = await response.json();
         if (res.code === 200 && res.result) {
           const apiProduct = res.result;
-          
+
           // Chuyển đổi dữ liệu API sang định dạng hiển thị
           const variants: Variant[] = apiProduct.variants || [];
-          
+
           // Lấy danh sách màu sắc duy nhất từ biến thể
           const uniqueColors = Array.from(new Set(variants.map((v: Variant) => v.color))) as string[];
           const colors = uniqueColors;
-          
+
           // Lấy danh sách kích thước duy nhất từ biến thể
           const uniqueSizes = Array.from(new Set(variants.map((v: Variant) => v.size))).sort() as string[];
           const sizes = uniqueSizes;
@@ -100,19 +100,25 @@ export default function ProductDetailPage() {
           };
 
           setProduct(foundProduct);
-          
-          // Chọn màu đầu tiên có hàng
-          const firstAvailableColor = colors.find(c => 
-            variants.some((v: Variant) => v.color === c && v.quantity > 0)
-          ) || colors[0];
-          
-          setSelectedColor(firstAvailableColor);
 
-          // Chọn size đầu tiên có hàng của màu đó
-          const availableSizesForColor = sizes.filter(s => 
-            variants.some((v: Variant) => v.color === firstAvailableColor && v.size === String(s) && v.quantity > 0)
-          );
-          setSelectedSize(availableSizesForColor.length > 0 ? availableSizesForColor[0] : String(sizes[0]));
+          // Kiểm tra query params từ URL
+          const searchParams = new URLSearchParams(window.location.search);
+          const initialColor = searchParams.get('color');
+          const initialSize = searchParams.get('size');
+
+          // Chọn màu: Ưu tiên từ query param, nếu không thì chọn màu đầu tiên có hàng
+          const colorToSelect = initialColor && colors.includes(initialColor)
+            ? initialColor
+            : (colors.find(c => variants.some((v: Variant) => v.color === c && v.quantity > 0)) || colors[0]);
+
+          setSelectedColor(colorToSelect);
+
+          // Chọn size: Ưu tiên từ query param, nếu không thì chọn size đầu tiên có hàng của màu đó
+          const sizeToSelect = initialSize && sizes.includes(initialSize)
+            ? initialSize
+            : (sizes.filter(s => variants.some((v: Variant) => v.color === colorToSelect && v.size === String(s) && v.quantity > 0))[0] || String(sizes[0]));
+
+          setSelectedSize(sizeToSelect);
         } else {
           setError(res.message || "Không tìm thấy sản phẩm");
         }
@@ -159,14 +165,14 @@ export default function ProductDetailPage() {
 
       {/* --- LAYOUT CHÍNH (CHIA 2 CỘT) --- */}
       <div className="max-w-[1400px] mx-auto pt-16 grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-16">
-        
+
         {/* ================= CỘT TRÁI: DÃY ẢNH ================= */}
         <div className="lg:col-span-7 flex flex-col">
           {product.images?.map((img: string, idx: number) => (
             <div key={idx} className="w-full bg-gray-50 border-b border-gray-100 last:border-b-0 relative">
-              <Image 
-                src={img} 
-                alt={`${product.name} - Góc ${idx + 1}`} 
+              <Image
+                src={img}
+                alt={`${product.name} - Góc ${idx + 1}`}
                 width={1200}
                 height={1200}
                 className="w-full h-auto object-cover"
@@ -179,7 +185,7 @@ export default function ProductDetailPage() {
         {/* ================= CỘT PHẢI: THÔNG TIN ================= */}
         <div className="lg:col-span-5 px-6 lg:px-0 py-10 lg:py-16 relative">
           <div className="sticky top-24 max-w-md">
-            
+
             <div className="flex justify-between items-start mb-4">
               <span className="text-xs text-gray-500 font-medium tracking-widest uppercase">
                 {typeof product.category === 'string' ? product.category : product.category?.name}
@@ -188,7 +194,7 @@ export default function ProductDetailPage() {
                 <Heart size={20} />
               </button>
             </div>
-            
+
             <h1 className="text-2xl font-medium text-gray-900 leading-tight tracking-wide mb-4 uppercase">
               {product.name}
             </h1>
@@ -214,15 +220,15 @@ export default function ProductDetailPage() {
                 {product.sizes?.map((size: string | number) => {
                   const variant = product.variants?.find((v: Variant) => v.color === selectedColor && v.size === String(size));
                   const isOutOfStock = (product.variants?.length || 0) > 0 && (!variant || variant.quantity <= 0);
-                  
+
                   return (
                     <button
                       key={size}
                       disabled={isOutOfStock}
                       onClick={() => setSelectedSize(String(size))}
                       className={`py-3 rounded-none text-sm font-medium transition-all border relative
-                        ${selectedSize === String(size) 
-                          ? 'border-gray-900 bg-gray-900 text-white' 
+                        ${selectedSize === String(size)
+                          ? 'border-gray-900 bg-gray-900 text-white'
                           : 'border-gray-200 text-gray-900 hover:border-gray-900 bg-white'}
                         ${isOutOfStock ? 'opacity-30 cursor-not-allowed bg-gray-50 border-dashed' : ''}`}
                     >
@@ -241,14 +247,14 @@ export default function ProductDetailPage() {
                 {product.colors?.map((color: string) => {
                   const isSelected = selectedColor === color;
                   const hexValue = COLOR_HEX_MAP[color] || "#000000";
-                  
+
                   // Kiểm tra màu này còn hàng không (bất kỳ size nào)
                   const hasStock = (product.variants?.length || 0) === 0 || product.variants?.some((v: Variant) => v.color === color && v.quantity > 0);
-                  
+
                   // Tính toán màu nền và màu chữ dựa trên trạng thái
                   const bgColor = isSelected ? hexValue : "#ffffff";
-                  const textColor = isSelected 
-                    ? (isLightColor(color) ? "#111827" : "#ffffff") 
+                  const textColor = isSelected
+                    ? (isLightColor(color) ? "#111827" : "#ffffff")
                     : "#111827";
 
                   return (
@@ -258,23 +264,23 @@ export default function ProductDetailPage() {
                       onClick={() => {
                         setSelectedColor(color);
                         // Khi đổi màu, tự động chọn size đầu tiên còn hàng của màu mới
-                        const availableSize = product.sizes?.find((s: string | number) => 
+                        const availableSize = product.sizes?.find((s: string | number) =>
                           product.variants?.some((v: Variant) => v.color === color && v.size === String(s) && v.quantity > 0)
                         );
                         if (availableSize) setSelectedSize(String(availableSize));
                       }}
                       className={`flex items-center gap-2.5 px-5 py-2.5 text-xs font-medium transition-all border uppercase tracking-widest relative
-                        ${isSelected 
-                          ? 'border-transparent shadow-md ring-1 ring-offset-2 ring-gray-200' 
+                        ${isSelected
+                          ? 'border-transparent shadow-md ring-1 ring-offset-2 ring-gray-200'
                           : 'border-gray-200 hover:border-gray-900'}
                         ${!hasStock ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
-                      style={{ 
+                      style={{
                         backgroundColor: bgColor,
                         color: textColor
                       }}
                     >
                       {!isSelected && (
-                        <span 
+                        <span
                           className="w-3 h-3 rounded-full border border-gray-300"
                           style={{ backgroundColor: hexValue }}
                         />
@@ -302,7 +308,7 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            <button 
+            <button
               onClick={async () => {
                 const token = sessionStorage.getItem("token");
                 if (!token) {
@@ -335,9 +341,9 @@ export default function ProductDetailPage() {
 
             {/* CÁC THẺ ACCORDION */}
             <div className="border-t border-gray-200">
-              
+
               <div className="border-b border-gray-200">
-                <button 
+                <button
                   onClick={() => toggleSection('details')}
                   className="w-full py-5 flex items-center justify-between text-left focus:outline-none group"
                 >
@@ -358,7 +364,7 @@ export default function ProductDetailPage() {
               </div>
 
               <div className="border-b border-gray-200">
-                <button 
+                <button
                   onClick={() => toggleSection('store')}
                   className="w-full py-5 flex items-center justify-between text-left focus:outline-none group"
                 >
@@ -373,7 +379,7 @@ export default function ProductDetailPage() {
               </div>
 
               <div className="border-b border-gray-200">
-                <button 
+                <button
                   onClick={() => toggleSection('shipping')}
                   className="w-full py-5 flex items-center justify-between text-left focus:outline-none group"
                 >

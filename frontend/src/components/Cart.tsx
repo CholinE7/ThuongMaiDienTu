@@ -271,40 +271,42 @@ const Cart = () => {
           {items.length > 0 ? (
             items.map((item) => (
               <div key={item.id} className="group flex flex-col sm:flex-row items-center bg-gray-50 p-6 rounded-3xl border border-transparent hover:border-blue-100 hover:bg-white hover:shadow-2xl transition-all duration-300">
-                <div className="relative w-32 h-32 flex-shrink-0 overflow-hidden rounded-2xl bg-white border border-gray-50">
-                  <Image 
-                    src={item.image} 
-                    alt={item.name} 
-                    fill 
-                    className="object-contain p-2 transition-transform duration-500 group-hover:scale-110" 
-                  />
-                  {item.discountPercentage && item.discountPercentage > 0 ? (
-                    <div className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg">
-                      -{item.discountPercentage}%
-                    </div>
-                  ) : null}
-                </div>
-                <div className="sm:ml-8 flex-grow text-center sm:text-left mt-4 sm:mt-0">
-                  <p className="text-[10px] font-bold text-blue-500 uppercase tracking-[0.15em] mb-1">{item.category}</p>
-                  <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1 uppercase tracking-wide">{item.name}</h3>
-                  <div className="flex items-center justify-center sm:justify-start gap-4 mb-3">
-                    {item.color && (
-                      <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded uppercase border border-gray-200">Màu: {item.color}</span>
-                    )}
-                    {item.size && (
-                      <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded uppercase border border-gray-200">Size: {item.size}</span>
-                    )}
+                <Link href={`/product/${item.productId}?color=${encodeURIComponent(item.color || '')}&size=${encodeURIComponent(item.size || '')}`} className="flex flex-col sm:flex-row items-center flex-grow group/link">
+                  <div className="relative w-32 h-32 flex-shrink-0 overflow-hidden rounded-2xl bg-white border border-gray-50">
+                    <Image 
+                      src={item.image} 
+                      alt={item.name} 
+                      fill 
+                      className="object-contain p-2 transition-transform duration-500 group-hover/link:scale-110" 
+                    />
+                    {item.discountPercentage && item.discountPercentage > 0 ? (
+                      <div className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg">
+                        -{item.discountPercentage}%
+                      </div>
+                    ) : null}
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-gray-400 font-bold uppercase">Đơn giá</span>
-                    <div className="flex items-center gap-2 justify-center sm:justify-start">
-                      <p className="text-lg font-bold text-gray-900">{formatPrice(item.price)}</p>
-                      {item.originalPrice && item.originalPrice > item.price && (
-                        <p className="text-xs text-gray-400 line-through">{formatPrice(item.originalPrice)}</p>
+                  <div className="sm:ml-8 flex-grow text-center sm:text-left mt-4 sm:mt-0">
+                    <p className="text-[10px] font-bold text-blue-500 uppercase tracking-[0.15em] mb-1">{item.category}</p>
+                    <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1 uppercase tracking-wide group-hover/link:text-blue-600 transition-colors">{item.name}</h3>
+                    <div className="flex items-center justify-center sm:justify-start gap-4 mb-3">
+                      {item.color && (
+                        <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded uppercase border border-gray-200">Màu: {item.color}</span>
+                      )}
+                      {item.size && (
+                        <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded uppercase border border-gray-200">Size: {item.size}</span>
                       )}
                     </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-400 font-bold uppercase">Đơn giá</span>
+                      <div className="flex items-center gap-2 justify-center sm:justify-start">
+                        <p className="text-lg font-bold text-gray-900">{formatPrice(item.price)}</p>
+                        {item.originalPrice && item.originalPrice > item.price && (
+                          <p className="text-xs text-gray-400 line-through">{formatPrice(item.originalPrice)}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </Link>
                 <div className="flex items-center bg-white rounded-2xl px-3 py-2 my-4 sm:my-0 sm:mx-6 shadow-sm border border-gray-100">
                   <button onClick={() => updateQuantity(item.id, -1)} className="p-2 hover:bg-blue-50 rounded-xl transition-all text-gray-400 hover:text-blue-600">
                     <Minus className="w-4 h-4" />

@@ -36,6 +36,7 @@ interface Order {
   orderDate: string;
   totalAmount: number;
   paymentMethod: string;
+  paymentStatus: string;
   status: string;
   items: OrderItem[];
 }
@@ -86,16 +87,17 @@ export default function AdminOrdersPage() {
       const result = await response.json();
 
       if (result && result.code === 200) {
-        const mappedOrders = result.result.content.map((item: { 
-          order: { 
-            id: number, 
-            customer?: { fullName: string, phone: string, email: string, street: string, ward: string, city: string }, 
-            createdAt: string, 
-            totalPrice: number, 
-            method: string, 
-            status: string 
-          }, 
-          details?: { product?: { name: string }, quantity: number, cost: number, total: number }[] 
+        const mappedOrders = result.result.content.map((item: {
+          order: {
+            paymentStatus: string;
+            id: number,
+            customer?: { fullName: string, phone: string, email: string, street: string, ward: string, city: string },
+            createdAt: string,
+            totalPrice: number,
+            method: string,
+            status: string
+          },
+          details?: { product?: { name: string }, quantity: number, cost: number, total: number }[]
         }) => {
           const ord = item.order;
           return {
@@ -109,6 +111,7 @@ export default function AdminOrdersPage() {
             orderDate: ord.createdAt ? ord.createdAt.split('T')[0] : "",
             totalAmount: ord.totalPrice,
             paymentMethod: ord.method || "COD",
+            paymentStatus: ord.paymentStatus || "PENDING",
             status: ord.status, // PENDING, CONFIRMED, etc.
             items: item.details?.map((dt) => ({
               name: dt.product?.name || "Sản phẩm",
@@ -156,7 +159,7 @@ export default function AdminOrdersPage() {
       if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?"))
         return;
     }
-    
+
     const empId = sessionStorage.getItem("employerId");
     if (!empId) {
       showToast("Không tìm thấy thông tin nhân viên. Vui lòng đăng nhập lại!", "error");
@@ -280,6 +283,22 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const renderPaymentStatusBadge = (pStatus: string) => {
+    const baseClass = "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest";
+
+    if (pStatus === "PAID") {
+      return <span className={`${baseClass} bg-green-100 text-green-700 border border-green-200`}>Đã thanh toán</span>;
+    }
+    if (pStatus === "UNPAID") {
+      return <span className={`${baseClass} bg-red-100 text-red-700 border border-red-200`}>Chưa thanh toán</span>;
+    }
+    if (pStatus === "COD") {
+      return <span className={`${baseClass} bg-blue-100 text-blue-700 border border-blue-200`}>Thanh toán COD</span>;
+    }
+
+    return <span className={`${baseClass} bg-gray-100 text-gray-700 border border-gray-200`}>{pStatus}</span>;
+  };
+
   const totalPages = Math.ceil(totalOrders / ORDERS_PER_PAGE);
   const startIndex = (currentPage - 1) * ORDERS_PER_PAGE;
   const paginatedOrders = orders; // Dữ liệu từ API đã là trang hiện tại
@@ -353,6 +372,10 @@ export default function AdminOrdersPage() {
                     <span className="text-gray-500">Trạng thái:</span>{" "}
                     {renderStatusBadge(selectedOrder.status, true)}
                   </p>
+                  <p className="mt-2">
+                    <span className="text-gray-500">Thanh toán:</span>{" "}
+                    {renderPaymentStatusBadge(selectedOrder.paymentStatus)}
+                  </p>
                 </div>
               </div>
 
@@ -382,12 +405,12 @@ export default function AdminOrdersPage() {
                         </td>
                       </tr>
                     )) || (
-                      <tr>
-                        <td colSpan={5} className="py-8 text-gray-400 italic">
-                          Không có dữ liệu sản phẩm
-                        </td>
-                      </tr>
-                    )}
+                        <tr>
+                          <td colSpan={5} className="py-8 text-gray-400 italic">
+                            Không có dữ liệu sản phẩm
+                          </td>
+                        </tr>
+                      )}
                   </tbody>
                 </table>
               </div>
@@ -402,7 +425,7 @@ export default function AdminOrdersPage() {
                       <CheckCircle2 size={18} /> {getNextStatusAction(selectedOrder.status)!.label}
                     </button>
                   )}
-                  
+
                   {(selectedOrder.status === "PENDING" || selectedOrder.status === "CONFIRMED") && (
                     <button
                       onClick={() => handleAdvanceStatus("CANCELLED")}
@@ -516,50 +539,53 @@ export default function AdminOrdersPage() {
             <tbody className="divide-y text-sm text-slate-900 font-medium">
               {!isLoading && paginatedOrders.length > 0
                 ? paginatedOrders.map((order, index) => (
-                    <tr
-                      key={order.id}
-                      className="hover:bg-blue-50/50 transition-colors"
-                    >
-                      <td className="px-4 py-5 font-medium text-slate-700">{startIndex + index + 1}</td>
-                      <td className="px-4 py-5 font-bold text-slate-900">{order.orderCode}</td>
-                      <td className="px-4 py-5 text-left">
-                        <span className="font-bold block text-slate-900">
-                          {order.customerName}
-                        </span>
-                        <span className="text-slate-500 text-xs font-medium">
-                          {order.totalProducts} sản phẩm
-                        </span>
-                      </td>
-                      <td className="px-4 py-5 font-medium text-slate-700">{order.phone}</td>
-                      <td className="px-4 py-5 font-medium">
-                        {formatDateDisplay(order.orderDate)}
-                      </td>
-                      <td className="px-4 py-5 font-bold text-red-600">
-                        {formatPrice(order.totalAmount)}
-                      </td>
-                      <td className="px-4 py-5 font-medium text-slate-800">
-                        {order.paymentMethod}
-                      </td>
-                      <td className="px-4 py-5">
+                  <tr
+                    key={order.id}
+                    className="hover:bg-blue-50/50 transition-colors"
+                  >
+                    <td className="px-4 py-5 font-medium text-slate-700">{startIndex + index + 1}</td>
+                    <td className="px-4 py-5 font-bold text-slate-900">{order.orderCode}</td>
+                    <td className="px-4 py-5 text-left">
+                      <span className="font-bold block text-slate-900">
+                        {order.customerName}
+                      </span>
+                      <span className="text-slate-500 text-xs font-medium">
+                        {order.totalProducts} sản phẩm
+                      </span>
+                    </td>
+                    <td className="px-4 py-5 font-medium text-slate-700">{order.phone}</td>
+                    <td className="px-4 py-5 font-medium">
+                      {formatDateDisplay(order.orderDate)}
+                    </td>
+                    <td className="px-4 py-5 font-bold text-red-600">
+                      {formatPrice(order.totalAmount)}
+                    </td>
+                    <td className="px-4 py-5 font-medium text-slate-800">
+                      {order.paymentMethod}
+                    </td>
+                    <td className="px-4 py-5">
+                      <div className="flex flex-col items-center gap-1">
                         {renderStatusBadge(order.status)}
-                      </td>
-                      <td className="px-4 py-5">
-                        <button
-                          onClick={() => handleOpenDetails(order)}
-                          className="bg-blue-600 text-white px-4 py-1.5 rounded shadow-sm font-medium flex items-center gap-1.5 mx-auto"
-                        >
-                          <Eye size={16} /> Xem
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                        {renderPaymentStatusBadge(order.paymentStatus)}
+                      </div>
+                    </td>
+                    <td className="px-4 py-5">
+                      <button
+                        onClick={() => handleOpenDetails(order)}
+                        className="bg-blue-600 text-white px-4 py-1.5 rounded shadow-sm font-medium flex items-center gap-1.5 mx-auto"
+                      >
+                        <Eye size={16} /> Xem
+                      </button>
+                    </td>
+                  </tr>
+                ))
                 : !isLoading && (
-                    <tr>
-                      <td colSpan={9} className="py-12 text-gray-500">
-                        Không tìm thấy đơn hàng nào.
-                      </td>
-                    </tr>
-                  )}
+                  <tr>
+                    <td colSpan={9} className="py-12 text-gray-500">
+                      Không tìm thấy đơn hàng nào.
+                    </td>
+                  </tr>
+                )}
             </tbody>
           </table>
         </div>

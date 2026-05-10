@@ -98,6 +98,7 @@ public class OrderService implements OrderServiceI {
                 .city(request.getCity())
                 .method(request.getMethod())
                 .status(OrderStatus.PENDING)
+                .paymentStatus(request.getMethod().equalsIgnoreCase("MOMO") ? "UNPAID" : "COD")
                 .deleted(0)
                 .totalPrice(request.getTotalPrice()).build();
 
@@ -107,27 +108,27 @@ public class OrderService implements OrderServiceI {
         }
 
         Orders newOrder = orderRepository.save(order);
-        orderDetailService.addAll(request.getDetails(), newOrder.getId()); 
-        
+        orderDetailService.addAll(request.getDetails(), newOrder.getId());
+
         // Trừ số lượng tồn kho ngay khi tạo đơn hàng (Trạng thái CHỜ XÁC NHẬN)
         List<OrdersDetails> details = orderDetailService.getByOrderId(newOrder.getId());
         for (OrdersDetails item : details) {
             Products pro = item.getProduct();
-            
+
             // Cập nhật số lượng biến thể
-            java.util.Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variantOpt = 
-                variantRepo.findByProductAndColorAndSize(pro, item.getColor(), item.getSize());
-            
+            java.util.Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variantOpt = variantRepo
+                    .findByProductAndColorAndSize(pro, item.getColor(), item.getSize());
+
             if (variantOpt.isPresent()) {
                 com.tmdtud.cuahang.api.product.model.ProductVariant variant = variantOpt.get();
                 if (variant.getQuantity() < item.getQuantity()) {
-                    throw new RuntimeException("Biến thể " + item.getColor() + " size " + item.getSize() + 
-                        " của sản phẩm " + pro.getName() + " không đủ số lượng tồn kho!");
+                    throw new RuntimeException("Biến thể " + item.getColor() + " size " + item.getSize() +
+                            " của sản phẩm " + pro.getName() + " không đủ số lượng tồn kho!");
                 }
                 variant.setQuantity(variant.getQuantity() - item.getQuantity());
                 variantRepo.save(variant);
             }
-            
+
             // Cập nhật tổng số lượng sản phẩm
             if (pro.getQuantity() < item.getQuantity()) {
                 throw new RuntimeException("Sản phẩm " + pro.getName() + " không đủ số lượng tồn kho!");
@@ -152,10 +153,10 @@ public class OrderService implements OrderServiceI {
         List<OrdersDetails> ordersDetails = orderDetailService.getByOrderId(order.getId());
         for (OrdersDetails item : ordersDetails) {
             Products pro = item.getProduct();
-            
+
             // Hoàn lại số lượng biến thể
-            java.util.Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variantOpt = 
-                variantRepo.findByProductAndColorAndSize(pro, item.getColor(), item.getSize());
+            java.util.Optional<com.tmdtud.cuahang.api.product.model.ProductVariant> variantOpt = variantRepo
+                    .findByProductAndColorAndSize(pro, item.getColor(), item.getSize());
             if (variantOpt.isPresent()) {
                 com.tmdtud.cuahang.api.product.model.ProductVariant variant = variantOpt.get();
                 variant.setQuantity(variant.getQuantity() + item.getQuantity());
@@ -205,26 +206,39 @@ public class OrderService implements OrderServiceI {
 
     @Override
     @Transactional
-    public Orders updateStatus(UpdateOrderStatusRequest request) throws Exception{
+    public Orders updateStatus(UpdateOrderStatusRequest request) throws Exception {
         Employers employer = employerService.getById(request.getEmployerId());
         Orders order = getById(request.getOrderId());
 
-        if(order.getStatus().equals(OrderStatus.CANCELLED)){
+        if (order.getStatus().equals(OrderStatus.CANCELLED)) {
             throw new Exception("Đơn hàng đã bị hủy trước đó");
         }
-        if(order.getStatus().equals(OrderStatus.DELIVERED)){
+        if (order.getStatus().equals(OrderStatus.DELIVERED)) {
             throw new Exception("Đơn hàng đã được giao, không thể hủy");
         }
         if (!order.getStatus().canAdvanceTo(request.getOrderStatusNext())) {
             throw new Exception("Không thể cập nhật trạng thái");
         }
 
+        // Kiểm tra logic thanh toán: MoMo phải PAID mới được CONFIRMED
+        if (request.getOrderStatusNext().equals(OrderStatus.CONFIRMED)
+                && "MOMO".equalsIgnoreCase(order.getMethod())
+                && !"PAID".equals(order.getPaymentStatus())) {
+            throw new Exception("Đơn hàng MoMo chưa được thanh toán, không thể xác nhận");
+        }
+
         order.setEmployer(employer);
         order.setStatus(request.getOrderStatusNext());
+
+        // Nếu là COD và hoàn thành đơn hàng, tự động đánh dấu đã thanh toán
+        if ("COD".equalsIgnoreCase(order.getMethod()) && OrderStatus.DELIVERED.equals(request.getOrderStatusNext())) {
+            order.setPaymentStatus("PAID");
+        }
+
         orderRepository.save(order);
 
         // Đã trừ tồn kho ở add(), không trừ lại ở CONFIRMED nữa
-        
+
         return order;
     }
 
@@ -232,9 +246,10 @@ public class OrderService implements OrderServiceI {
     public PageResponse<Orders> getAllByDateRange(String fromDate, String toDate, String status, Pageable pageable) {
         LocalDate from = (fromDate != null && !fromDate.isEmpty()) ? LocalDate.parse(fromDate) : null;
         LocalDate to = (toDate != null && !toDate.isEmpty()) ? LocalDate.parse(toDate) : null;
-        OrderStatus orderStatus = (status != null && !status.isEmpty() && !status.equalsIgnoreCase("all")) 
-                                  ? OrderStatus.valueOf(status) : null;
-        
+        OrderStatus orderStatus = (status != null && !status.isEmpty() && !status.equalsIgnoreCase("all"))
+                ? OrderStatus.valueOf(status)
+                : null;
+
         Page<Orders> orders = orderRepository.findAllByDateRange(from, to, orderStatus, pageable);
         return new PageResponse<Orders>(orders);
     }
