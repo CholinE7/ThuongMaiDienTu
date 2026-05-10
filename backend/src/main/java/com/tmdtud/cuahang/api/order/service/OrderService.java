@@ -8,14 +8,17 @@ import com.tmdtud.cuahang.api.product.model.Products;
 import com.tmdtud.cuahang.api.product.service.ProductService;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +36,7 @@ import com.tmdtud.cuahang.api.order.request.UpdateOrderStatusRequest;
 import com.tmdtud.cuahang.api.order_detail.model.OrdersDetails;
 import com.tmdtud.cuahang.api.order_detail.service.OrderDetailService;
 import com.tmdtud.cuahang.common.response.PageResponse;
+import com.tmdtud.cuahang.common.service.SseService;
 
 import lombok.Data;
 
@@ -65,6 +69,9 @@ public class OrderService implements OrderServiceI {
 
     @Autowired
     private CustomerMapper customerMapper;
+
+    @Autowired
+    private SseService sseService;
 
     @Override
     public PageResponse<Orders> getAll(Pageable pageable) {
@@ -256,5 +263,32 @@ public class OrderService implements OrderServiceI {
 
         Page<Orders> orders = orderRepository.findAllByDateRange(from, to, orderStatus, pageable);
         return new PageResponse<Orders>(orders);
+    }
+
+    @Override
+    @Scheduled(fixedRate = 10000) // chạy mỗi 10 giây
+    public void cancelOrderExpired(){
+        LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(1);
+        System.out.println(fiveMinutesAgo);
+
+        List<Orders> expiredOrders = orderRepository
+            .findPendingMomoOrders();
+        System.out.println("Tìm thấy " + expiredOrders.size() + " đơn hàng MoMo chưa thanh toán quá 1 phút, sẽ hủy...");
+
+        for (Orders order : expiredOrders) {
+            try {
+                order.setStatus(OrderStatus.CANCELLED);
+                orderRepository.save(order);
+
+                sseService.sendToAll(Map.of(
+                    "orderId", order.getId(),
+                    "status", "CANCELLED",
+                    "message", "Đơn hàng MoMo chưa thanh toán quá 5 phút đã bị hủy"
+                ));
+            } catch (Exception e) {
+                // Log lỗi nếu cần thiết, nhưng tiếp tục xử lý các đơn hàng khác
+                System.err.println("Lỗi khi hủy đơn hàng ID " + order.getId() + ": " + e.getMessage());
+            }
+        }
     }
 }

@@ -1,6 +1,8 @@
 package com.tmdtud.cuahang.api.order.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 //khác với hibernate Page
 import org.springframework.data.domain.Page;
@@ -52,4 +54,17 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate,
             @Param("status") OrderStatus status);
+
+
+        // Tìm các đơn hàng MOMO, chưa thanh toán và thời gian hiện tại trừ đi thời gian tạo lớn hơn 5 phút
+        @Query(value = """
+                SELECT * FROM orders o
+                WHERE o.method = 'MOMO' 
+                AND o.payment_status = 'UNPAID'
+                AND o.status = 'PENDING'
+                AND TIMESTAMPDIFF(MINUTE, o.created_at, NOW()) > 1
+                AND o.deleted = 0
+                """
+        , nativeQuery = true)
+        List<Orders> findPendingMomoOrders();
 }
