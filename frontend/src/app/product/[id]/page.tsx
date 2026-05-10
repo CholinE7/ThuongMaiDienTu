@@ -94,10 +94,16 @@ export default function ProductDetailPage() {
             variants: variants,
             sizes: sizes,
             colors: colors,
+            status: apiProduct.deleted === 0 ? "visible" : "hidden",
             images: [
               apiProduct.imageUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop"
             ]
           };
+
+          if (foundProduct.status !== "visible") {
+            setError("Sản phẩm này đã ngừng kinh doanh");
+            return;
+          }
 
           setProduct(foundProduct);
 
@@ -200,12 +206,21 @@ export default function ProductDetailPage() {
             </h1>
 
             <div className="flex items-center gap-4 mb-10">
-              <span className="text-xl font-medium text-gray-900">
-                {formatPrice(product.price)}
-              </span>
-              {product.discountPercentage !== undefined && product.discountPercentage > 0 && (
-                <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest">
-                  -{product.discountPercentage}%
+              {(product.discountPercentage || 0) > 0 ? (
+                <>
+                  <span className="text-xl font-bold text-red-600">
+                    {formatPrice(product.price * (1 - (product.discountPercentage || 0) / 100))}
+                  </span>
+                  <span className="text-sm font-medium text-gray-400 line-through">
+                    {formatPrice(product.price)}
+                  </span>
+                  <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest">
+                    -{product.discountPercentage}%
+                  </span>
+                </>
+              ) : (
+                <span className="text-xl font-medium text-gray-900">
+                  {formatPrice(product.price)}
                 </span>
               )}
             </div>

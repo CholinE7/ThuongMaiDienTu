@@ -76,7 +76,8 @@ function SearchContent() {
       const res = await response.json();
       
       if (res.code === 200 && res.result) {
-        setSearchResults(res.result.content.map((p: Product) => {
+        const filteredContent = res.result.content.filter((p: { deleted?: number; status?: string }) => p.deleted === 0 || p.status === "visible");
+        setSearchResults(filteredContent.map((p: Product) => {
           const uniqueColors = Array.from(new Set((p.variants || []).map(v => v.color)));
           return {
             ...p,
@@ -84,7 +85,7 @@ function SearchContent() {
             colors: uniqueColors
           };
         }));
-        setTotalProducts(res.result.total);
+        setTotalProducts(res.result.total - (res.result.content.length - filteredContent.length));
       } else {
         setSearchResults([]);
         setTotalProducts(0);

@@ -20,6 +20,7 @@ export interface Product {
   sizes?: (string | number)[];
   brand?: Brand | string;
   discountPercentage?: number;
+  status?: string;
   variants?: { id: number, color: string, size: string, quantity: number }[];
   images?: string[];
 }

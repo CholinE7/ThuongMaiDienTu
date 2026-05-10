@@ -28,8 +28,11 @@ export default function AdminSidebar() {
 
       if (!name && token) {
         try {
-          const res = await fetch("http://localhost:8080/api/auth/me", {
-            headers: { "Authorization": `Bearer ${token}` }
+          const res = await fetch("https://punk-caucasian-hangnail.ngrok-free.dev/api/auth/me?ngrok-skip-browser-warning=true", {
+            headers: { 
+              "Authorization": `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "69420"
+            }
           });
           if (res.ok) {
             const data = await res.json();

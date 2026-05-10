@@ -105,7 +105,8 @@ function CategoryContent() {
       const res = await response.json();
 
       if (res.code === 200 && res.result) {
-        setProducts(res.result.content.map((p: { 
+        const filteredContent = res.result.content.filter((p: { deleted?: number; status?: string }) => p.deleted === 0 || p.status === "visible");
+        setProducts(filteredContent.map((p: { 
           category?: { name: string }, 
           variants?: { color: string }[] 
         }) => {
@@ -116,7 +117,7 @@ function CategoryContent() {
             colors: uniqueColors
           };
         }));
-        setTotalProducts(res.result.total);
+        setTotalProducts(res.result.total - (res.result.content.length - filteredContent.length));
       }
     } catch (error) {
       console.error("Error fetching category products:", error);

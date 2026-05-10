@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import { apiRequest } from "@/services/app";
 import { Loader2, Smartphone, ShieldCheck, ArrowLeft, Copy, Check } from "lucide-react";
 
 interface PaymentData {
@@ -25,9 +26,7 @@ function MomoPaymentContent() {
 
   useEffect(() => {
     if (orderId) {
-      fetch(`http://localhost:8080/api/payment/momo/create_payment?orderId=${orderId}`, {
-        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
-      })
+      apiRequest(`/api/payment/momo/create_payment?orderId=${orderId}`)
       .then(res => res.json())
       .then(result => {
         if (result.code === 200 && result.result) {
@@ -41,10 +40,7 @@ function MomoPaymentContent() {
   const handleConfirm = async () => {
     setIsConfirming(true);
     try {
-      const res = await fetch(`http://localhost:8080/api/payment/momo/sync?orderId=${orderId}&resultCode=0`, {
-        method: "GET",
-        headers: { "Authorization": `Bearer ${sessionStorage.getItem("token")}` }
-      });
+      const res = await apiRequest(`/api/payment/momo/sync?orderId=${orderId}&resultCode=0`);
       const result = await res.json();
       if (result.code === 200) {
         alert("Xác nhận thanh toán thành công!");

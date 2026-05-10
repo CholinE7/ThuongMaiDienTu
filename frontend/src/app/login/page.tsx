@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { apiRequest } from "@/services/app";
 import {
   Mail,
   Lock,
@@ -43,11 +44,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8080/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: email, password }),
-      });
+      const res = await apiRequest("/login", "POST", { username: email, password });
 
       const data = await res.json();
       const token = data.token;
@@ -57,9 +54,7 @@ const LoginPage = () => {
 
         // Lấy thông tin người dùng
         try {
-          const meRes = await fetch("http://localhost:8080/api/auth/me", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const meRes = await apiRequest("/api/auth/me");
           if (meRes.ok) {
             const meData = await meRes.json();
             if (meData.code === 200) {
@@ -97,11 +92,7 @@ const LoginPage = () => {
 
     try {
       // Gọi API reset password bên Backend (đã hướng dẫn ở bước trước)
-      const res = await fetch("http://localhost:8080/forgot-password", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      const res = await apiRequest("/forgot-password", "PATCH", { email });
 
       if (res.ok) {
         showToast(
