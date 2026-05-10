@@ -72,20 +72,14 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
                         @Param("toDate") java.time.LocalDateTime toDate,
                         org.springframework.data.domain.Pageable pageable);
 
-        java.math.BigDecimal sumRevenue(
-                        @Param("fromDate") LocalDate fromDate,
-                        @Param("toDate") LocalDate toDate,
-                        @Param("status") OrderStatus status);
-
-        // Tìm các đơn hàng MOMO, chưa thanh toán và thời gian hiện tại trừ đi thời gian
-        // tạo lớn hơn 5 phút
-        @Query(value = """
-                        SELECT * FROM orders o
+        // Tìm các đơn hàng MOMO, chưa thanh toán quá hạn
+        @Query("""
+                        SELECT o FROM Orders o
                         WHERE o.method = 'MOMO'
-                        AND o.payment_status = 'UNPAID'
+                        AND o.paymentStatus = 'UNPAID'
                         AND o.status = 'PENDING'
-                        AND TIMESTAMPDIFF(MINUTE, o.created_at, NOW()) > 1
+                        AND o.createdAt < :expiryTime
                         AND o.deleted = 0
-                        """, nativeQuery = true)
-        List<Orders> findPendingMomoOrders();
+                        """)
+        List<Orders> findPendingMomoOrders(@Param("expiryTime") java.sql.Timestamp expiryTime);
 }
