@@ -681,7 +681,26 @@ export default function AdminProductsPage() {
                     </div>
 
                     {/* KHUNG CHỨA NÚT VÀ INPUT FILE (ẨN) */}
-                    <div className="w-full relative mt-4">
+                    <div className="w-full relative mt-4 space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wider">
+                           Đường dẫn ảnh (URL)
+                        </label>
+                        <input
+                          type="text"
+                          value={currentProduct.image}
+                          onChange={(e) => setCurrentProduct({ ...currentProduct, image: e.target.value })}
+                          placeholder="https://example.com/image.jpg"
+                          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none font-medium text-gray-900 bg-white"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 h-px bg-gray-200"></div>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Hoặc</span>
+                        <div className="flex-1 h-px bg-gray-200"></div>
+                      </div>
+
                       {/* Thẻ input ẩn đi */}
                       <input
                         type="file"
@@ -703,9 +722,9 @@ export default function AdminProductsPage() {
                       {/* Label này đóng vai trò như một nút bấm, khi click vào nó sẽ kích hoạt thẻ input ẩn bên trên */}
                       <label
                         htmlFor="imageUpload"
-                        className="w-full cursor-pointer bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition"
+                        className="w-full cursor-pointer bg-gray-50 hover:bg-gray-100 text-gray-700 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition border-2 border-dashed border-gray-300 text-sm"
                       >
-                        <Edit size={16} /> Thay đổi hình ảnh
+                        <Edit size={16} /> Chọn ảnh từ máy tính
                       </label>
                     </div>
 
