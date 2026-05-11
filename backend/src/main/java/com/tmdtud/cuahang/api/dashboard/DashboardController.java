@@ -67,14 +67,6 @@ public class DashboardController {
         // 2. Doanh thu thực tế (Đã thu tiền)
         java.math.BigDecimal paidRevenue = orderRepository.sumPaidRevenue(start, end);
 
-        // 3. Top 5 sản phẩm bán chạy
-        java.util.List<Object[]> topProductsData = orderRepository.getTopSellingProducts(start, end,
-                org.springframework.data.domain.PageRequest.of(0, 5));
-        java.util.List<DashboardDTO.TopProductDTO> topProducts = topProductsData.stream()
-                .map(row -> new DashboardDTO.TopProductDTO((String) row[0], (long) row[1],
-                        (java.math.BigDecimal) row[2]))
-                .collect(java.util.stream.Collectors.toList());
-
         DashboardDTO.OrderStatsDTO orderStats = DashboardDTO.OrderStatsDTO.builder()
                 .total(totalOrders).success(successOrders).processing(processingOrders)
                 .waitingPayment(waitingPaymentOrders).cancelled(cancelledOrders).build();
@@ -83,6 +75,6 @@ public class DashboardController {
                 .total(totalRevenue).success(successRevenue).processing(processingRevenue)
                 .waitingPayment(waitingPaymentRevenue).cancelled(cancelledRevenue).paid(paidRevenue).build();
 
-        return ApiResponse.success(new DashboardDTO(orderStats, revenueStats, topProducts));
+        return ApiResponse.success(new DashboardDTO(orderStats, revenueStats));
     }
 }

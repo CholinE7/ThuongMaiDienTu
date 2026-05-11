@@ -57,20 +57,6 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
                         @Param("fromDate") java.time.LocalDateTime fromDate,
                         @Param("toDate") java.time.LocalDateTime toDate);
 
-        @Query("""
-                        SELECT od.product.name, SUM(od.quantity), SUM(od.total)
-                        FROM OrdersDetails od
-                        JOIN od.order o
-                        WHERE o.deleted = 0 AND o.status != 'CANCELLED'
-                        AND (:fromDate is null OR o.createdAt >= :fromDate)
-                        AND (:toDate is null OR o.createdAt <= :toDate)
-                        GROUP BY od.product.id, od.product.name
-                        ORDER BY SUM(od.quantity) DESC
-                        """)
-        java.util.List<Object[]> getTopSellingProducts(
-                        @Param("fromDate") java.time.LocalDateTime fromDate,
-                        @Param("toDate") java.time.LocalDateTime toDate,
-                        org.springframework.data.domain.Pageable pageable);
 
         // Tìm các đơn hàng MOMO, chưa thanh toán quá hạn
         @Query("""

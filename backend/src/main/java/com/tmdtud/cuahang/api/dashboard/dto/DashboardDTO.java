@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 public class DashboardDTO {
     private OrderStatsDTO orders;
     private RevenueStatsDTO revenue;
-    private java.util.List<TopProductDTO> topProducts;
 
     @Data
     @Builder
@@ -38,15 +37,5 @@ public class DashboardDTO {
         private BigDecimal waitingPayment; // PENDING
         private BigDecimal cancelled;
         private BigDecimal paid; // Thực tế đã thu
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class TopProductDTO {
-        private String name;
-        private long quantity;
-        private BigDecimal revenue;
     }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, RefreshCcw, Loader2, ShoppingBag, CheckCircle, Clock, XCircle, DollarSign, CreditCard, AlertCircle, TrendingDown } from "lucide-react";
+import { Search, RefreshCcw, Loader2, ShoppingBag, CheckCircle, Clock, XCircle, DollarSign, CreditCard, AlertCircle } from "lucide-react";
 import { apiRequest } from "@/services/app";
 
 export default function AdminDashboardPage() {
@@ -14,8 +14,7 @@ export default function AdminDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
     orders: { total: 0, success: 0, processing: 0, waitingPayment: 0, cancelled: 0 },
-    revenue: { total: 0, success: 0, processing: 0, waitingPayment: 0, cancelled: 0, paid: 0 },
-    topProducts: [] as { name: string, quantity: number, revenue: number }[]
+    revenue: { total: 0, success: 0, processing: 0, waitingPayment: 0, cancelled: 0, paid: 0 }
   });
 
   // HÀM FORMAT TIỀN
@@ -172,36 +171,6 @@ export default function AdminDashboardPage() {
 
       </div>
 
-      {/* --- KHU VỰC 3: TOP SẢN PHẨM BÁN CHẠY --- */}
-      <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-l-4 border-purple-600 pl-3">
-        <TrendingDown size={20} className="text-purple-600 rotate-180"/> Top 5 sản phẩm bán chạy nhất
-      </h2>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-4 text-sm font-bold text-gray-600 uppercase">Tên sản phẩm</th>
-              <th className="px-6 py-4 text-sm font-bold text-gray-600 uppercase text-center">Số lượng bán</th>
-              <th className="px-6 py-4 text-sm font-bold text-gray-600 uppercase text-right">Doanh thu</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {stats.topProducts && stats.topProducts.length > 0 ? (
-              stats.topProducts.map((product, index) => (
-                <tr key={index} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 font-medium text-gray-900">{product.name}</td>
-                  <td className="px-6 py-4 text-center font-bold text-blue-600">{product.quantity}</td>
-                  <td className="px-6 py-4 text-right font-bold text-gray-900">{formatPrice(product.revenue)}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={3} className="px-6 py-10 text-center text-gray-500">Chưa có dữ liệu sản phẩm bán chạy</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
 
     </div>
   );
