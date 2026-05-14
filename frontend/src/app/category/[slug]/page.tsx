@@ -34,7 +34,7 @@ function CategoryContent() {
   const [sortBy, setSortBy] = useState<string>("id");
   const [sortDir, setSortDir] = useState<string>("asc");
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -58,7 +58,7 @@ function CategoryContent() {
         const SLUG_TO_NAME: Record<string, string> = {
           "nu": "Giày Thể Thao Nữ",
           "nam": "Giày Thể Thao Nam",
-          "cap": "Giày Cặp",
+          "cap": "Giày Thời Trang & Unisex",
           "banchay": "Sản phẩm bán chạy"
         };
 
@@ -68,12 +68,12 @@ function CategoryContent() {
         const found = categories.find(
           (c) => c.name.toLowerCase() === targetCategoryName.toLowerCase()
         );
-        
+
         if (found) {
           setCategoryId(found.id);
           setCategoryTitle(found.name.toUpperCase());
         } else {
-           setCategoryTitle(title || "DANH MỤC");
+          setCategoryTitle(title || "DANH MỤC");
         }
 
       } catch (error) {
@@ -105,9 +105,9 @@ function CategoryContent() {
       const res = await response.json();
 
       if (res.code === 200 && res.result) {
-        setProducts(res.result.content.map((p: { 
-          category?: { name: string }, 
-          variants?: { color: string }[] 
+        setProducts(res.result.content.map((p: {
+          category?: { name: string },
+          variants?: { color: string }[]
         }) => {
           const uniqueColors = Array.from(new Set((p.variants || []).map(v => v.color)));
           return {
@@ -151,12 +151,12 @@ function CategoryContent() {
             Tìm thấy <strong>{totalProducts}</strong> sản phẩm.
           </p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           {/* Sắp xếp */}
           <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
             <ArrowUpDown size={16} className="text-gray-400" />
-            <select 
+            <select
               value={`${sortBy}-${sortDir}`}
               onChange={(e) => {
                 const [newSortBy, newSortDir] = e.target.value.split('-');
@@ -173,19 +173,18 @@ function CategoryContent() {
           </div>
 
           {/* Toggle Lọc */}
-          <button 
+          <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border transition-all font-bold text-sm ${
-              showFilters 
-              ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100" 
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border transition-all font-bold text-sm ${showFilters
+              ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100"
               : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
-            }`}
+              }`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide lucide-arrow-up-down transition-colors ${showFilters ? 'text-white' : 'text-gray-400'}`} aria-hidden="true">
-              <path d="m21 16-4 4-4-4"/>
-              <path d="M17 20V4"/>
-              <path d="m3 8 4-4 4 4"/>
-              <path d="M7 4v16"/>
+              <path d="m21 16-4 4-4-4" />
+              <path d="M17 20V4" />
+              <path d="m3 8 4-4 4 4" />
+              <path d="M7 4v16" />
             </svg>
             Bộ lọc
           </button>
@@ -212,20 +211,20 @@ function CategoryContent() {
               {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex justify-center items-center gap-2">
-                  <button 
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
-                    disabled={currentPage === 1} 
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
                     className={`w-10 h-10 flex items-center justify-center border rounded-lg transition ${currentPage === 1 ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50" : "border-gray-300 text-gray-600 bg-white hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 shadow-sm"}`}
                   >
                     <ChevronLeft size={20} />
                   </button>
-                  
+
                   {Array.from({ length: totalPages }).map((_, index) => {
                     const pageNumber = index + 1;
                     return (
-                      <button 
-                        key={pageNumber} 
-                        onClick={() => setCurrentPage(pageNumber)} 
+                      <button
+                        key={pageNumber}
+                        onClick={() => setCurrentPage(pageNumber)}
                         className={`w-10 h-10 flex items-center justify-center border rounded-lg font-bold transition shadow-sm ${currentPage === pageNumber ? "border-blue-600 bg-blue-600 text-white shadow-md" : "border-gray-300 bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"}`}
                       >
                         {pageNumber}
@@ -233,9 +232,9 @@ function CategoryContent() {
                     );
                   })}
 
-                  <button 
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
-                    disabled={currentPage === totalPages} 
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
                     className={`w-10 h-10 flex items-center justify-center border rounded-lg transition ${currentPage === totalPages ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50" : "border-gray-300 text-gray-600 bg-white hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 shadow-sm"}`}
                   >
                     <ChevronRight size={20} />
@@ -256,15 +255,15 @@ function CategoryContent() {
         {showFilters && (
           <>
             {/* Backdrop - Transparent */}
-            <div 
-              onClick={() => setShowFilters(false)} 
-              className="fixed inset-0 z-[140] animate-in fade-in duration-300" 
+            <div
+              onClick={() => setShowFilters(false)}
+              className="fixed inset-0 z-[140] animate-in fade-in duration-300"
             />
 
             {/* Sidebar Drawer */}
             <div className="fixed top-0 right-0 h-full w-full max-w-xs bg-white z-[150] shadow-2xl animate-in slide-in-from-right duration-300 overflow-y-auto border-l border-gray-100">
               <div className="p-8 pt-24">
-                <FilterSidebar 
+                <FilterSidebar
                   brands={brands}
                   selectedBrand={selectedBrand}
                   setSelectedBrand={setSelectedBrand}

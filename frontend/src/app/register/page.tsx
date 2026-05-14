@@ -159,7 +159,7 @@ export default function RegisterPage() {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full bg-gray-100 border border-gray-300 rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500"
+                    className="w-full bg-gray-100  text-black border border-gray-300 rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500"
                   />
                 </div>
 
@@ -174,7 +174,7 @@ export default function RegisterPage() {
                       required
                       value={formData.password}
                       onChange={handleChange}
-                      className="w-full bg-gray-100 border border-gray-300 rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500"
+                      className="w-full bg-gray-100 text-black border border-gray-300 rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500"
                     />
                     <button
                       type="button"
@@ -196,7 +196,7 @@ export default function RegisterPage() {
                     required
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className={`w-full bg-gray-100 border ${errorMsg.includes("Mật khẩu") ? "border-red-500" : "border-gray-300"} rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500`}
+                    className={`w-full bg-gray-100 text-black border ${errorMsg.includes("Mật khẩu") ? "border-red-500" : "border-gray-300"} rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500`}
                   />
                 </div>
 
@@ -215,7 +215,7 @@ export default function RegisterPage() {
                         required
                         value={formData.city}
                         onChange={handleChange}
-                        className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-sm outline-none focus:bg-white focus:border-blue-500"
+                        className="w-full bg-gray-100 text-black border border-gray-300 rounded-lg py-2 px-3 text-sm outline-none focus:bg-white focus:border-blue-500"
                       />
                     </div>
                     <div>
@@ -227,7 +227,7 @@ export default function RegisterPage() {
                         required
                         value={formData.ward}
                         onChange={handleChange}
-                        className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-sm outline-none focus:bg-white focus:border-blue-500"
+                        className="w-full bg-gray-100 text-black border border-gray-300 rounded-lg py-2 px-3 text-sm outline-none focus:bg-white focus:border-blue-500"
                       />
                     </div>
                   </div>
@@ -240,7 +240,7 @@ export default function RegisterPage() {
                       required
                       value={formData.street}
                       onChange={handleChange}
-                      className="w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-sm outline-none focus:bg-white focus:border-blue-500"
+                      className="w-full bg-gray-100 text-black border border-gray-300 rounded-lg py-2 px-3 text-sm outline-none focus:bg-white focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -259,7 +259,7 @@ export default function RegisterPage() {
                       required
                       value={formData.lastName}
                       onChange={handleChange}
-                      className="w-full bg-gray-100 border border-gray-300 rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500"
+                      className="w-full bg-gray-100 text-black border border-gray-300 rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500"
                     />
                   </div>
                   <div>
@@ -272,7 +272,7 @@ export default function RegisterPage() {
                       required
                       value={formData.firstName}
                       onChange={handleChange}
-                      className="w-full bg-gray-100 border border-gray-300 rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500"
+                      className="w-full bg-gray-100 text-black border border-gray-300 rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -287,7 +287,7 @@ export default function RegisterPage() {
                     required
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full bg-gray-100 border border-gray-300 rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500"
+                    className="w-full bg-gray-100 text-black border border-gray-300 rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500"
                   />
                 </div>
 
@@ -301,7 +301,7 @@ export default function RegisterPage() {
                     value={formData.dateOfBirth}
                     onChange={handleChange}
                     max={today}
-                    className="w-full bg-gray-100 border border-gray-300 rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500"
+                    className="w-full bg-gray-100 text-gray-900 border border-gray-300 rounded-xl py-3 px-4 outline-none focus:bg-white focus:border-blue-500"
                   />
                 </div>
               </div>

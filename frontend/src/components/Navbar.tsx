@@ -169,7 +169,7 @@ export default function Navbar() {
               href="/category/cap"
               className="hover:text-blue-600 transition"
             >
-              Giày Cặp
+              Giày Thời Trang & Unisex
             </Link>
           </div>
 
