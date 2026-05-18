@@ -13,7 +13,7 @@ public class MomoConfig {
     public static final String ENDPOINT = "https://test-payment.momo.vn/v2/gateway/api/create";
     
     // Khi deploy lên Render/Railway, hãy đổi domain này thành domain thật của bạn
-    public static final String REDIRECT_URL = "http://localhost:3000/orders"; 
+    public static final String REDIRECT_URL = "https://frontend-six-steel-88.vercel.app/orders"; 
     public static final String NOTIFY_URL = "https://punk-caucasian-hangnail.ngrok-free.dev/api/payment/momo/confirm";
 
     // === THÔNG TIN TÀI KHOẢN CÁ NHÂN (VIETQR - DÙNG CHO QUÉT MÃ NHANH) ===

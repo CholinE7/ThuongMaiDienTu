@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiRequest } from "@/services/app";
 import {
   Lock,
   Mail,
@@ -34,39 +35,30 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: email, password }),
-      });
+      const response = await apiRequest("/login", "POST", { username: email, password });
 
       const data = await response.json();
       const token = data.token;
 
       if (response.ok && token && token !== "fail") {
         // --- ĐOẠN KIỂM TRA ROLE BỔ SUNG ---
+        // Lưu tạm token vào sessionStorage để apiRequest có thể lấy được
+        sessionStorage.setItem("token", token);
+        
         // Thử gọi 1 API chỉ dành cho Admin để kiểm tra xem Token này có quyền STAFF/ADMIN không
-        const checkRole = await fetch(
-          "http://localhost:8080/api/employers?page_no=0&page_size=1",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        const checkRole = await apiRequest("/api/employers?page_no=0&page_size=1");
 
         if (checkRole.status === 403) {
           showToast("Bạn không có quyền truy cập hệ thống nội bộ!", "error");
+          sessionStorage.removeItem("token");
           setIsLoading(false);
           return; // Dừng lại, không lưu token
         }
         // ----------------------------------
 
-        sessionStorage.setItem("token", token);
-
         // Lấy thêm thông tin nhân viên
         try {
-          const meRes = await fetch("http://localhost:8080/api/auth/me", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const meRes = await apiRequest("/api/auth/me");
           if (meRes.ok) {
             const meData = await meRes.json();
             if (meData.code === 200) {

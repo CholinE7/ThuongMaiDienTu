@@ -1,5 +1,5 @@
 // src/services/api.ts
-const API_URL = "http://localhost:8080";
+const API_URL = "https://punk-caucasian-hangnail.ngrok-free.dev";
 
 export const apiRequest = async (endpoint: string, method: string = "GET", body: unknown = null) => {
     // Lấy token từ sessionStorage
@@ -12,11 +12,15 @@ export const apiRequest = async (endpoint: string, method: string = "GET", body:
     
     const headers: HeadersInit = {
         "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "69420", // Thêm header này để bypass ngrok warning page
         ...(token && token !== "fail" ? { "Authorization": `Bearer ${token}` } : {}),
     };
 
     try {
-        const response = await fetch(`${API_URL}${endpoint}`, {
+        const separator = endpoint.includes("?") ? "&" : "?";
+        const url = `${API_URL}${endpoint}${separator}ngrok-skip-browser-warning=true`;
+        
+        const response = await fetch(url, {
             method,
             headers,
             body: body ? JSON.stringify(body) : null,

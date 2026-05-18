@@ -91,9 +91,12 @@ export default function RegisterPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:8080/register/customers", {
+      const res = await fetch("https://punk-caucasian-hangnail.ngrok-free.dev/register/customers?ngrok-skip-browser-warning=true", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "69420"
+        },
         body: JSON.stringify(registerData),
       });
 

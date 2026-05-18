@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { apiRequest } from "@/services/app";
 import {
   Plus,
   Search,
@@ -20,7 +21,6 @@ import {
 } from "lucide-react";
 
 const USERS_PER_PAGE = 5;
-const API_BASE_URL = "http://localhost:8080";
 
 interface User {
   id: number;
@@ -86,25 +86,17 @@ export default function AdminUsersPage() {
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const token = sessionStorage.getItem("token");
       const isStaffTab =
         appliedFilters.role === "staff" || appliedFilters.role === "admin";
       const endpoint = isStaffTab
-        ? `${API_BASE_URL}/api/employers`
-        : `${API_BASE_URL}/api/customers`;
+        ? `/api/employers`
+        : `/api/customers`;
       const params = new URLSearchParams({
         page_no: "0",
         page_size: "1000",
       }).toString();
 
-      const response = await fetch(`${endpoint}?${params}`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && token !== "null"
-            ? { Authorization: `Bearer ${token}` }
-            : {}),
-        },
-      });
+      const response = await apiRequest(`${endpoint}?${params}`);
 
       if (!response.ok) {
         setUsers([]);
@@ -172,12 +164,11 @@ export default function AdminUsersPage() {
 
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = sessionStorage.getItem("token");
     const isStaff =
       currentUser.role === "staff" || currentUser.role === "admin";
     const endpoint = isStaff
-      ? `${API_BASE_URL}/api/employers`
-      : `${API_BASE_URL}/api/customers`;
+      ? `/api/employers`
+      : `/api/customers`;
     const method = modalMode === "add" ? "POST" : "PUT";
     const url =
       modalMode === "add" ? endpoint : `${endpoint}/${currentUser.id}`;
@@ -201,14 +192,7 @@ export default function AdminUsersPage() {
 
     if (isStaff) payload.salary = currentUser.salary || 0;
     try {
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await apiRequest(url, method, payload);
       const result = await response.json();
       if (response.ok) {
         showToast(
@@ -278,13 +262,12 @@ export default function AdminUsersPage() {
   };
 
   const toggleStatus = async (user: User) => {
-    const token = sessionStorage.getItem("token");
     const newStatus = user.status === 1 ? 0 : 1;
     const isStaff =
       appliedFilters.role === "staff" || appliedFilters.role === "admin";
     const endpoint = isStaff
-      ? `${API_BASE_URL}/api/employers`
-      : `${API_BASE_URL}/api/customers`;
+      ? `/api/employers`
+      : `/api/customers`;
 
     const payload = {
       ...user,
@@ -294,14 +277,7 @@ export default function AdminUsersPage() {
     };
 
     try {
-      const response = await fetch(`${endpoint}/${user.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await apiRequest(`${endpoint}/${user.id}`, "PUT", payload);
       if (response.ok) {
         showToast(
           newStatus === 0 ? "Đã khóa tài khoản!" : "Đã mở khóa thành công!",
@@ -320,21 +296,14 @@ export default function AdminUsersPage() {
   };
 
   const handleResetPassword = async (user: User) => {
-    const token = sessionStorage.getItem("token");
     const isStaff =
       appliedFilters.role === "staff" || appliedFilters.role === "admin";
     const endpoint = isStaff
-      ? `${API_BASE_URL}/api/employers`
-      : `${API_BASE_URL}/api/customers`;
+      ? `/api/employers`
+      : `/api/customers`;
 
     try {
-      const response = await fetch(`${endpoint}/${user.id}/reset-password`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiRequest(`${endpoint}/${user.id}/reset-password`, "PUT");
       if (response.ok) {
         showToast("Mật khẩu đã được reset thành công!", "success");
         fetchUsers();
@@ -839,29 +808,34 @@ export default function AdminUsersPage() {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-6">
+        <div className="flex justify-center items-center gap-2 pb-6">
           <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => prev - 1)}
-            className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 hover:bg-gray-50 transition"
+            className={`w-9 h-9 flex items-center justify-center border rounded-lg transition ${currentPage === 1 ? "border-gray-200 text-gray-300 cursor-not-allowed bg-white" : "border-gray-300 text-gray-500 bg-white hover:bg-blue-50 hover:text-blue-600 shadow-sm"}`}
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={18} />
           </button>
-          {[...Array(totalPages)].map((_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`w-10 h-10 rounded-lg border transition ${currentPage === i + 1 ? "bg-blue-600 text-white border-blue-600" : "border-gray-300 hover:bg-gray-50"}`}
-            >
-              {i + 1}
-            </button>
-          ))}
+          {Array.from({ length: totalPages }).map((_, index) => {
+            const pageNumber = index + 1;
+            return (
+              <button
+                key={pageNumber}
+                onClick={() => setCurrentPage(pageNumber)}
+                className={`w-9 h-9 flex items-center justify-center border rounded-lg font-bold transition shadow-sm ${currentPage === pageNumber ? "border-blue-600 bg-blue-600 text-white shadow-md" : "border-gray-300 bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-600"}`}
+              >
+                {pageNumber}
+              </button>
+            );
+          })}
           <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
             disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 hover:bg-gray-50 transition"
+            className={`w-9 h-9 flex items-center justify-center border rounded-lg transition ${currentPage === totalPages ? "border-gray-200 text-gray-300 cursor-not-allowed bg-white" : "border-gray-300 text-gray-500 bg-white hover:bg-blue-50 hover:text-blue-600 shadow-sm"}`}
           >
-            <ChevronRight size={20} />
+            <ChevronRight size={18} />
           </button>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { apiRequest } from '@/services/app';
 import { Edit, CheckCircle2, Loader2, Lock, Eye, EyeOff, MapPin } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import toast from 'react-hot-toast';
@@ -37,16 +38,7 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       setIsLoading(true);
       try {
-        let token = sessionStorage.getItem("token");
-        
-        // Làm sạch token (loại bỏ dấu ngoặc kép nếu có)
-        if (token) {
-          token = token.replace(/^["'](.+)["']$/, '$1').trim();
-        }
-
-        const response = await fetch(`http://localhost:8080/api/auth/me`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
+        const response = await apiRequest(`/api/auth/me`);
 
         if (response.ok) {
           const result = await response.json();
@@ -96,13 +88,6 @@ export default function ProfilePage() {
 
   setIsSaving(true);
   try {
-    let token = sessionStorage.getItem("token");
-    
-    // Làm sạch token
-    if (token) {
-      token = token.replace(/^["'](.+)["']$/, '$1').trim();
-    }
-    
     // 2. Chuẩn be Payload gửi lên
     // Quan trọng: Gửi kèm 'password' nếu người dùng có nhập vào ô đổi mật khẩu
     const updateData: Record<string, unknown> = {
@@ -115,14 +100,7 @@ export default function ProfilePage() {
       updateData.password = passwords.newPassword;
     }
 
-    const response = await fetch(`http://localhost:8080/api/customers/${userInfo.id}`, {
-      method: "PUT",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(updateData)
-    });
+    const response = await apiRequest(`/api/customers/${userInfo.id}`, "PUT", updateData);
 
     if (response.ok) {
       setUserInfo(editForm);

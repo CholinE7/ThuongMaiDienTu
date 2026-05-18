@@ -10,14 +10,19 @@ export const dynamic = "force-dynamic";
 // Hàm lấy dữ liệu sản phẩm từ API
 async function getProducts() {
   try {
-    const res = await fetch('http://localhost:8080/api/products?page_size=1000', { 
-      cache: 'no-store' 
+    const res = await fetch('https://punk-caucasian-hangnail.ngrok-free.dev/api/products?page_size=1000&ngrok-skip-browser-warning=true', { 
+      cache: 'no-store',
+      headers: {
+        "ngrok-skip-browser-warning": "69420"
+      }
     });
     if (!res.ok) return [];
     const data = await res.json();
     
     // Map dữ liệu từ API về định dạng Frontend cần
-    return (data.result?.content || []).map((p: { 
+    return (data.result?.content || [])
+      .filter((p: { deleted?: number; status?: string }) => p.deleted === 0 || p.status === "visible")
+      .map((p: { 
       category?: { name: string }, 
       imageUrl?: string, 
       id: number,
@@ -44,12 +49,17 @@ async function getProducts() {
 // Hàm lấy sản phẩm bán chạy
 async function getBestSellers() {
   try {
-    const res = await fetch('http://localhost:8080/api/products/best-sellers?page_size=4', { 
-      cache: 'no-store' 
+    const res = await fetch('https://punk-caucasian-hangnail.ngrok-free.dev/api/products/best-sellers?page_size=4&ngrok-skip-browser-warning=true', { 
+      cache: 'no-store',
+      headers: {
+        "ngrok-skip-browser-warning": "69420"
+      }
     });
     if (!res.ok) return [];
     const data = await res.json();
-    return (data.result?.content || []).map((p: { 
+    return (data.result?.content || [])
+      .filter((p: { deleted?: number; status?: string }) => p.deleted === 0 || p.status === "visible")
+      .map((p: { 
       category?: { name: string }, 
       imageUrl?: string, 
       variants?: { color: string }[] 
