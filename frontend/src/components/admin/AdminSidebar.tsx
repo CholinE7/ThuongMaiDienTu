@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { API_BASE_URL } from '@/config/apiConfig';
 import { 
   BarChart3,
   Users, 
@@ -28,7 +29,7 @@ export default function AdminSidebar() {
 
       if (!name && token) {
         try {
-          const res = await fetch("https://punk-caucasian-hangnail.ngrok-free.dev/api/auth/me?ngrok-skip-browser-warning=true", {
+          const res = await fetch(`${API_BASE_URL}/api/auth/me?ngrok-skip-browser-warning=true`, {
             headers: { 
               "Authorization": `Bearer ${token}`,
               "ngrok-skip-browser-warning": "69420"

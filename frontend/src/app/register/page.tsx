@@ -12,6 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { API_BASE_URL } from "@/config/apiConfig";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -91,7 +92,7 @@ export default function RegisterPage() {
     };
 
     try {
-      const res = await fetch("https://punk-caucasian-hangnail.ngrok-free.dev/register/customers?ngrok-skip-browser-warning=true", {
+      const res = await fetch(`${API_BASE_URL}/register/customers?ngrok-skip-browser-warning=true`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

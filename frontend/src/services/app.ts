@@ -1,5 +1,6 @@
 // src/services/api.ts
-const API_URL = "https://punk-caucasian-hangnail.ngrok-free.dev";
+import { API_BASE_URL } from "../config/apiConfig";
+const API_URL = API_BASE_URL;
 
 export const apiRequest = async (endpoint: string, method: string = "GET", body: unknown = null) => {
     // Lấy token từ sessionStorage

@@ -4,13 +4,14 @@ import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 import { Truck, ShieldCheck, RefreshCw } from 'lucide-react';
 import { Product } from '@/types';
+import { API_BASE_URL } from '@/config/apiConfig';
 
 export const dynamic = "force-dynamic";
 
 // Hàm lấy dữ liệu sản phẩm từ API
 async function getProducts() {
   try {
-    const res = await fetch('https://punk-caucasian-hangnail.ngrok-free.dev/api/products?page_size=1000&ngrok-skip-browser-warning=true', { 
+    const res = await fetch(`${API_BASE_URL}/api/products?page_size=1000&ngrok-skip-browser-warning=true`, { 
       cache: 'no-store',
       headers: {
         "ngrok-skip-browser-warning": "69420"
@@ -49,7 +50,7 @@ async function getProducts() {
 // Hàm lấy sản phẩm bán chạy
 async function getBestSellers() {
   try {
-    const res = await fetch('https://punk-caucasian-hangnail.ngrok-free.dev/api/products/best-sellers?page_size=4&ngrok-skip-browser-warning=true', { 
+    const res = await fetch(`${API_BASE_URL}/api/products/best-sellers?page_size=4&ngrok-skip-browser-warning=true`, { 
       cache: 'no-store',
       headers: {
         "ngrok-skip-browser-warning": "69420"
